@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, Users, UserRound, Calendar, 
-  Stethoscope, UserPlus, Settings, LogOut, ChevronLeft, ChevronRight, X,
+  Stethoscope, UserPlus, Settings, LogOut, ChevronLeft, ChevronRight, X, CreditCard,
   ActivitySquare
 } from 'lucide-react';
 
@@ -43,13 +43,13 @@ const Sidebar = ({ onToggle, isMobileOpen, onMobileClose }) => {
       { name: 'Patient List', path: '/staff/patients', icon: <Users size={20}/> },
       { name: 'Dentist List', path: '/staff/dentists', icon: <UserRound size={20}/> },
       { name: 'Appointments', path: '/staff/appointments', icon: <Calendar size={20}/> },
+      { name: 'Billings', path: '/staff/billings', icon: <CreditCard size={20}/> },
       { name: 'Settings', path: '/staff/settings', icon: <Settings size={20}/> },
     ],
     dentist: [
       { name: 'Dashboard', path: '/dentist/dashboard', icon: <LayoutDashboard size={20}/> },
       { name: 'Patient List', path: '/dentist/patients', icon: <Users size={20}/> },
       { name: 'Profile', path: '/dentist/profile', icon: <UserRound size={20}/> },
-      { name: 'Appointments', path: '/dentist/appointments', icon: <Calendar size={20}/> },
       { name: 'Diagnostics', path: '/dentist/diagnostics', icon: <Stethoscope size={20}/> },
       { name: 'Predictive Analytics', path: '/dentist/analytics', icon: <ActivitySquare size={20}/> },
       { name: 'Settings', path: '/dentist/settings', icon: <Settings size={20}/> },

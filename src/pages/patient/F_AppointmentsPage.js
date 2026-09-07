@@ -15,9 +15,10 @@ import {
   Calendar,
   AlertTriangle,
   XCircle,
+  CreditCard,
   CheckCircle2,
   Save,
-  Pencil
+  Pencil,
 } from "lucide-react";
 
 function AppointmentsPage() {
@@ -41,17 +42,27 @@ function AppointmentsPage() {
   const [showSaveChanges, setShowSaveChanges] = useState(false);
   const [appointmentToCancel, setAppointmentToCancel] = useState(null);
 
-  const [feedbackModal, setFeedbackModal] = useState({ show: false, message: "", type: "success" });
+  const [feedbackModal, setFeedbackModal] = useState({
+    show: false,
+    message: "",
+    type: "success",
+  });
 
   const dentistsList = [
     "Therese Madrid DMD",
     "Queenie Balmedina DMD",
     "Vicente Epress II Dmd",
     "Carl Adrian Usi DMD",
-    "Paulette Maliit DMD"
+    "Paulette Maliit DMD",
   ];
 
-  const statusList = ["Approved", "Pending", "Cancelled", "Completed", "Reschedule"];
+  const statusList = [
+    "Approved",
+    "Pending",
+    "Cancelled",
+    "Completed",
+    "Reschedule",
+  ];
 
   useEffect(() => {
     const checkMobile = () => {
@@ -64,10 +75,15 @@ function AppointmentsPage() {
 
   const fetchAppointments = useCallback(async (userId) => {
     try {
-      const response = await fetch(`https://oravista-server-474976105474.asia-southeast1.run.app/api/user-appointments/${userId}`);
+      const response = await fetch(
+        `https://oravista-server-474976105474.asia-southeast1.run.app/api/user-appointments/${userId}`,
+      );
       if (response.ok) {
         const data = await response.json();
-        const mappedData = data.map(appt => ({ ...appt, status: appt.status || "Pending" }));
+        const mappedData = data.map((appt) => ({
+          ...appt,
+          status: appt.status || "Pending",
+        }));
         setAppointments(mappedData);
       }
     } catch (error) {
@@ -105,8 +121,8 @@ function AppointmentsPage() {
   const handleApplyClick = () => setShowSaveChanges(true);
 
   const handleConfirmSaveChanges = async () => {
-    const modifiedAppointments = appointments.filter(appt => {
-      const original = backupAppointments.find(b => b.id === appt.id);
+    const modifiedAppointments = appointments.filter((appt) => {
+      const original = backupAppointments.find((b) => b.id === appt.id);
       return original && original.status !== appt.status;
     });
 
@@ -117,13 +133,21 @@ function AppointmentsPage() {
     }
 
     try {
-      await Promise.all(modifiedAppointments.map(appt =>
-        fetch("https://oravista-server-474976105474.asia-southeast1.run.app/api/update-appointment-status", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ appointment_id: appt.id, status: appt.status }),
-        })
-      ));
+      await Promise.all(
+        modifiedAppointments.map((appt) =>
+          fetch(
+            "https://oravista-server-474976105474.asia-southeast1.run.app/api/update-appointment-status",
+            {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                appointment_id: appt.id,
+                status: appt.status,
+              }),
+            },
+          ),
+        ),
+      );
       setIsEditing(false);
       setShowSaveChanges(false);
       showFeedback("Changes saved successfully!", "success");
@@ -155,8 +179,8 @@ function AppointmentsPage() {
   };
 
   const confirmCancellation = () => {
-    const updatedList = appointments.map(a =>
-      a.id === appointmentToCancel.id ? { ...a, status: "Cancelled" } : a
+    const updatedList = appointments.map((a) =>
+      a.id === appointmentToCancel.id ? { ...a, status: "Cancelled" } : a,
     );
     setAppointments(updatedList);
     setShowConfirmCancel(false);
@@ -172,28 +196,44 @@ function AppointmentsPage() {
       color: "white",
       display: "inline-block",
       textAlign: "center",
-      cursor: isEditing && (status === "Pending" || status === "Approved" || status === "Confirmed") ? "pointer" : "not-allowed",
+      cursor:
+        isEditing &&
+        (status === "Pending" ||
+          status === "Approved" ||
+          status === "Confirmed")
+          ? "pointer"
+          : "not-allowed",
       transition: "all 0.3s",
       whiteSpace: "nowrap",
     };
     switch (status) {
       case "Approved":
-      case "Confirmed": return { ...base, backgroundColor: "#10b981" };
-      case "Pending": return { ...base, backgroundColor: "#ffc107" };
-      case "Reschedule": return { ...base, backgroundColor: "#007bff" };
-      case "Completed": return { ...base, backgroundColor: "#cc33cc" };
-      case "Cancelled": return { ...base, backgroundColor: "#ff4444" };
-      default: return { ...base, backgroundColor: "#ffc107" };
+      case "Confirmed":
+        return { ...base, backgroundColor: "#10b981" };
+      case "Pending":
+        return { ...base, backgroundColor: "#ffc107" };
+      case "Reschedule":
+        return { ...base, backgroundColor: "#007bff" };
+      case "Completed":
+        return { ...base, backgroundColor: "#cc33cc" };
+      case "Cancelled":
+        return { ...base, backgroundColor: "#ff4444" };
+      default:
+        return { ...base, backgroundColor: "#ffc107" };
     }
   };
 
-  const filteredAppointments = appointments.filter(appt => {
+  const filteredAppointments = appointments.filter((appt) => {
     const service = (appt.service_type || "").toLowerCase();
     const dentist = (appt.dentist_name || "").toLowerCase();
     const search = searchTerm.toLowerCase();
     const matchesSearch = service.includes(search) || dentist.includes(search);
-    const matchesDentist = selectedDentist ? appt.dentist_name === selectedDentist : true;
-    const matchesStatus = selectedStatus ? appt.status === selectedStatus : true;
+    const matchesDentist = selectedDentist
+      ? appt.dentist_name === selectedDentist
+      : true;
+    const matchesStatus = selectedStatus
+      ? appt.status === selectedStatus
+      : true;
     return matchesSearch && matchesDentist && matchesStatus;
   });
 
@@ -213,32 +253,64 @@ function AppointmentsPage() {
     transition: "all 0.3s ease",
     whiteSpace: "nowrap",
     overflow: "hidden",
-    backgroundColor: location.pathname === path ? "rgba(255, 255, 255, 0.2)" : "transparent",
+    backgroundColor:
+      location.pathname === path ? "rgba(255, 255, 255, 0.2)" : "transparent",
     fontWeight: location.pathname === path ? "700" : "400",
-    borderLeft: location.pathname === path ? "4px solid white" : "4px solid transparent",
+    borderLeft:
+      location.pathname === path ? "4px solid white" : "4px solid transparent",
   });
 
   const modalOverlay = {
-    position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
-    backgroundColor: "rgba(0,0,0,0.5)", display: "flex",
-    justifyContent: "center", alignItems: "center",
-    padding: "20px", boxSizing: "border-box",
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    backgroundColor: "rgba(0,0,0,0.5)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: "20px",
+    boxSizing: "border-box",
   };
 
   const modalBox = {
-    backgroundColor: "white", padding: "30px", borderRadius: "20px",
-    textAlign: "center", width: "100%", maxWidth: "400px",
+    backgroundColor: "white",
+    padding: "30px",
+    borderRadius: "20px",
+    textAlign: "center",
+    width: "100%",
+    maxWidth: "400px",
     boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
   };
 
   const SidebarContent = () => (
     <>
-      <div style={{ display: "flex", justifyContent: isCollapsed && !isMobile ? "center" : "space-between", alignItems: "center", marginBottom: "40px" }}>
-        {(!isCollapsed || isMobile) && <h2 style={{ fontSize: "28px", fontWeight: "800", margin: 0 }}>OraVista</h2>}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: isCollapsed && !isMobile ? "center" : "space-between",
+          alignItems: "center",
+          marginBottom: "40px",
+        }}
+      >
+        {(!isCollapsed || isMobile) && (
+          <h2 style={{ fontSize: "28px", fontWeight: "800", margin: 0 }}>
+            OraVista
+          </h2>
+        )}
         {isMobile ? (
-          <div onClick={() => setIsMobileOpen(false)} style={{ cursor: "pointer" }}><X size={24} /></div>
+          <div
+            onClick={() => setIsMobileOpen(false)}
+            style={{ cursor: "pointer" }}
+          >
+            <X size={24} />
+          </div>
         ) : (
-          <div onClick={() => setIsCollapsed(!isCollapsed)} style={{ cursor: "pointer" }}>
+          <div
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            style={{ cursor: "pointer" }}
+          >
             {isCollapsed ? <Menu size={24} /> : <X size={24} />}
           </div>
         )}
@@ -246,25 +318,75 @@ function AppointmentsPage() {
 
       <nav style={{ flexGrow: 1 }}>
         {[
-          { path: "/dashboard", icon: <LayoutDashboard size={20} style={{ flexShrink: 0 }} />, label: "Dashboard" },
-          { path: "/profile", icon: <User size={20} style={{ flexShrink: 0 }} />, label: "Profile" },
-          { path: "/booking", icon: <CalendarHeart size={20} style={{ flexShrink: 0 }} />, label: "Book an Appointment" },
-          { path: "/appointments", icon: <History size={20} style={{ flexShrink: 0 }} />, label: "My Appointments" },
-          { path: "/records", icon: <FileText size={20} style={{ flexShrink: 0 }} />, label: "Records" },
+          {
+            path: "/dashboard",
+            icon: <LayoutDashboard size={20} style={{ flexShrink: 0 }} />,
+            label: "Dashboard",
+          },
+          {
+            path: "/profile",
+            icon: <User size={20} style={{ flexShrink: 0 }} />,
+            label: "Profile",
+          },
+          {
+            path: "/booking",
+            icon: <CalendarHeart size={20} style={{ flexShrink: 0 }} />,
+            label: "Book an Appointment",
+          },
+          {
+            path: "/appointments",
+            icon: <History size={20} style={{ flexShrink: 0 }} />,
+            label: "My Appointments",
+          },
+          {
+            path: "/records",
+            icon: <FileText size={20} style={{ flexShrink: 0 }} />,
+            label: "Records",
+          },
+          {
+            path: "/billings",
+            icon: <CreditCard size={20} style={{ flexShrink: 0 }} />,
+            label: "Billings",
+          },
         ].map(({ path, icon, label }) => (
-          <div key={path} style={getNavItemStyle(path)} onClick={() => { navigate(path); if (isMobile) setIsMobileOpen(false); }}>
+          <div
+            key={path}
+            style={getNavItemStyle(path)}
+            onClick={() => {
+              navigate(path);
+              if (isMobile) setIsMobileOpen(false);
+            }}
+          >
             {icon}
-            {(!isCollapsed || isMobile) && <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{label}</span>}
+            {(!isCollapsed || isMobile) && (
+              <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+                {label}
+              </span>
+            )}
           </div>
         ))}
       </nav>
 
-      <div style={{ borderTop: "1px solid rgba(255,255,255,0.2)", paddingTop: "10px" }}>
-        <div style={getNavItemStyle("/settings")} onClick={() => { navigate("/settings"); if (isMobile) setIsMobileOpen(false); }}>
+      <div
+        style={{
+          borderTop: "1px solid rgba(255,255,255,0.2)",
+          paddingTop: "10px",
+        }}
+      >
+        <div
+          style={getNavItemStyle("/settings")}
+          onClick={() => {
+            navigate("/settings");
+            if (isMobile) setIsMobileOpen(false);
+          }}
+        >
           <Settings size={20} style={{ flexShrink: 0 }} />
           {(!isCollapsed || isMobile) && "Settings"}
         </div>
-        <div style={{ ...getNavItemStyle("/logout"), color: "#ff4d4d" }} onClick={handleLogout}>
+        <div
+          style={{ ...getNavItemStyle("/logout"), color: "#ff4d4d" }}
+          onClick={handleLogout}
+        >
           <LogOut size={20} style={{ flexShrink: 0 }} />
           {(!isCollapsed || isMobile) && "Logout"}
         </div>
@@ -273,20 +395,62 @@ function AppointmentsPage() {
   );
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", width: "100%", backgroundColor: "white", fontFamily: "'Poppins', sans-serif" }}>
-
+    <div
+      style={{
+        display: "flex",
+        minHeight: "100vh",
+        width: "100%",
+        backgroundColor: "white",
+        fontFamily: "'Poppins', sans-serif",
+      }}
+    >
       {/* Modals */}
       {feedbackModal.show && (
         <div style={{ ...modalOverlay, zIndex: 4000 }}>
           <div style={modalBox}>
-            {feedbackModal.type === "success"
-              ? <CheckCircle2 size={50} color="#28a745" style={{ margin: "0 auto 15px" }} />
-              : <XCircle size={50} color="#ff4d4d" style={{ margin: "0 auto 15px" }} />}
-            <h3 style={{ color: "#001166", fontWeight: "800", marginBottom: "10px" }}>
+            {feedbackModal.type === "success" ? (
+              <CheckCircle2
+                size={50}
+                color="#28a745"
+                style={{ margin: "0 auto 15px" }}
+              />
+            ) : (
+              <XCircle
+                size={50}
+                color="#ff4d4d"
+                style={{ margin: "0 auto 15px" }}
+              />
+            )}
+            <h3
+              style={{
+                color: "#001166",
+                fontWeight: "800",
+                marginBottom: "10px",
+              }}
+            >
               {feedbackModal.type === "success" ? "Done!" : "Error"}
             </h3>
-            <p style={{ color: "#666", fontSize: "14px", marginBottom: "20px" }}>{feedbackModal.message}</p>
-            <button onClick={() => setFeedbackModal({ ...feedbackModal, show: false })} style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "none", backgroundColor: "#001166", color: "white", fontWeight: "700", cursor: "pointer", fontFamily: "'Poppins', sans-serif" }}>
+            <p
+              style={{ color: "#666", fontSize: "14px", marginBottom: "20px" }}
+            >
+              {feedbackModal.message}
+            </p>
+            <button
+              onClick={() =>
+                setFeedbackModal({ ...feedbackModal, show: false })
+              }
+              style={{
+                width: "100%",
+                padding: "12px",
+                borderRadius: "10px",
+                border: "none",
+                backgroundColor: "#001166",
+                color: "white",
+                fontWeight: "700",
+                cursor: "pointer",
+                fontFamily: "'Poppins', sans-serif",
+              }}
+            >
               Okay
             </button>
           </div>
@@ -297,11 +461,44 @@ function AppointmentsPage() {
         <div style={{ ...modalOverlay, zIndex: 3500 }}>
           <div style={modalBox}>
             <Save size={50} color="#001166" style={{ margin: "0 auto 15px" }} />
-            <h3 style={{ color: "#001166", fontWeight: "800" }}>Save Changes?</h3>
-            <p style={{ color: "#555", fontSize: "14px", marginBottom: "20px" }}>Do you want to save the changes you made to your appointments?</p>
+            <h3 style={{ color: "#001166", fontWeight: "800" }}>
+              Save Changes?
+            </h3>
+            <p
+              style={{ color: "#555", fontSize: "14px", marginBottom: "20px" }}
+            >
+              Do you want to save the changes you made to your appointments?
+            </p>
             <div style={{ display: "flex", gap: "10px" }}>
-              <button onClick={handleDiscardChanges} style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "1px solid #ccc", backgroundColor: "white", cursor: "pointer", fontFamily: "'Poppins', sans-serif" }}>No</button>
-              <button onClick={handleConfirmSaveChanges} style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "none", backgroundColor: "#001166", color: "white", cursor: "pointer", fontFamily: "'Poppins', sans-serif" }}>Yes</button>
+              <button
+                onClick={handleDiscardChanges}
+                style={{
+                  flex: 1,
+                  padding: "12px",
+                  borderRadius: "10px",
+                  border: "1px solid #ccc",
+                  backgroundColor: "white",
+                  cursor: "pointer",
+                  fontFamily: "'Poppins', sans-serif",
+                }}
+              >
+                No
+              </button>
+              <button
+                onClick={handleConfirmSaveChanges}
+                style={{
+                  flex: 1,
+                  padding: "12px",
+                  borderRadius: "10px",
+                  border: "none",
+                  backgroundColor: "#001166",
+                  color: "white",
+                  cursor: "pointer",
+                  fontFamily: "'Poppins', sans-serif",
+                }}
+              >
+                Yes
+              </button>
             </div>
           </div>
         </div>
@@ -310,14 +507,51 @@ function AppointmentsPage() {
       {showCancelWarning && (
         <div style={{ ...modalOverlay, zIndex: 3000 }}>
           <div style={modalBox}>
-            <AlertTriangle size={50} color="#ff9800" style={{ margin: "0 auto 15px" }} />
-            <h3 style={{ color: "#001166", fontWeight: "800" }}>Cancel Policy Warning</h3>
-            <p style={{ color: "#555", fontSize: "14px", marginBottom: "20px" }}>
-              You can only cancel <strong>one approved appointment per week</strong>. Proceeding may affect your ability to book future slots immediately.
+            <AlertTriangle
+              size={50}
+              color="#ff9800"
+              style={{ margin: "0 auto 15px" }}
+            />
+            <h3 style={{ color: "#001166", fontWeight: "800" }}>
+              Cancel Policy Warning
+            </h3>
+            <p
+              style={{ color: "#555", fontSize: "14px", marginBottom: "20px" }}
+            >
+              You can only cancel{" "}
+              <strong>one approved appointment per week</strong>. Proceeding may
+              affect your ability to book future slots immediately.
             </p>
             <div style={{ display: "flex", gap: "10px" }}>
-              <button onClick={() => setShowCancelWarning(false)} style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "1px solid #ccc", backgroundColor: "white", cursor: "pointer", fontFamily: "'Poppins', sans-serif" }}>Go Back</button>
-              <button onClick={proceedToConfirmCancel} style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "none", backgroundColor: "#ff4d4d", color: "white", cursor: "pointer", fontFamily: "'Poppins', sans-serif" }}>Proceed</button>
+              <button
+                onClick={() => setShowCancelWarning(false)}
+                style={{
+                  flex: 1,
+                  padding: "12px",
+                  borderRadius: "10px",
+                  border: "1px solid #ccc",
+                  backgroundColor: "white",
+                  cursor: "pointer",
+                  fontFamily: "'Poppins', sans-serif",
+                }}
+              >
+                Go Back
+              </button>
+              <button
+                onClick={proceedToConfirmCancel}
+                style={{
+                  flex: 1,
+                  padding: "12px",
+                  borderRadius: "10px",
+                  border: "none",
+                  backgroundColor: "#ff4d4d",
+                  color: "white",
+                  cursor: "pointer",
+                  fontFamily: "'Poppins', sans-serif",
+                }}
+              >
+                Proceed
+              </button>
             </div>
           </div>
         </div>
@@ -326,14 +560,51 @@ function AppointmentsPage() {
       {showConfirmCancel && (
         <div style={{ ...modalOverlay, zIndex: 3000 }}>
           <div style={modalBox}>
-            <XCircle size={50} color="#ff4d4d" style={{ margin: "0 auto 15px" }} />
-            <h3 style={{ color: "#001166", fontWeight: "800" }}>Mark for Cancellation?</h3>
-            <p style={{ color: "#555", fontSize: "14px", marginBottom: "20px" }}>
-              This will mark the appointment with {appointmentToCancel?.dentist_name} as cancelled. Click "Apply" to save.
+            <XCircle
+              size={50}
+              color="#ff4d4d"
+              style={{ margin: "0 auto 15px" }}
+            />
+            <h3 style={{ color: "#001166", fontWeight: "800" }}>
+              Mark for Cancellation?
+            </h3>
+            <p
+              style={{ color: "#555", fontSize: "14px", marginBottom: "20px" }}
+            >
+              This will mark the appointment with{" "}
+              {appointmentToCancel?.dentist_name} as cancelled. Click "Apply" to
+              save.
             </p>
             <div style={{ display: "flex", gap: "10px" }}>
-              <button onClick={() => setShowConfirmCancel(false)} style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "1px solid #ccc", backgroundColor: "white", cursor: "pointer", fontFamily: "'Poppins', sans-serif" }}>Cancel</button>
-              <button onClick={confirmCancellation} style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "none", backgroundColor: "#ff4d4d", color: "white", cursor: "pointer", fontFamily: "'Poppins', sans-serif" }}>Confirm</button>
+              <button
+                onClick={() => setShowConfirmCancel(false)}
+                style={{
+                  flex: 1,
+                  padding: "12px",
+                  borderRadius: "10px",
+                  border: "1px solid #ccc",
+                  backgroundColor: "white",
+                  cursor: "pointer",
+                  fontFamily: "'Poppins', sans-serif",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmCancellation}
+                style={{
+                  flex: 1,
+                  padding: "12px",
+                  borderRadius: "10px",
+                  border: "none",
+                  backgroundColor: "#ff4d4d",
+                  color: "white",
+                  cursor: "pointer",
+                  fontFamily: "'Poppins', sans-serif",
+                }}
+              >
+                Confirm
+              </button>
             </div>
           </div>
         </div>
@@ -341,106 +612,293 @@ function AppointmentsPage() {
 
       {/* Mobile backdrop */}
       {isMobile && isMobileOpen && (
-        <div onClick={() => setIsMobileOpen(false)} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.4)", zIndex: 1500 }} />
+        <div
+          onClick={() => setIsMobileOpen(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(0,0,0,0.4)",
+            zIndex: 1500,
+          }}
+        />
       )}
 
       {/* Desktop Sidebar */}
       {!isMobile && (
-        <div style={{
-          width: sidebarWidth, backgroundColor: "#001166", height: "100vh", color: "white",
-          padding: "20px 15px", position: "fixed", transition: "width 0.3s ease",
-          zIndex: 1000, display: "flex", flexDirection: "column", boxSizing: "border-box", overflow: "hidden",
-        }}>
+        <div
+          style={{
+            width: sidebarWidth,
+            backgroundColor: "#001166",
+            height: "100vh",
+            color: "white",
+            padding: "20px 15px",
+            position: "fixed",
+            transition: "width 0.3s ease",
+            zIndex: 1000,
+            display: "flex",
+            flexDirection: "column",
+            boxSizing: "border-box",
+            overflow: "hidden",
+          }}
+        >
           <SidebarContent />
         </div>
       )}
 
       {/* Mobile Sidebar Drawer */}
       {isMobile && (
-        <div style={{
-          width: "260px", backgroundColor: "#001166", height: "100vh", color: "white",
-          padding: "20px 15px", position: "fixed", left: isMobileOpen ? 0 : "-260px",
-          top: 0, transition: "left 0.3s ease", zIndex: 2000,
-          display: "flex", flexDirection: "column", boxSizing: "border-box", overflowY: "auto",
-        }}>
+        <div
+          style={{
+            width: "260px",
+            backgroundColor: "#001166",
+            height: "100vh",
+            color: "white",
+            padding: "20px 15px",
+            position: "fixed",
+            left: isMobileOpen ? 0 : "-260px",
+            top: 0,
+            transition: "left 0.3s ease",
+            zIndex: 2000,
+            display: "flex",
+            flexDirection: "column",
+            boxSizing: "border-box",
+            overflowY: "auto",
+          }}
+        >
           <SidebarContent />
         </div>
       )}
 
       {/* Main Content */}
-      <div style={{
-        marginLeft: isMobile ? 0 : sidebarWidth,
-        width: isMobile ? "100%" : `calc(100% - ${sidebarWidth})`,
-        transition: "margin-left 0.3s ease",
-        boxSizing: "border-box",
-      }}>
-
+      <div
+        style={{
+          marginLeft: isMobile ? 0 : sidebarWidth,
+          width: isMobile ? "100%" : `calc(100% - ${sidebarWidth})`,
+          transition: "margin-left 0.3s ease",
+          boxSizing: "border-box",
+        }}
+      >
         {/* Mobile Top Bar */}
         {isMobile && (
-          <div style={{ display: "flex", alignItems: "center", padding: "15px 20px", backgroundColor: "#001166", color: "white", position: "sticky", top: 0, zIndex: 100 }}>
-            <div onClick={() => setIsMobileOpen(true)} style={{ cursor: "pointer", marginRight: "15px" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              padding: "15px 20px",
+              backgroundColor: "#001166",
+              color: "white",
+              position: "sticky",
+              top: 0,
+              zIndex: 100,
+            }}
+          >
+            <div
+              onClick={() => setIsMobileOpen(true)}
+              style={{ cursor: "pointer", marginRight: "15px" }}
+            >
               <Menu size={24} />
             </div>
-            <h2 style={{ fontSize: "22px", fontWeight: "800", margin: 0 }}>OraVista</h2>
+            <h2 style={{ fontSize: "22px", fontWeight: "800", margin: 0 }}>
+              OraVista
+            </h2>
           </div>
         )}
 
         <div style={{ padding: isMobile ? "20px 16px" : "60px 80px" }}>
-          <h1 style={{ color: "#001166", fontSize: isMobile ? "28px" : "48px", fontWeight: "800", marginBottom: "6px" }}>My Appointments</h1>
-          <p style={{ color: "#001166", fontWeight: "600", marginBottom: isMobile ? "20px" : "40px" }}>Welcome, {userData.firstName}!</p>
+          <h1
+            style={{
+              color: "#001166",
+              fontSize: isMobile ? "28px" : "48px",
+              fontWeight: "800",
+              marginBottom: "6px",
+            }}
+          >
+            My Appointments
+          </h1>
+          <p
+            style={{
+              color: "#001166",
+              fontWeight: "600",
+              marginBottom: isMobile ? "20px" : "40px",
+            }}
+          >
+            Welcome, {userData.firstName}!
+          </p>
 
           {/* Filters Row */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginBottom: "24px", alignItems: "center" }}>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "12px",
+              marginBottom: "24px",
+              alignItems: "center",
+            }}
+          >
             {/* Search */}
-            <div style={{ position: "relative", flex: isMobile ? "1 1 100%" : "0 0 280px", minWidth: isMobile ? "100%" : "200px" }}>
-              <Search size={18} style={{ position: "absolute", left: "14px", top: "13px", color: "#666" }} />
+            <div
+              style={{
+                position: "relative",
+                flex: isMobile ? "1 1 100%" : "0 0 280px",
+                minWidth: isMobile ? "100%" : "200px",
+              }}
+            >
+              <Search
+                size={18}
+                style={{
+                  position: "absolute",
+                  left: "14px",
+                  top: "13px",
+                  color: "#666",
+                }}
+              />
               <input
                 type="text"
                 placeholder="Search..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ width: "100%", padding: "12px 15px 12px 42px", borderRadius: "30px", border: "none", backgroundColor: "#e8ebf5", fontSize: "14px", outline: "none", boxSizing: "border-box", fontFamily: "'Poppins', sans-serif" }}
+                style={{
+                  width: "100%",
+                  padding: "12px 15px 12px 42px",
+                  borderRadius: "30px",
+                  border: "none",
+                  backgroundColor: "#e8ebf5",
+                  fontSize: "14px",
+                  outline: "none",
+                  boxSizing: "border-box",
+                  fontFamily: "'Poppins', sans-serif",
+                }}
               />
             </div>
 
             {/* Dentist filter */}
-            <div style={{ position: "relative", flex: isMobile ? "1 1 calc(50% - 6px)" : "0 0 auto" }}>
+            <div
+              style={{
+                position: "relative",
+                flex: isMobile ? "1 1 calc(50% - 6px)" : "0 0 auto",
+              }}
+            >
               <select
                 value={selectedDentist}
                 onChange={(e) => setSelectedDentist(e.target.value)}
-                style={{ appearance: "none", backgroundColor: "#e8ebf5", border: "none", padding: "12px 36px 12px 16px", borderRadius: "10px", color: "#001166", fontWeight: "600", cursor: "pointer", fontSize: "13px", width: "100%", fontFamily: "'Poppins', sans-serif" }}
+                style={{
+                  appearance: "none",
+                  backgroundColor: "#e8ebf5",
+                  border: "none",
+                  padding: "12px 36px 12px 16px",
+                  borderRadius: "10px",
+                  color: "#001166",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  fontSize: "13px",
+                  width: "100%",
+                  fontFamily: "'Poppins', sans-serif",
+                }}
               >
                 <option value="">All Dentists</option>
-                {dentistsList.map(d => <option key={d} value={d}>{d}</option>)}
+                {dentistsList.map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
               </select>
-              <ChevronDown size={16} style={{ position: "absolute", right: "12px", top: "14px", pointerEvents: "none", color: "#001166" }} />
+              <ChevronDown
+                size={16}
+                style={{
+                  position: "absolute",
+                  right: "12px",
+                  top: "14px",
+                  pointerEvents: "none",
+                  color: "#001166",
+                }}
+              />
             </div>
 
             {/* Status filter */}
-            <div style={{ position: "relative", flex: isMobile ? "1 1 calc(50% - 6px)" : "0 0 auto" }}>
+            <div
+              style={{
+                position: "relative",
+                flex: isMobile ? "1 1 calc(50% - 6px)" : "0 0 auto",
+              }}
+            >
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                style={{ appearance: "none", backgroundColor: "#e8ebf5", border: "none", padding: "12px 36px 12px 16px", borderRadius: "10px", color: "#001166", fontWeight: "600", cursor: "pointer", fontSize: "13px", width: "100%", fontFamily: "'Poppins', sans-serif" }}
+                style={{
+                  appearance: "none",
+                  backgroundColor: "#e8ebf5",
+                  border: "none",
+                  padding: "12px 36px 12px 16px",
+                  borderRadius: "10px",
+                  color: "#001166",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  fontSize: "13px",
+                  width: "100%",
+                  fontFamily: "'Poppins', sans-serif",
+                }}
               >
                 <option value="">All Statuses</option>
-                {statusList.map(s => <option key={s} value={s}>{s}</option>)}
+                {statusList.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
               </select>
-              <ChevronDown size={16} style={{ position: "absolute", right: "12px", top: "14px", pointerEvents: "none", color: "#001166" }} />
+              <ChevronDown
+                size={16}
+                style={{
+                  position: "absolute",
+                  right: "12px",
+                  top: "14px",
+                  pointerEvents: "none",
+                  color: "#001166",
+                }}
+              />
             </div>
 
             {/* Edit/Apply button */}
             {isEditing ? (
               <button
                 onClick={handleApplyClick}
-                style={{ backgroundColor: "#28a745", border: "none", padding: "12px 28px", borderRadius: "10px", color: "white", fontWeight: "700", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", fontFamily: "'Poppins', sans-serif", marginLeft: isMobile ? 0 : "auto", width: isMobile ? "100%" : "auto", justifyContent: "center" }}
+                style={{
+                  backgroundColor: "#28a745",
+                  border: "none",
+                  padding: "12px 28px",
+                  borderRadius: "10px",
+                  color: "white",
+                  fontWeight: "700",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  fontFamily: "'Poppins', sans-serif",
+                  marginLeft: isMobile ? 0 : "auto",
+                  width: isMobile ? "100%" : "auto",
+                  justifyContent: "center",
+                }}
               >
                 <Save size={16} /> Apply
               </button>
             ) : (
               <button
                 onClick={handleEditClick}
-                style={{ backgroundColor: "#001166", border: "none", padding: "12px 28px", borderRadius: "10px", color: "white", fontWeight: "700", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", fontFamily: "'Poppins', sans-serif", marginLeft: isMobile ? 0 : "auto", width: isMobile ? "100%" : "auto", justifyContent: "center" }}
+                style={{
+                  backgroundColor: "#001166",
+                  border: "none",
+                  padding: "12px 28px",
+                  borderRadius: "10px",
+                  color: "white",
+                  fontWeight: "700",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  fontFamily: "'Poppins', sans-serif",
+                  marginLeft: isMobile ? 0 : "auto",
+                  width: isMobile ? "100%" : "auto",
+                  justifyContent: "center",
+                }}
               >
                 <Pencil size={16} /> Edit
               </button>
@@ -448,11 +906,26 @@ function AppointmentsPage() {
           </div>
 
           {/* Appointments Table */}
-          <div style={{ backgroundColor: "#e8ebf5", borderRadius: "24px", padding: isMobile ? "16px 12px" : "40px" }}>
-
+          <div
+            style={{
+              backgroundColor: "#e8ebf5",
+              borderRadius: "24px",
+              padding: isMobile ? "16px 12px" : "40px",
+            }}
+          >
             {/* Desktop Table Header */}
             {!isMobile && (
-              <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1.5fr 1.5fr 1fr 1fr", padding: "0 20px 15px 20px", color: "#001166", fontWeight: "800", borderBottom: "2px dashed #001166", marginBottom: "20px" }}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1.5fr 1.5fr 1.5fr 1fr 1fr",
+                  padding: "0 20px 15px 20px",
+                  color: "#001166",
+                  fontWeight: "800",
+                  borderBottom: "2px dashed #001166",
+                  marginBottom: "20px",
+                }}
+              >
                 <div>Date</div>
                 <div>Service</div>
                 <div>Dentist</div>
@@ -461,51 +934,144 @@ function AppointmentsPage() {
               </div>
             )}
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+            >
               {filteredAppointments.length > 0 ? (
-                filteredAppointments.map((appt) => (
+                filteredAppointments.map((appt) =>
                   isMobile ? (
                     /* Mobile Card Layout */
-                    <div key={appt.id} style={{ backgroundColor: "white", padding: "16px", borderRadius: "14px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
+                    <div
+                      key={appt.id}
+                      style={{
+                        backgroundColor: "white",
+                        padding: "16px",
+                        borderRadius: "14px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
+                          marginBottom: "10px",
+                        }}
+                      >
                         <div>
-                          <div style={{ color: "#001166", fontWeight: "700", fontSize: "14px" }}>
-                            {new Date(appt.appointment_date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                          <div
+                            style={{
+                              color: "#001166",
+                              fontWeight: "700",
+                              fontSize: "14px",
+                            }}
+                          >
+                            {new Date(appt.appointment_date).toLocaleDateString(
+                              "en-US",
+                              {
+                                month: "long",
+                                day: "numeric",
+                                year: "numeric",
+                              },
+                            )}
                           </div>
-                          <div style={{ color: "#333", fontSize: "13px", marginTop: "2px" }}>{appt.service_type}</div>
+                          <div
+                            style={{
+                              color: "#333",
+                              fontSize: "13px",
+                              marginTop: "2px",
+                            }}
+                          >
+                            {appt.service_type}
+                          </div>
                         </div>
-                        <span onClick={() => handleStatusClick(appt)} style={getStatusStyle(appt.status)}>
+                        <span
+                          onClick={() => handleStatusClick(appt)}
+                          style={getStatusStyle(appt.status)}
+                        >
                           {appt.status}
                         </span>
                       </div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <div style={{ color: "#555", fontSize: "13px" }}>{appt.dentist_name}</div>
-                        <div style={{ color: "#28a745", fontWeight: "700", fontSize: "14px" }}>
-                          ₱{appt.amount ? parseFloat(appt.amount).toLocaleString() : "0"}
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        <div style={{ color: "#555", fontSize: "13px" }}>
+                          {appt.dentist_name}
+                        </div>
+                        <div
+                          style={{
+                            color: "#28a745",
+                            fontWeight: "700",
+                            fontSize: "14px",
+                          }}
+                        >
+                          ₱
+                          {appt.amount
+                            ? parseFloat(appt.amount).toLocaleString()
+                            : "0"}
                         </div>
                       </div>
                     </div>
                   ) : (
                     /* Desktop Row Layout */
-                    <div key={appt.id} style={{ display: "grid", gridTemplateColumns: "1.5fr 1.5fr 1.5fr 1fr 1fr", backgroundColor: "white", padding: "22px 20px", borderRadius: "15px", alignItems: "center" }}>
+                    <div
+                      key={appt.id}
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "1.5fr 1.5fr 1.5fr 1fr 1fr",
+                        backgroundColor: "white",
+                        padding: "22px 20px",
+                        borderRadius: "15px",
+                        alignItems: "center",
+                      }}
+                    >
                       <div style={{ color: "#001166", fontWeight: "600" }}>
-                        {new Date(appt.appointment_date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                        {new Date(appt.appointment_date).toLocaleDateString(
+                          "en-US",
+                          { month: "long", day: "numeric", year: "numeric" },
+                        )}
                       </div>
-                      <div style={{ color: "#001166" }}>{appt.service_type}</div>
-                      <div style={{ color: "#001166" }}>{appt.dentist_name}</div>
-                      <div style={{ color: "#28a745", fontWeight: "700" }}>₱{appt.amount ? parseFloat(appt.amount).toLocaleString() : "0"}</div>
+                      <div style={{ color: "#001166" }}>
+                        {appt.service_type}
+                      </div>
+                      <div style={{ color: "#001166" }}>
+                        {appt.dentist_name}
+                      </div>
+                      <div style={{ color: "#28a745", fontWeight: "700" }}>
+                        ₱
+                        {appt.amount
+                          ? parseFloat(appt.amount).toLocaleString()
+                          : "0"}
+                      </div>
                       <div style={{ textAlign: "center" }}>
-                        <span onClick={() => handleStatusClick(appt)} style={getStatusStyle(appt.status)}>
+                        <span
+                          onClick={() => handleStatusClick(appt)}
+                          style={getStatusStyle(appt.status)}
+                        >
                           {appt.status}
                         </span>
                       </div>
                     </div>
-                  )
-                ))
+                  ),
+                )
               ) : (
-                <div style={{ textAlign: "center", padding: "60px 0", color: "#001166" }}>
-                  <Calendar size={50} style={{ opacity: 0.2, marginBottom: "15px" }} />
-                  <p style={{ fontSize: "16px", fontWeight: "600" }}>No appointments found.</p>
+                <div
+                  style={{
+                    textAlign: "center",
+                    padding: "60px 0",
+                    color: "#001166",
+                  }}
+                >
+                  <Calendar
+                    size={50}
+                    style={{ opacity: 0.2, marginBottom: "15px" }}
+                  />
+                  <p style={{ fontSize: "16px", fontWeight: "600" }}>
+                    No appointments found.
+                  </p>
                 </div>
               )}
             </div>

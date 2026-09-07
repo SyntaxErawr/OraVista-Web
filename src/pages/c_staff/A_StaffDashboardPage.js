@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import AdminLayout from "../../components/AdminLayout";
-import { Search, Bell, MessageSquare, User, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, Bell, MessageSquare, User, ChevronDown, ChevronUp, CreditCard } from "lucide-react";
 
 function StaffDashboard() {
+  const navigate = useNavigate();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   // Mirroring Admin State structure
   const [appointments, setAppointments] = useState([]);
@@ -13,6 +15,19 @@ function StaffDashboard() {
     monthPatients: 0,
     loading: true
   });
+
+  const getDateKey = (date) => {
+    if (!date) return "";
+    if (typeof date === "string") return date.slice(0, 10);
+    return new Date(date).toISOString().slice(0, 10);
+  };
+
+  const getTodayKey = () => {
+    const today = new Date();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    return `${today.getFullYear()}-${month}-${day}`;
+  };
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -26,17 +41,20 @@ function StaffDashboard() {
 
         const data = await response.json();
 
-        // Update stats mirroring Admin logic
+        const todayAppointments = (data.schedule || []).filter(
+          (appointment) => getDateKey(appointment.date) === getTodayKey(),
+        );
+
+        // Keep the card count and the schedule list in sync with today's date.
         setStats({
-          todayCount: data.todayCount,
+          todayCount: todayAppointments.length,
           availableDentists: 3,
           totalDentists: 3,
           monthPatients: data.monthPatients,
           loading: false
         });
 
-        // Update Today's Schedule List
-        setAppointments(data.schedule);
+        setAppointments(todayAppointments);
 
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
@@ -142,6 +160,25 @@ function StaffDashboard() {
               <h2 style={styles.cardValue}>{stats.monthPatients}</h2>
               <p style={styles.cardSub}>Monthly growth</p>
             </div>
+          </div>
+
+          <div style={styles.billingCard}>
+            <div style={styles.billingCardIcon}>
+              <CreditCard size={27} color="#001166" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={styles.billingCardTitle}>Billing & Receipts</p>
+              <p style={styles.billingCardText}>
+                Approve patient bills, record payments, and customize treatment-record receipts.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate("/staff/billings")}
+              style={styles.billingButton}
+            >
+              Open Billings
+            </button>
           </div>
 
           <div style={styles.gridMid} className="dashboard-grid-mid">
@@ -282,6 +319,34 @@ const styles = {
   },
   progressFill: { height: "100%", background: "#00d4ff", borderRadius: "3px" },
   cardSub: { fontSize: "11px", margin: 0, opacity: 0.8 },
+  billingCard: {
+    display: "flex",
+    alignItems: "center",
+    gap: "18px",
+    padding: "20px 25px",
+    borderRadius: "20px",
+    background: "white",
+    boxShadow: "0 4px 16px rgba(0,17,102,0.1)",
+    marginBottom: "25px",
+  },
+  billingCardIcon: {
+    display: "flex",
+    padding: "13px",
+    background: "#e8ebf5",
+    borderRadius: "14px",
+  },
+  billingCardTitle: { margin: 0, color: "#001166", fontSize: "17px", fontWeight: "700" },
+  billingCardText: { margin: "5px 0 0", color: "#667085", fontSize: "13px" },
+  billingButton: {
+    border: "none",
+    background: "#001166",
+    color: "white",
+    padding: "11px 16px",
+    borderRadius: "9px",
+    fontWeight: "700",
+    cursor: "pointer",
+    whiteSpace: "nowrap",
+  },
 
   gridMid: {
     display: "grid",
