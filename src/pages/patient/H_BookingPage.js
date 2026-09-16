@@ -17,10 +17,13 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { API_BASE_URL } from "../../config/api";
 
 function BookingPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const isReschedule = location.state?.mode === "reschedule";
+  const rescheduleAppointment = location.state;
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -42,6 +45,7 @@ function BookingPage() {
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [rescheduleError, setRescheduleError] = useState("");
 
   const today = new Date();
   const [viewDate, setViewDate] = useState(new Date());
@@ -133,17 +137,19 @@ function BookingPage() {
         available: true,
         schedule: mockSchedule,
       },
-      { name: "Dr. Vicente Epres", 
-        available: true, 
-        schedule: mockSchedule },
-
+      {
+        name: "Dr. Vicente Epres",
+        available: true,
+        schedule: mockSchedule,
+      },
     ],
     "Angeles, Pampanga": [
-      { name: "Dra.Paulette Maliit", 
+      {
+        name: "Dra.Paulette Maliit",
         available: true,
-         schedule: mockSchedule 
-        },
-              {
+        schedule: mockSchedule,
+      },
+      {
         name: "Dr. Vicente Epres",
         available: true,
         schedule: mockSchedule,
@@ -153,10 +159,32 @@ function BookingPage() {
 
   // Legacy patient records may still use "Main Branch". It is the Gil Puyat,
   // Pasay branch and therefore uses the same dentist roster.
-  const selectedBranch = userData.branch === "Main Branch"
-    ? "Gil Puyat, Pasay"
-    : userData.branch;
+  const selectedBranch =
+    userData.branch === "Main Branch" ? "Gil Puyat, Pasay" : userData.branch;
   const filteredDentists = branchDentists[selectedBranch] || [];
+
+  useEffect(() => {
+    if (!isReschedule || !rescheduleAppointment?.currentService) return;
+    const matchingMainService = Object.keys(servicesData).find((category) =>
+      servicesData[category].some(
+        (service) => service.name === rescheduleAppointment.currentService,
+      ),
+    );
+    setBookingData((current) => ({
+      ...current,
+      mainService: matchingMainService || current.mainService,
+      specificService: rescheduleAppointment.currentService || current.specificService,
+      dentist: rescheduleAppointment.currentDentist || current.dentist,
+      date: rescheduleAppointment.currentDate
+        ? String(rescheduleAppointment.currentDate).slice(0, 10)
+        : current.date,
+      time: rescheduleAppointment.currentTime || current.time,
+    }));
+    if (rescheduleAppointment.currentDate) {
+      const requestedDate = new Date(rescheduleAppointment.currentDate);
+      if (!Number.isNaN(requestedDate.getTime())) setViewDate(requestedDate);
+    }
+  }, [isReschedule, rescheduleAppointment]);
 
   const generateTimeSlots = (service, selectedDate) => {
     if (!selectedDate) return [];
@@ -246,7 +274,7 @@ function BookingPage() {
     setIsRefreshing(true);
     try {
       const response = await fetch(
-        `https://oravista-server-474976105474.asia-southeast1.run.app/api/appointments/check-availability?date=${bookingData.date}&dentist=${encodeURIComponent(bookingData.dentist)}`,
+        `${API_BASE_URL}/api/appointments/check-availability?date=${bookingData.date}&dentist=${encodeURIComponent(bookingData.dentist)}${isReschedule && rescheduleAppointment?.appointmentId ? `&excludeAppointmentId=${rescheduleAppointment.appointmentId}` : ""}`,
       );
       const data = await response.json();
       const allOccupiedMinutes = [];
@@ -263,7 +291,7 @@ function BookingPage() {
       setTimeout(() => setIsRefreshing(false), 500);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bookingData.date, bookingData.dentist]);
+  }, [bookingData.date, bookingData.dentist, isReschedule, rescheduleAppointment?.appointmentId]);
 
   useEffect(() => {
     loadUser();
@@ -289,6 +317,52 @@ function BookingPage() {
   };
 
   const handleFinalSubmit = async () => {
+    if (isReschedule) {
+      if (
+        !rescheduleAppointment?.appointmentId ||
+        !userData.id ||
+        !bookingData.date ||
+        !bookingData.time
+      ) {
+        setRescheduleError(
+          "Please select a date and time before submitting the reschedule request.",
+        );
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/api/request-reschedule`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              appointment_id: rescheduleAppointment.appointmentId,
+              user_id: userData.id,
+              requested_date: bookingData.date,
+              requested_time: bookingData.time,
+            }),
+          },
+        );
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(
+            result.message || "The reschedule request could not be submitted.",
+          );
+        }
+        setShowConfirmModal(false);
+        setShowSuccessModal(true);
+        setRescheduleError("");
+      } catch (error) {
+        console.error("Reschedule Error:", error);
+        setRescheduleError(
+          error.message ||
+            "The reschedule request could not be submitted. Please try again.",
+        );
+      }
+      return;
+    }
+
     const appointmentData = {
       user_id: userData.id,
       service_type: bookingData.specificService,
@@ -300,7 +374,7 @@ function BookingPage() {
     };
     try {
       const response = await fetch(
-        "https://oravista-server-474976105474.asia-southeast1.run.app/api/book-appointment",
+        `${API_BASE_URL}/api/book-appointment`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -389,7 +463,7 @@ function BookingPage() {
   };
 
   const labelStyle = {
-    color: "#001166",
+    color: isMobile ? "#001166" : "white",
     fontWeight: "700",
     marginBottom: "10px",
     display: "block",
@@ -524,7 +598,7 @@ function BookingPage() {
                 style={{ margin: "0 auto 10px" }}
               />
               <h3 style={{ color: "#001166", fontWeight: "800", margin: 0 }}>
-                Confirm Appointment?
+                {isReschedule ? "Submit Reschedule Request?" : "Confirm Appointment?"}
               </h3>
             </div>
             <div
@@ -542,7 +616,7 @@ function BookingPage() {
                 <strong>Dentist:</strong> {bookingData.dentist}
               </p>
               <p style={{ fontSize: "14px", margin: "5px 0" }}>
-                <strong>Date:</strong> {bookingData.date}
+                <strong>{isReschedule ? "Requested date" : "Date"}:</strong> {bookingData.date}
               </p>
               <p style={{ fontSize: "14px", margin: "5px 0" }}>
                 <strong>Time:</strong> {bookingData.time} - {endTimeStr}
@@ -586,7 +660,7 @@ function BookingPage() {
                   fontFamily: "'Poppins', sans-serif",
                 }}
               >
-                Confirm
+                {isReschedule ? "Submit Request" : "Confirm"}
               </button>
             </div>
           </div>
@@ -602,7 +676,7 @@ function BookingPage() {
               style={{ margin: "0 auto 15px" }}
             />
             <h3 style={{ color: "#001166", fontWeight: "800" }}>
-              Appointment Booked!
+              {isReschedule ? "Reschedule Request Submitted!" : "Appointment Booked!"}
             </h3>
             <button
               onClick={() => setShowSuccessModal(false)}
@@ -728,7 +802,7 @@ function BookingPage() {
               margin: 0,
             }}
           >
-            Book Now
+            {isReschedule ? "Reschedule Appointment" : "Book Now"}
           </h1>
           <p
             style={{
@@ -738,13 +812,14 @@ function BookingPage() {
               fontSize: "14px",
             }}
           >
-            Welcome, {userData.firstName}! (
-            {selectedBranch || "Branch not set"})
+            {isReschedule
+              ? "Choose a new date and time for your confirmed appointment."
+              : `Welcome, ${userData.firstName}! (${selectedBranch || "Branch not set"})`}
           </p>
 
           <div
             style={{
-              backgroundColor: "#e8ebf5",
+              backgroundColor: isMobile ? "#e8ebf5" : "#001166",
               borderRadius: isMobile ? "20px" : "40px",
               padding: isMobile ? "20px 16px" : "50px",
               marginTop: "24px",
@@ -774,6 +849,7 @@ function BookingPage() {
                       time: "",
                     })
                   }
+                  disabled={isReschedule}
                 >
                   <option value="">Select Service</option>
                   {Object.keys(servicesData).map((s) => (
@@ -801,7 +877,7 @@ function BookingPage() {
                       time: "",
                     })
                   }
-                  disabled={!bookingData.mainService}
+                  disabled={!bookingData.mainService || isReschedule}
                 >
                   <option value="">Select Dentist</option>
                   {filteredDentists.length > 0 ? (
@@ -867,31 +943,33 @@ function BookingPage() {
                       <button
                         key={type.name}
                         onClick={() =>
-                          setBookingData({
+                          !isReschedule && setBookingData({
                             ...bookingData,
                             specificService: type.name,
                           })
                         }
+                        disabled={isReschedule}
                         style={{
                           padding: "14px",
                           borderRadius: "12px",
                           border: "none",
                           textAlign: "left",
-                          cursor: "pointer",
+                          cursor: isReschedule ? "not-allowed" : "pointer",
                           fontWeight: "600",
                           fontFamily: "'Poppins', sans-serif",
                           backgroundColor:
                             bookingData.specificService === type.name
-                              ? "#001166"
+                              ? (isMobile ? "#001166" : "#C2E6E6")
                               : "#f0f2f8",
                           color:
                             bookingData.specificService === type.name
-                              ? "white"
+                              ? (isMobile ? "white" : "#001166")
                               : "#001166",
                           display: "flex",
                           justifyContent: "space-between",
                           alignItems: "center",
                           fontSize: "13px",
+                          opacity: isReschedule ? 0.75 : 1,
                         }}
                       >
                         <span>
@@ -903,7 +981,12 @@ function BookingPage() {
                       </button>
                     ))}
                   {!bookingData.mainService && (
-                    <p style={{ fontSize: "13px", color: "#888" }}>
+                    <p
+                      style={{
+                        fontSize: "13px",
+                        color: isMobile ? "#888" : "#C2E6E6",
+                      }}
+                    >
                       Please select a service category first.
                     </p>
                   )}
@@ -1061,7 +1144,7 @@ function BookingPage() {
                       display: "flex",
                       alignItems: "center",
                       gap: "5px",
-                      color: "#001166",
+                      color: isMobile ? "#001166" : "white",
                       fontSize: "12px",
                       fontWeight: "600",
                       fontFamily: "'Poppins', sans-serif",
@@ -1104,12 +1187,12 @@ function BookingPage() {
                             backgroundColor: isTaken
                               ? "#ccc"
                               : bookingData.time === t
-                                ? "#001166"
+                                ? (isMobile ? "#001166" : "#C2E6E6")
                                 : "white",
                             color: isTaken
                               ? "#888"
                               : bookingData.time === t
-                                ? "white"
+                                ? (isMobile ? "white" : "#001166")
                                 : "#001166",
                             opacity: isTaken ? 0.6 : 1,
                           }}
@@ -1123,7 +1206,7 @@ function BookingPage() {
                     <p
                       style={{
                         fontSize: "12px",
-                        color: "#666",
+                        color: isMobile ? "#666" : "#C2E6E6",
                         gridColumn: "span 2",
                       }}
                     >
@@ -1161,7 +1244,10 @@ function BookingPage() {
                 Cancel Booking
               </button>
               <button
-                onClick={() => setShowConfirmModal(true)}
+                onClick={() => {
+                  setRescheduleError("");
+                  setShowConfirmModal(true);
+                }}
                 disabled={!bookingData.time}
                 style={{
                   padding: "12px 30px",
@@ -1176,8 +1262,21 @@ function BookingPage() {
                   width: isMobile ? "100%" : "auto",
                 }}
               >
-                Confirm Appointment
+                {isReschedule ? "Submit Reschedule Request" : "Confirm Appointment"}
               </button>
+              {isReschedule && rescheduleError && (
+                <p
+                  style={{
+                    color: "#b42318",
+                    fontSize: "12px",
+                    margin: "8px 0 0",
+                    width: "100%",
+                    textAlign: isMobile ? "center" : "right",
+                  }}
+                >
+                  {rescheduleError}
+                </p>
+              )}
             </div>
           </div>
         </div>

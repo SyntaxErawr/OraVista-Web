@@ -126,6 +126,8 @@ function ProfilePage() {
   };
 
   const handleImageUpload = async (e) => {
+    if (!isEditing) return;
+
     const file = e.target.files[0];
     if (file) {
       const imageUrl = URL.createObjectURL(file);
@@ -676,12 +678,14 @@ function ProfilePage() {
                 <input
                   type="file"
                   ref={fileInputRef}
+                  disabled={!isEditing}
                   onChange={handleImageUpload}
                   accept="image/*"
                   style={{ display: "none" }}
                 />
                 <button
                   onClick={triggerFileInput}
+                  disabled={!isEditing}
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -692,7 +696,8 @@ function ProfilePage() {
                     backgroundColor: "rgba(255,255,255,0.2)",
                     color: "white",
                     fontSize: "12px",
-                    cursor: "pointer",
+                    cursor: isEditing ? "pointer" : "not-allowed",
+                    opacity: isEditing ? 1 : 0.5,
                     fontFamily: "'Poppins', sans-serif",
                   }}
                 >

@@ -4,8 +4,8 @@ import { Search, Bell, MessageSquare, User, Download, MapPin, ChevronDown, Chevr
 
 function AdminDashboard() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  // States for dynamic clinic data
   const [appointments, setAppointments] = useState([]);
+  const [recentVisits, setRecentVisits] = useState([]);
   const [branchEarnings, setBranchEarnings] = useState({});
   const [stats, setStats] = useState({
     todayCount: 0,
@@ -19,15 +19,16 @@ function AdminDashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        // 1. Centralized Clinic Overview: Fetching stats and operational workflow[cite: 6]
         const statsRes = await fetch('https://oravista-server-474976105474.asia-southeast1.run.app/api/dashboard/stats');
-
-        // 2. Daily Earnings: Fetching real-time revenue per each branch[cite: 6]
         const earningsRes = await fetch('https://oravista-server-474976105474.asia-southeast1.run.app/api/dashboard/branch-earnings');
 
         if (statsRes.ok && earningsRes.ok) {
           const statsData = await statsRes.json();
           const earningsData = await earningsRes.json();
+
+          const completedVisits = (statsData.schedule || []).filter(
+            (appointment) => appointment.status === 'Completed'
+          );
 
           setStats({
             todayCount: statsData.todayCount,
@@ -38,8 +39,8 @@ function AdminDashboard() {
             loading: false
           });
 
-          // 3. Schedule Monitoring: Tracking upcoming patient visits[cite: 6]
           setAppointments(statsData.schedule);
+          setRecentVisits(completedVisits);
           setBranchEarnings(earningsData);
         }
       } catch (err) {
@@ -51,7 +52,6 @@ function AdminDashboard() {
     fetchDashboardData();
   }, []);
 
-  // NEW: Generate Report Functionality
   const handleGenerateReport = () => {
     alert("Generating comprehensive daily report based on live branch operations...");
   };
@@ -137,7 +137,7 @@ function AdminDashboard() {
             {/* CARD 2: CURRENT DATE */}
             <div style={styles.card}>
               <p style={styles.cardLabel}>Current Date</p>
-              <h2 style={{ ...styles.cardValue, fontSize: "18px" }}>
+              <h2 style={{ ...styles.cardValue, fontSize: "17px", lineHeight: "1.4" }}>
                 {new Date().toLocaleDateString("en-US", {
                   weekday: "long",
                   year: "numeric",
@@ -165,16 +165,16 @@ function AdminDashboard() {
           </div>
 
           <div style={styles.gridMid} className="dashboard-grid-mid">
-            {/* CENTRALIZED BRANCH REVENUE Overview */}
+            {/* CENTRALIZED BRANCH REVENUE */}
             <div style={styles.chartCard}>
               <p style={styles.sectionTitle}>Daily Earnings (Per Branch)</p>
               <div style={styles.earningsContainer}>
                 {Object.keys(branchEarnings).length > 0 ? (
                   Object.entries(branchEarnings).map(([branch, amount], index) => (
                     <div key={index} style={styles.earningRow}>
-                       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                         <div style={styles.iconCircle}>
-                          <MapPin size={18} color="#001166" />
+                          <MapPin size={16} color="#001166" />
                         </div>
                         <p style={styles.branchName}>{branch}</p>
                       </div>
@@ -182,51 +182,59 @@ function AdminDashboard() {
                     </div>
                   ))
                 ) : (
-                  <p style={{ textAlign: 'center', opacity: 0.5 }}>No earnings recorded today.</p>
+                  <p style={styles.emptyText}>No earnings recorded today.</p>
                 )}
               </div>
             </div>
 
             <div style={styles.chartCard}>
               <p style={styles.sectionTitle}>Patient Growth</p>
-              <div style={styles.placeholder}>Growth Analytics</div>
+              <div style={styles.placeholder}>Growth Analytics Placeholder</div>
             </div>
           </div>
 
           <div style={styles.gridBottom} className="dashboard-grid-bottom">
+            {/* RECENT PATIENT VISITS */}
             <div style={styles.listCard}>
-              <p style={{ ...styles.sectionTitle, color: "white" }}>
-                Recent Patient Visits
-              </p>
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} style={styles.patientRow}>
-                  <div style={styles.pAvatar}></div>
-                  <div style={{ flex: 1 }}>
-                    <p style={styles.pName}>Patient Name {i}</p>
-                    <p style={styles.pId}>ID: PT-100{i}</p>
+              <p style={styles.sectionTitle}>Recent Patient Visits</p>
+              {recentVisits.length > 0 ? (
+                recentVisits.slice(0, 5).map((visit, idx) => (
+                  <div key={visit.id || idx} style={styles.patientRow}>
+                    <div style={styles.pAvatar}>
+                      <User size={18} color="white" />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={styles.pName}>{visit.patientName}</p>
+                      <p style={styles.pId}>ID: {visit.booking_ref || `PT-100${visit.id}`}</p>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <p style={styles.pType}>{visit.serviceType || "Check-up"}</p>
+                      <p style={styles.pTime}>{visit.time || "Completed"}</p>
+                    </div>
                   </div>
-                  <div style={{ textAlign: "right" }}>
-                    <p style={styles.pType}>Check-up</p>
-                    <p style={styles.pTime}>Active Session</p>
-                  </div>
+                ))
+              ) : (
+                <div style={styles.emptyState}>
+                  <p style={styles.emptyText}>No recent patient visits recorded.</p>
                 </div>
-              ))}
+              )}
             </div>
 
             {/* SCHEDULE MONITORING LIST */}
-            <div style={{ ...styles.listCard, background: "#001166" }}>
+            <div style={styles.listCard}>
               <p style={styles.sectionTitle}>Today's Schedule</p>
 
               {stats.loading ? (
-                <p style={{ color: 'white', opacity: 0.6 }}>Loading schedule...</p>
+                <p style={styles.emptyText}>Loading schedule...</p>
               ) : appointments.length > 0 ? (
-                appointments.map((item, idx) => (
+                appointments.slice(0, 5).map((item, idx) => (
                   <div key={idx} style={styles.scheduleRow}>
-                    <span style={{ flex: 1 }}>{item.time} - {item.patientName}</span>
+                    <div style={styles.scheduleInfo}>
+                      <span style={styles.scheduleTime}>🕒 {item.time}</span>
+                      <span style={styles.schedulePatient}>{item.patientName}</span>
+                    </div>
                     <span style={{
-                      fontSize: '11px',
-                      padding: '2px 8px',
-                      borderRadius: '10px',
+                      ...styles.scheduleBadge,
                       background: item.status === 'Confirmed' ? '#e6fffa' : '#fff7ed',
                       color: item.status === 'Confirmed' ? '#047857' : '#c2410c'
                     }}>
@@ -235,9 +243,9 @@ function AdminDashboard() {
                   </div>
                 ))
               ) : (
-                <p style={{ fontSize: "14px", opacity: 0.6 }}>
-                  No appointments scheduled.
-                </p>
+                <div style={styles.emptyState}>
+                  <p style={styles.emptyText}>No appointments scheduled.</p>
+                </div>
               )}
             </div>
           </div>
@@ -285,11 +293,12 @@ const styles = {
     background: "white",
     color: "#001166",
     border: "none",
-    padding: "8px 15px",
+    padding: "8px 16px",
     borderRadius: "8px",
-    fontWeight: "bold",
+    fontWeight: "700",
     cursor: "pointer",
     fontSize: "13px",
+    transition: "0.2s",
   },
 
   actionIcon: { cursor: "pointer", opacity: 0.9 },
@@ -313,42 +322,61 @@ const styles = {
     justifyContent: "center",
   },
 
-  content: { padding: "30px" },
+  content: {
+    padding: "32px 40px",
+    backgroundColor: "#F4F7FE",
+    minHeight: "calc(100vh - 80px)",
+    boxSizing: "border-box",
+  },
   gridTop: {
     display: "grid",
-    gridTemplateColumns: "repeat(4, 1fr)",
+    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
     gap: "20px",
-    marginBottom: "25px",
+    marginBottom: "24px",
   },
   card: {
-    padding: "25px",
-    borderRadius: "20px",
+    padding: "22px 24px",
+    borderRadius: "16px",
     color: "white",
     background: "#001166",
+    boxShadow: "0 6px 20px rgba(0, 17, 102, 0.1)",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
   },
-  cardLabel: { fontSize: "12px", opacity: 0.8, marginBottom: "10px" },
-  cardValue: { margin: "0 0 10px 0", fontSize: "24px", fontWeight: "bold" },
+  cardLabel: {
+    fontSize: "12px",
+    fontWeight: "600",
+    color: "rgba(255,255,255,0.7)",
+    textTransform: "uppercase",
+    letterSpacing: "0.5px",
+    margin: "0 0 8px 0",
+  },
+  cardValue: { margin: "0 0 6px 0", fontSize: "26px", fontWeight: "700", color: "#ffffff" },
   progressBase: {
     height: "6px",
-    background: "rgba(255,255,255,0.2)",
-    borderRadius: "3px",
+    background: "rgba(255,255,255,0.15)",
+    borderRadius: "4px",
+    overflow: "hidden",
+    marginTop: "8px",
   },
-  progressFill: { height: "100%", background: "#00d4ff", borderRadius: "3px" },
-  cardSub: { fontSize: "11px", margin: 0, opacity: 0.8 },
+  progressFill: { height: "100%", background: "#00d4ff", borderRadius: "4px" },
+  cardSub: { fontSize: "12px", margin: 0, color: "rgba(255,255,255,0.7)" },
 
   gridMid: {
     display: "grid",
     gridTemplateColumns: "1.6fr 1fr",
     gap: "20px",
-    marginBottom: "25px",
+    marginBottom: "24px",
   },
   chartCard: {
     background: "#001166",
-    borderRadius: "20px",
-    padding: "25px",
+    borderRadius: "16px",
+    padding: "24px",
     color: "white",
     display: "flex",
     flexDirection: "column",
+    boxShadow: "0 6px 20px rgba(0, 17, 102, 0.1)",
   },
   placeholder: {
     height: "200px",
@@ -356,36 +384,41 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     border: "1px dashed rgba(255,255,255,0.2)",
-    marginTop: "15px",
+    marginTop: "14px",
     borderRadius: "12px",
-    color: "rgba(255,255,255,0.4)",
+    color: "rgba(255,255,255,0.45)",
+    fontSize: "13px",
+    background: "rgba(255,255,255,0.02)",
   },
   sectionTitle: {
-    margin: "0 0 20px 0",
-    fontWeight: "bold",
+    margin: "0 0 16px 0",
+    fontWeight: "700",
     fontSize: "16px",
     color: "white",
+    letterSpacing: "0.2px",
   },
 
   earningsContainer: {
     display: "flex",
     flexDirection: "column",
-    gap: "15px",
+    gap: "12px",
     flexGrow: 1,
     justifyContent: "center",
+    marginTop: "6px",
   },
   earningRow: {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    background: "rgba(255,255,255,0.05)",
-    padding: "15px 20px",
+    background: "rgba(255,255,255,0.06)",
+    padding: "14px 18px",
     borderRadius: "12px",
+    border: "1px solid rgba(255,255,255,0.08)",
   },
   iconCircle: {
     background: "white",
-    width: "35px",
-    height: "35px",
+    width: "34px",
+    height: "34px",
     borderRadius: "50%",
     display: "flex",
     alignItems: "center",
@@ -393,12 +426,13 @@ const styles = {
   },
   branchName: {
     margin: 0,
-    fontSize: "15px",
+    fontSize: "14px",
     fontWeight: "600",
   },
   earningAmount: {
     margin: 0,
-    fontSize: "20px",
+    fontSize: "18px",
+    fontWeight: "700",
     color: "#10b981",
   },
 
@@ -408,39 +442,84 @@ const styles = {
     gap: "20px",
   },
   listCard: {
-    borderRadius: "20px",
-    padding: "25px",
+    borderRadius: "16px",
+    padding: "24px",
     background: "#001166",
     color: "white",
+    boxShadow: "0 6px 20px rgba(0, 17, 102, 0.1)",
+    display: "flex",
+    flexDirection: "column",
   },
   patientRow: {
     display: "flex",
     alignItems: "center",
-    gap: "15px",
-    padding: "15px 0",
-    borderBottom: "1px solid rgba(255,255,255,0.1)",
+    gap: "14px",
+    padding: "12px 0",
+    borderBottom: "1px solid rgba(255,255,255,0.08)",
   },
   pAvatar: {
-    width: "40px",
-    height: "40px",
-    background: "rgba(255,255,255,0.1)",
+    width: "38px",
+    height: "38px",
+    background: "rgba(255,255,255,0.12)",
     borderRadius: "50%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
   pName: { margin: 0, fontWeight: "600", fontSize: "14px", color: "white" },
-  pId: { margin: 0, fontSize: "12px", color: "rgba(255,255,255,0.5)" },
-  pType: { margin: 0, fontSize: "13px", fontWeight: "500", color: "white" },
-  pTime: { margin: 0, fontSize: "11px", color: "rgba(255,255,255,0.4)" },
+  pId: { margin: "2px 0 0", fontSize: "11px", color: "rgba(255,255,255,0.55)" },
+  pType: { margin: 0, fontSize: "13px", fontWeight: "600", color: "white" },
+  pTime: { margin: "2px 0 0", fontSize: "11px", color: "rgba(255,255,255,0.5)" },
+
   scheduleRow: {
     background: "white",
     color: "#001166",
-    padding: "15px",
+    padding: "12px 16px",
     borderRadius: "12px",
     marginBottom: "10px",
-    fontWeight: "bold",
-    fontSize: "14px",
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center'
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+  },
+  scheduleInfo: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    flex: 1,
+    minWidth: 0,
+  },
+  scheduleTime: {
+    fontWeight: "700",
+    fontSize: "13px",
+    whiteSpace: "nowrap",
+  },
+  schedulePatient: {
+    fontWeight: "600",
+    fontSize: "13px",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
+  scheduleBadge: {
+    fontSize: "11px",
+    fontWeight: "700",
+    padding: "4px 10px",
+    borderRadius: "20px",
+    whiteSpace: "nowrap",
+  },
+  emptyState: {
+    padding: "36px 0",
+    textAlign: "center",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyText: {
+    margin: 0,
+    fontSize: "13px",
+    color: "rgba(255,255,255,0.6)",
+    fontStyle: "italic",
   },
 };
 

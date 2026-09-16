@@ -6,8 +6,8 @@ import { Search, Bell, MessageSquare, User, ChevronDown, ChevronUp, CreditCard }
 function StaffDashboard() {
   const navigate = useNavigate();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  // Mirroring Admin State structure
   const [appointments, setAppointments] = useState([]);
+  const [recentVisits, setRecentVisits] = useState([]);
   const [stats, setStats] = useState({
     todayCount: 0,
     availableDentists: 3,
@@ -32,7 +32,6 @@ function StaffDashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        // Fetching from your Node.js server
         const response = await fetch('https://oravista-server-474976105474.asia-southeast1.run.app/api/dashboard/stats');
 
         if (!response.ok) {
@@ -45,7 +44,10 @@ function StaffDashboard() {
           (appointment) => getDateKey(appointment.date) === getTodayKey(),
         );
 
-        // Keep the card count and the schedule list in sync with today's date.
+        const completedVisits = (data.schedule || []).filter(
+          (appointment) => appointment.status === 'Completed'
+        );
+
         setStats({
           todayCount: todayAppointments.length,
           availableDentists: 3,
@@ -55,6 +57,7 @@ function StaffDashboard() {
         });
 
         setAppointments(todayAppointments);
+        setRecentVisits(completedVisits);
 
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
@@ -133,9 +136,10 @@ function StaffDashboard() {
               </div>
             </div>
 
+            {/* CARD 2: CURRENT DATE */}
             <div style={styles.card}>
               <p style={styles.cardLabel}>Current Date</p>
-              <h2 style={{ ...styles.cardValue, fontSize: "18px" }}>
+              <h2 style={{ ...styles.cardValue, fontSize: "17px", lineHeight: "1.4" }}>
                 {new Date().toLocaleDateString("en-US", {
                   weekday: "long",
                   year: "numeric",
@@ -164,7 +168,7 @@ function StaffDashboard() {
 
           <div style={styles.billingCard}>
             <div style={styles.billingCardIcon}>
-              <CreditCard size={27} color="#001166" />
+              <CreditCard size={24} color="#001166" />
             </div>
             <div style={{ flex: 1 }}>
               <p style={styles.billingCardTitle}>Billing & Receipts</p>
@@ -184,48 +188,56 @@ function StaffDashboard() {
           <div style={styles.gridMid} className="dashboard-grid-mid">
             <div style={styles.chartCard}>
               <p style={styles.sectionTitle}>Revenue Overview</p>
-              <div style={styles.placeholder}>Chart Placeholder</div>
+              <div style={styles.placeholder}>Revenue Analytics Placeholder</div>
             </div>
             <div style={styles.chartCard}>
               <p style={styles.sectionTitle}>Patient Growth</p>
-              <div style={styles.placeholder}>Chart Placeholder</div>
+              <div style={styles.placeholder}>Growth Analytics Placeholder</div>
             </div>
           </div>
 
           <div style={styles.gridBottom} className="dashboard-grid-bottom">
+            {/* RECENT PATIENT VISITS */}
             <div style={styles.listCard}>
-              <p style={{ ...styles.sectionTitle, color: "white" }}>
-                Recent Patient Visits
-              </p>
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} style={styles.patientRow}>
-                  <div style={styles.pAvatar}></div>
-                  <div style={{ flex: 1 }}>
-                    <p style={styles.pName}>Patient Name {i}</p>
-                    <p style={styles.pId}>ID: PT-100{i}</p>
+              <p style={styles.sectionTitle}>Recent Patient Visits</p>
+              {recentVisits.length > 0 ? (
+                recentVisits.slice(0, 5).map((visit, idx) => (
+                  <div key={visit.id || idx} style={styles.patientRow}>
+                    <div style={styles.pAvatar}>
+                      <User size={18} color="white" />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={styles.pName}>{visit.patientName}</p>
+                      <p style={styles.pId}>ID: {visit.booking_ref || `PT-100${visit.id}`}</p>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <p style={styles.pType}>{visit.serviceType || "Check-up"}</p>
+                      <p style={styles.pTime}>{visit.time || "Completed"}</p>
+                    </div>
                   </div>
-                  <div style={{ textAlign: "right" }}>
-                    <p style={styles.pType}>Check-up</p>
-                    <p style={styles.pTime}>2h ago</p>
-                  </div>
+                ))
+              ) : (
+                <div style={styles.emptyState}>
+                  <p style={styles.emptyText}>No recent patient visits recorded.</p>
                 </div>
-              ))}
+              )}
             </div>
 
             {/* TODAY'S SCHEDULE LIST */}
-            <div style={{ ...styles.listCard, background: "#001166" }}>
+            <div style={styles.listCard}>
               <p style={styles.sectionTitle}>Today's Schedule</p>
 
               {stats.loading ? (
-                <p style={{ color: 'white', opacity: 0.6 }}>Loading schedule...</p>
+                <p style={styles.emptyText}>Loading schedule...</p>
               ) : appointments.length > 0 ? (
                 appointments.map((item, idx) => (
                   <div key={idx} style={styles.scheduleRow}>
-                    <span style={{ flex: 1 }}>{item.time} - {item.patientName}</span>
+                    <div style={styles.scheduleInfo}>
+                      <span style={styles.scheduleTime}>🕒 {item.time}</span>
+                      <span style={styles.schedulePatient}>{item.patientName}</span>
+                    </div>
                     <span style={{
-                      fontSize: '11px',
-                      padding: '2px 8px',
-                      borderRadius: '10px',
+                      ...styles.scheduleBadge,
                       background: item.status === 'Confirmed' ? '#e6fffa' : '#fff7ed',
                       color: item.status === 'Confirmed' ? '#047857' : '#c2410c'
                     }}>
@@ -234,9 +246,9 @@ function StaffDashboard() {
                   </div>
                 ))
               ) : (
-                <p style={{ fontSize: "14px", opacity: 0.6 }}>
-                  No appointments scheduled for today.
-                </p>
+                <div style={styles.emptyState}>
+                  <p style={styles.emptyText}>No appointments scheduled for today.</p>
+                </div>
               )}
             </div>
           </div>
@@ -297,68 +309,91 @@ const styles = {
     justifyContent: "center",
   },
 
-  content: { padding: "30px" },
+  content: {
+    padding: "32px 40px",
+    backgroundColor: "#F4F7FE",
+    minHeight: "calc(100vh - 80px)",
+    boxSizing: "border-box",
+  },
   gridTop: {
     display: "grid",
-    gridTemplateColumns: "repeat(4, 1fr)",
+    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
     gap: "20px",
-    marginBottom: "25px",
+    marginBottom: "24px",
   },
   card: {
-    padding: "25px",
-    borderRadius: "20px",
+    padding: "22px 24px",
+    borderRadius: "16px",
     color: "white",
     background: "#001166",
+    boxShadow: "0 6px 20px rgba(0, 17, 102, 0.1)",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
   },
-  cardLabel: { fontSize: "12px", opacity: 0.8, marginBottom: "10px" },
-  cardValue: { margin: "0 0 10px 0", fontSize: "24px", fontWeight: "bold" },
+  cardLabel: {
+    fontSize: "12px",
+    fontWeight: "600",
+    color: "rgba(255,255,255,0.7)",
+    textTransform: "uppercase",
+    letterSpacing: "0.5px",
+    margin: "0 0 8px 0",
+  },
+  cardValue: { margin: "0 0 6px 0", fontSize: "26px", fontWeight: "700", color: "#ffffff" },
   progressBase: {
     height: "6px",
-    background: "rgba(255,255,255,0.2)",
-    borderRadius: "3px",
+    background: "rgba(255,255,255,0.15)",
+    borderRadius: "4px",
+    overflow: "hidden",
+    marginTop: "8px",
   },
-  progressFill: { height: "100%", background: "#00d4ff", borderRadius: "3px" },
-  cardSub: { fontSize: "11px", margin: 0, opacity: 0.8 },
+  progressFill: { height: "100%", background: "#00d4ff", borderRadius: "4px" },
+  cardSub: { fontSize: "12px", margin: 0, color: "rgba(255,255,255,0.7)" },
+
   billingCard: {
     display: "flex",
     alignItems: "center",
     gap: "18px",
-    padding: "20px 25px",
-    borderRadius: "20px",
+    padding: "18px 24px",
+    borderRadius: "16px",
     background: "white",
-    boxShadow: "0 4px 16px rgba(0,17,102,0.1)",
-    marginBottom: "25px",
+    border: "1px solid rgba(0, 17, 102, 0.08)",
+    boxShadow: "0 4px 16px rgba(0, 17, 102, 0.06)",
+    marginBottom: "24px",
   },
   billingCardIcon: {
     display: "flex",
-    padding: "13px",
+    padding: "12px",
     background: "#e8ebf5",
-    borderRadius: "14px",
+    borderRadius: "12px",
   },
-  billingCardTitle: { margin: 0, color: "#001166", fontSize: "17px", fontWeight: "700" },
-  billingCardText: { margin: "5px 0 0", color: "#667085", fontSize: "13px" },
+  billingCardTitle: { margin: 0, color: "#001166", fontSize: "16px", fontWeight: "700" },
+  billingCardText: { margin: "4px 0 0", color: "#64748b", fontSize: "13px" },
   billingButton: {
     border: "none",
     background: "#001166",
     color: "white",
-    padding: "11px 16px",
-    borderRadius: "9px",
+    padding: "10px 18px",
+    borderRadius: "8px",
     fontWeight: "700",
+    fontSize: "13px",
     cursor: "pointer",
     whiteSpace: "nowrap",
+    transition: "0.2s",
   },
 
   gridMid: {
     display: "grid",
     gridTemplateColumns: "1.6fr 1fr",
     gap: "20px",
-    marginBottom: "25px",
+    marginBottom: "24px",
   },
   chartCard: {
     background: "#001166",
-    borderRadius: "20px",
-    padding: "25px",
+    borderRadius: "16px",
+    padding: "24px",
     color: "white",
+    boxShadow: "0 6px 20px rgba(0, 17, 102, 0.1)",
   },
   placeholder: {
     height: "200px",
@@ -366,15 +401,18 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     border: "1px dashed rgba(255,255,255,0.2)",
-    marginTop: "15px",
+    marginTop: "14px",
     borderRadius: "12px",
-    color: "rgba(255,255,255,0.4)",
+    color: "rgba(255,255,255,0.45)",
+    fontSize: "13px",
+    background: "rgba(255,255,255,0.02)",
   },
   sectionTitle: {
-    margin: "0 0 20px 0",
-    fontWeight: "bold",
+    margin: "0 0 16px 0",
+    fontWeight: "700",
     fontSize: "16px",
     color: "white",
+    letterSpacing: "0.2px",
   },
 
   gridBottom: {
@@ -383,39 +421,84 @@ const styles = {
     gap: "20px",
   },
   listCard: {
-    borderRadius: "20px",
-    padding: "25px",
+    borderRadius: "16px",
+    padding: "24px",
     background: "#001166",
     color: "white",
+    boxShadow: "0 6px 20px rgba(0, 17, 102, 0.1)",
+    display: "flex",
+    flexDirection: "column",
   },
   patientRow: {
     display: "flex",
     alignItems: "center",
-    gap: "15px",
-    padding: "15px 0",
-    borderBottom: "1px solid rgba(255,255,255,0.1)",
+    gap: "14px",
+    padding: "12px 0",
+    borderBottom: "1px solid rgba(255,255,255,0.08)",
   },
   pAvatar: {
-    width: "40px",
-    height: "40px",
-    background: "rgba(255,255,255,0.1)",
+    width: "38px",
+    height: "38px",
+    background: "rgba(255,255,255,0.12)",
     borderRadius: "50%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
   pName: { margin: 0, fontWeight: "600", fontSize: "14px", color: "white" },
-  pId: { margin: 0, fontSize: "12px", color: "rgba(255,255,255,0.5)" },
-  pType: { margin: 0, fontSize: "13px", fontWeight: "500", color: "white" },
-  pTime: { margin: 0, fontSize: "11px", color: "rgba(255,255,255,0.4)" },
+  pId: { margin: "2px 0 0", fontSize: "11px", color: "rgba(255,255,255,0.55)" },
+  pType: { margin: 0, fontSize: "13px", fontWeight: "600", color: "white" },
+  pTime: { margin: "2px 0 0", fontSize: "11px", color: "rgba(255,255,255,0.5)" },
+
   scheduleRow: {
     background: "white",
     color: "#001166",
-    padding: "15px",
+    padding: "12px 16px",
     borderRadius: "12px",
     marginBottom: "10px",
-    fontWeight: "bold",
-    fontSize: "14px",
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center'
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+  },
+  scheduleInfo: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    flex: 1,
+    minWidth: 0,
+  },
+  scheduleTime: {
+    fontWeight: "700",
+    fontSize: "13px",
+    whiteSpace: "nowrap",
+  },
+  schedulePatient: {
+    fontWeight: "600",
+    fontSize: "13px",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
+  scheduleBadge: {
+    fontSize: "11px",
+    fontWeight: "700",
+    padding: "4px 10px",
+    borderRadius: "20px",
+    whiteSpace: "nowrap",
+  },
+  emptyState: {
+    padding: "36px 0",
+    textAlign: "center",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyText: {
+    margin: 0,
+    fontSize: "13px",
+    color: "rgba(255,255,255,0.6)",
+    fontStyle: "italic",
   },
 };
 

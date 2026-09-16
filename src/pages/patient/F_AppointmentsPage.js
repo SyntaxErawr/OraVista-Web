@@ -20,6 +20,7 @@ import {
   Save,
   Pencil,
 } from "lucide-react";
+import { API_BASE_URL } from "../../config/api";
 
 function AppointmentsPage() {
   const navigate = useNavigate();
@@ -36,6 +37,12 @@ function AppointmentsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDentist, setSelectedDentist] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const appointmentsPerPage = 5;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedDentist, selectedStatus]);
 
   const [showCancelWarning, setShowCancelWarning] = useState(false);
   const [showConfirmCancel, setShowConfirmCancel] = useState(false);
@@ -49,19 +56,19 @@ function AppointmentsPage() {
   });
 
   const dentistsList = [
-    "Therese Madrid DMD",
-    "Queenie Balmedina DMD",
-    "Vicente Epress II Dmd",
-    "Carl Adrian Usi DMD",
-    "Paulette Maliit DMD",
+    "Dra. Theresa Madrid",
+    "Dra. Ruth Bozar",
+    "Dr. Vicente Epres",
+    "Dra. Queenie Balmedina",
+    "Dra.Paulette Maliit",
   ];
 
   const statusList = [
-    "Approved",
+    "Confirmed",
     "Pending",
     "Cancelled",
     "Completed",
-    "Reschedule",
+    "Reschedule Requested",
   ];
 
   useEffect(() => {
@@ -76,7 +83,7 @@ function AppointmentsPage() {
   const fetchAppointments = useCallback(async (userId) => {
     try {
       const response = await fetch(
-        `https://oravista-server-474976105474.asia-southeast1.run.app/api/user-appointments/${userId}`,
+        `${API_BASE_URL}/api/user-appointments/${userId}`,
       );
       if (response.ok) {
         const data = await response.json();
@@ -136,7 +143,7 @@ function AppointmentsPage() {
       await Promise.all(
         modifiedAppointments.map((appt) =>
           fetch(
-            "https://oravista-server-474976105474.asia-southeast1.run.app/api/update-appointment-status",
+            `${API_BASE_URL}/api/update-appointment-status`,
             {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
@@ -178,6 +185,19 @@ function AppointmentsPage() {
     setShowConfirmCancel(true);
   };
 
+  const handleReschedule = (appt) => {
+    navigate("/booking", {
+      state: {
+        mode: "reschedule",
+        appointmentId: appt.id,
+        currentDentist: appt.dentist_name,
+        currentService: appt.service_type,
+        currentDate: appt.appointment_date,
+        currentTime: appt.appointment_time,
+      },
+    });
+  };
+
   const confirmCancellation = () => {
     const updatedList = appointments.map((a) =>
       a.id === appointmentToCancel.id ? { ...a, status: "Cancelled" } : a,
@@ -186,6 +206,9 @@ function AppointmentsPage() {
     setShowConfirmCancel(false);
     setAppointmentToCancel(null);
   };
+
+  const canCancelStatus = (status) =>
+    isEditing && ["Pending", "Approved", "Confirmed"].includes(status);
 
   const getStatusStyle = (status) => {
     const base = {
@@ -205,6 +228,12 @@ function AppointmentsPage() {
           : "not-allowed",
       transition: "all 0.3s",
       whiteSpace: "nowrap",
+      border: canCancelStatus(status)
+        ? "2px solid rgba(255,255,255,0.9)"
+        : "2px solid transparent",
+      boxShadow: canCancelStatus(status)
+        ? "0 0 0 3px rgba(255,255,255,0.18)"
+        : "none",
     };
     switch (status) {
       case "Approved":
@@ -235,6 +264,32 @@ function AppointmentsPage() {
       ? appt.status === selectedStatus
       : true;
     return matchesSearch && matchesDentist && matchesStatus;
+  });
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredAppointments.length / appointmentsPerPage),
+  );
+  const activePage = Math.min(currentPage, totalPages);
+  const startIndex = (activePage - 1) * appointmentsPerPage;
+  const displayedAppointments = isMobile
+    ? filteredAppointments
+    : filteredAppointments.slice(startIndex, startIndex + appointmentsPerPage);
+
+  useEffect(() => {
+    setCurrentPage((page) => Math.min(page, totalPages));
+  }, [totalPages]);
+
+  const paginationButtonStyle = (disabled) => ({
+    padding: "8px 16px",
+    borderRadius: "8px",
+    border: "none",
+    backgroundColor: "#C2E6E6",
+    color: "#001166",
+    fontWeight: "700",
+    fontFamily: "'Poppins', sans-serif",
+    cursor: disabled ? "not-allowed" : "pointer",
+    opacity: disabled ? 0.5 : 1,
   });
 
   const sidebarWidth = isCollapsed ? "80px" : "260px";
@@ -404,6 +459,7 @@ function AppointmentsPage() {
         fontFamily: "'Poppins', sans-serif",
       }}
     >
+      <style>{".appointment-cancelable-status { transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease; } .appointment-cancelable-status:hover { transform: translateY(-2px) scale(1.04); filter: brightness(1.08); box-shadow: 0 5px 12px rgba(0, 0, 0, 0.24), 0 0 0 3px rgba(255, 255, 255, 0.35) !important; } .appointment-cancelable-status:active { transform: translateY(0) scale(0.98); }"}</style>
       {/* Modals */}
       {feedbackModal.show && (
         <div style={{ ...modalOverlay, zIndex: 4000 }}>
@@ -908,25 +964,29 @@ function AppointmentsPage() {
           {/* Appointments Table */}
           <div
             style={{
-              backgroundColor: "#e8ebf5",
+              backgroundColor: isMobile ? "#e8ebf5" : "#001166",
               borderRadius: "24px",
               padding: isMobile ? "16px 12px" : "40px",
             }}
           >
+            <div style={{ overflowX: isMobile ? "visible" : "auto" }}>
             {/* Desktop Table Header */}
             {!isMobile && (
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "1.5fr 1.5fr 1.5fr 1fr 1fr",
-                  padding: "0 20px 15px 20px",
-                  color: "#001166",
+                  gridTemplateColumns: "minmax(170px, 1.4fr) minmax(180px, 1.5fr) minmax(180px, 1.5fr) minmax(110px, 1fr) minmax(130px, 1fr)",
+                  columnGap: "24px",
+                  minWidth: "922px",
+                  boxSizing: "border-box",
+                  padding: "0 28px 20px 28px",
+                  color: "white",
                   fontWeight: "800",
-                  borderBottom: "2px dashed #001166",
+                  borderBottom: "2px dashed white",
                   marginBottom: "20px",
                 }}
               >
-                <div>Date</div>
+                <div>Date &amp; Time</div>
                 <div>Service</div>
                 <div>Dentist</div>
                 <div>Base Price</div>
@@ -935,10 +995,15 @@ function AppointmentsPage() {
             )}
 
             <div
-              style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: isMobile ? "12px" : "18px",
+                minWidth: isMobile ? 0 : "922px",
+              }}
             >
               {filteredAppointments.length > 0 ? (
-                filteredAppointments.map((appt) =>
+                displayedAppointments.map((appt) =>
                   isMobile ? (
                     /* Mobile Card Layout */
                     <div
@@ -984,12 +1049,55 @@ function AppointmentsPage() {
                             {appt.service_type}
                           </div>
                         </div>
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "flex-end",
+                          }}
+                        >
                         <span
+                          className={
+                            canCancelStatus(appt.status)
+                              ? "appointment-cancelable-status"
+                              : ""
+                          }
                           onClick={() => handleStatusClick(appt)}
                           style={getStatusStyle(appt.status)}
+                          title={
+                            canCancelStatus(appt.status)
+                              ? "Click to cancel this appointment"
+                              : undefined
+                          }
+                          aria-label={
+                            canCancelStatus(appt.status)
+                              ? "Click to cancel this appointment"
+                              : `Appointment status: ${appt.status}`
+                          }
                         >
                           {appt.status}
                         </span>
+                        {appt.status === "Confirmed" && (
+                          <button
+                            type="button"
+                            onClick={() => handleReschedule(appt)}
+                            style={{
+                              marginTop: "8px",
+                              padding: "5px 10px",
+                              borderRadius: "8px",
+                              border: "1px solid #001166",
+                              backgroundColor: "#C2E6E6",
+                              color: "#001166",
+                              fontSize: "11px",
+                              fontWeight: "700",
+                              cursor: "pointer",
+                              fontFamily: "'Poppins', sans-serif",
+                            }}
+                          >
+                            Reschedule
+                          </button>
+                        )}
+                        </div>
                       </div>
                       <div
                         style={{
@@ -1021,11 +1129,16 @@ function AppointmentsPage() {
                       key={appt.id}
                       style={{
                         display: "grid",
-                        gridTemplateColumns: "1.5fr 1.5fr 1.5fr 1fr 1fr",
+                        gridTemplateColumns: "minmax(170px, 1.4fr) minmax(180px, 1.5fr) minmax(180px, 1.5fr) minmax(110px, 1fr) minmax(130px, 1fr)",
                         backgroundColor: "white",
-                        padding: "22px 20px",
+                        padding: "26px 28px",
                         borderRadius: "15px",
                         alignItems: "center",
+                        columnGap: "24px",
+                        minWidth: "922px",
+                        boxSizing: "border-box",
+                        lineHeight: "1.6",
+                        overflowWrap: "anywhere",
                       }}
                     >
                       <div style={{ color: "#001166", fontWeight: "600" }}>
@@ -1033,6 +1146,15 @@ function AppointmentsPage() {
                           "en-US",
                           { month: "long", day: "numeric", year: "numeric" },
                         )}
+                        <div
+                          style={{
+                            fontSize: "13px",
+                            fontWeight: "400",
+                            marginTop: "8px",
+                          }}
+                        >
+                          {appt.appointment_time || "Time not provided"}
+                        </div>
                       </div>
                       <div style={{ color: "#001166" }}>
                         {appt.service_type}
@@ -1046,13 +1168,55 @@ function AppointmentsPage() {
                           ? parseFloat(appt.amount).toLocaleString()
                           : "0"}
                       </div>
-                      <div style={{ textAlign: "center" }}>
+                      <div
+                        style={{
+                          textAlign: "center",
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                        }}
+                      >
                         <span
+                          className={
+                            canCancelStatus(appt.status)
+                              ? "appointment-cancelable-status"
+                              : ""
+                          }
                           onClick={() => handleStatusClick(appt)}
                           style={getStatusStyle(appt.status)}
+                          title={
+                            canCancelStatus(appt.status)
+                              ? "Click to cancel this appointment"
+                              : undefined
+                          }
+                          aria-label={
+                            canCancelStatus(appt.status)
+                              ? "Click to cancel this appointment"
+                              : `Appointment status: ${appt.status}`
+                          }
                         >
                           {appt.status}
                         </span>
+                        {appt.status === "Confirmed" && (
+                          <button
+                            type="button"
+                            onClick={() => handleReschedule(appt)}
+                            style={{
+                              marginTop: "8px",
+                              padding: "5px 10px",
+                              borderRadius: "8px",
+                              border: "1px solid #001166",
+                              backgroundColor: "#C2E6E6",
+                              color: "#001166",
+                              fontSize: "11px",
+                              fontWeight: "700",
+                              cursor: "pointer",
+                              fontFamily: "'Poppins', sans-serif",
+                            }}
+                          >
+                            Reschedule
+                          </button>
+                        )}
                       </div>
                     </div>
                   ),
@@ -1062,7 +1226,7 @@ function AppointmentsPage() {
                   style={{
                     textAlign: "center",
                     padding: "60px 0",
-                    color: "#001166",
+                    color: isMobile ? "#001166" : "white",
                   }}
                 >
                   <Calendar
@@ -1075,6 +1239,50 @@ function AppointmentsPage() {
                 </div>
               )}
             </div>
+
+            </div>
+
+            {!isMobile && filteredAppointments.length > 0 && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: "12px",
+                  marginTop: "24px",
+                  color: "white",
+                  fontSize: "13px",
+                }}
+              >
+                <span>
+                  Showing {startIndex + 1}–
+                  {Math.min(startIndex + appointmentsPerPage, filteredAppointments.length)}
+                  {" "}of {filteredAppointments.length} appointments
+                </span>
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: "12px" }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage(Math.max(1, activePage - 1))}
+                    disabled={activePage === 1}
+                    style={paginationButtonStyle(activePage === 1)}
+                  >
+                    Previous
+                  </button>
+                  <span>Page {activePage} of {totalPages}</span>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage(Math.min(totalPages, activePage + 1))}
+                    disabled={activePage === totalPages}
+                    style={paginationButtonStyle(activePage === totalPages)}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -14,6 +14,20 @@ const FASTAPI_API_BASE = "https://oravista-ai-engine-474976105474.asia-southeast
 
 
 
+// Format X-ray advisory text for display only; keep the saved response unchanged.
+function getXrayFindingBullets(text) {
+  const segmenter = typeof Intl.Segmenter === 'function'
+    ? new Intl.Segmenter('en', { granularity: 'sentence' })
+    : null;
+  return String(text).split(/\r?\n/).flatMap((line) => {
+    const content = line.trim().replace(/^(?:[-*•]\s+|\d+[.)]\s+)/, '');
+    if (!content) return [];
+    return segmenter
+      ? Array.from(segmenter.segment(content), ({ segment }) => segment.trim()).filter(Boolean)
+      : [content];
+  });
+}
+
 function DentistDiagnostics() {
 
   const [imageUploaded, setImageUploaded] = useState(false);
@@ -1422,7 +1436,13 @@ function DentistDiagnostics() {
 
                     <h4 style={styles.aiFindingsHeader}>AI Generated Findings</h4>
 
-                    <p style={styles.aiFindingsText}>{diagnosticData.clinical_notes}</p>
+                    <ul style={{ ...styles.aiFindingsText, paddingLeft: '20px', listStyleType: 'disc' }}>
+                      {getXrayFindingBullets(diagnosticData.clinical_notes).map((finding, index, items) => (
+                        <li key={index} style={{ marginBottom: index < items.length - 1 ? '8px' : 0 }}>
+                          {finding}
+                        </li>
+                      ))}
+                    </ul>
 
                   </div>
 

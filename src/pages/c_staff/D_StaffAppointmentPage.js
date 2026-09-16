@@ -11,13 +11,17 @@ import {
   Plus,
   ChevronDown,
   ChevronUp,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  Calendar,
 } from "lucide-react";
+import { API_BASE_URL } from "../../config/api";
 
 function StaffAppointments() {
   const navigate = useNavigate();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [appointments, setAppointments] = useState([]);
-  // ADDED: canceled to the summary state
   const [summary, setSummary] = useState({
     total: 0,
     confirmed: 0,
@@ -26,10 +30,18 @@ function StaffAppointments() {
     canceled: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [lateNoShowAppointment, setLateNoShowAppointment] = useState(null);
+  const [feedbackModal, setFeedbackModal] = useState({
+    show: false,
+    type: "success",
+    message: "",
+  });
 
   // --- Calendar & Filter States ---
   const [viewDate, setViewDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const appointmentsPerPage = 5;
 
   // --- Dynamic Calendar Logic ---
   const currentYear = viewDate.getFullYear();
@@ -50,12 +62,20 @@ function StaffAppointments() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   };
 
+  const formatDisplayDate = (dbDate) => {
+    if (!dbDate) return "No date";
+    const d = new Date(dbDate);
+    return d.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
   // FETCH LOGIC
   const fetchAppointments = useCallback(async () => {
     try {
-      const response = await fetch(
-        "https://oravista-server-474976105474.asia-southeast1.run.app/api/dashboard/stats",
-      );
+      const response = await fetch(`${API_BASE_URL}/api/dashboard/stats`);
       const data = await response.json();
 
       if (data.schedule) {
@@ -80,7 +100,7 @@ function StaffAppointments() {
         completed: data.schedule.filter((a) => a.status === "Completed").length,
         canceled: data.schedule.filter(
           (a) => a.status === "Canceled" || a.status === "Cancelled",
-        ).length, // Tracks cancellations
+        ).length,
       });
     } catch (err) {
       console.error("Error fetching staff appointments:", err);
@@ -97,7 +117,7 @@ function StaffAppointments() {
   const handleApprove = async (appointmentId) => {
     try {
       const response = await fetch(
-        "https://oravista-server-474976105474.asia-southeast1.run.app/api/update-appointment-status",
+        `${API_BASE_URL}/api/update-appointment-status`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -116,14 +136,137 @@ function StaffAppointments() {
     }
   };
 
+  const handleLateNoShow = async () => {
+    if (!lateNoShowAppointment) return;
+    const appointmentId = lateNoShowAppointment.dbId;
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/appointments/${appointmentId}/late-no-show`,
+        { method: "PUT" },
+      );
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.message || "Unable to update the appointment.");
+      setAppointments((current) =>
+        current.map((appointment) =>
+          appointment.dbId === appointmentId
+            ? { ...appointment, status: "Late / No Show", approved: false }
+            : appointment,
+        ),
+      );
+      setLateNoShowAppointment(null);
+      setFeedbackModal({
+        show: true,
+        type: "success",
+        message: "The appointment is now marked Late / No Show. The patient has been sent an email and dashboard notification with cancel and reschedule options.",
+      });
+      await fetchAppointments();
+    } catch (err) {
+      setLateNoShowAppointment(null);
+      setFeedbackModal({
+        show: true,
+        type: "error",
+        message: err.message || "Unable to mark the appointment Late / No Show.",
+      });
+      fetchAppointments();
+    }
+  };
+
+  const modalOverlay = {
+    position: "fixed",
+    inset: 0,
+    zIndex: 3000,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "20px",
+    backgroundColor: "rgba(0, 0, 0, 0.52)",
+  };
+
+  const modalBox = {
+    width: "100%",
+    maxWidth: "420px",
+    padding: "28px",
+    borderRadius: "18px",
+    backgroundColor: "white",
+    textAlign: "center",
+    boxShadow: "0 16px 40px rgba(0, 0, 0, 0.25)",
+  };
+
   // --- APPOINTMENT FILTER LOGIC ---
   const filteredAppointments = selectedDate
     ? appointments.filter((app) => formatDbDate(app.date) === selectedDate)
     : appointments;
 
+  const totalPages = Math.max(1, Math.ceil(filteredAppointments.length / appointmentsPerPage));
+  const startIndex = (currentPage - 1) * appointmentsPerPage;
+  const paginatedAppointments = filteredAppointments.slice(
+    startIndex,
+    startIndex + appointmentsPerPage,
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedDate]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
   return (
     <AdminLayout>
       <div style={styles.container}>
+        {lateNoShowAppointment && (
+          <div style={modalOverlay}>
+            <div style={modalBox}>
+              <XCircle size={48} color="#dc2626" style={{ marginBottom: "12px" }} />
+              <h3 style={{ margin: "0 0 10px", color: "#001166" }}>Mark Late / No Show?</h3>
+              <p style={{ margin: "0 0 22px", color: "#555", fontSize: "14px", lineHeight: 1.5 }}>
+                Marking {lateNoShowAppointment.patient}'s appointment as Late / No Show will notify the patient by email and in their dashboard. They will be able to cancel or request rescheduling.
+              </p>
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button
+                  onClick={() => setLateNoShowAppointment(null)}
+                  style={{ ...styles.modalButton, backgroundColor: "white", color: "#001166", border: "1px solid #cbd5e1" }}
+                >
+                  Go Back
+                </button>
+                <button
+                  onClick={handleLateNoShow}
+                  style={{ ...styles.modalButton, backgroundColor: "#dc2626", color: "white", border: "none" }}
+                >
+                  Confirm
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {feedbackModal.show && (
+          <div style={modalOverlay}>
+            <div style={modalBox}>
+              {feedbackModal.type === "success" ? (
+                <CheckCircle2 size={48} color="#16a34a" style={{ marginBottom: "12px" }} />
+              ) : (
+                <XCircle size={48} color="#dc2626" style={{ marginBottom: "12px" }} />
+              )}
+              <h3 style={{ margin: "0 0 10px", color: "#001166" }}>
+                {feedbackModal.type === "success" ? "Appointment Updated" : "Unable to Update Appointment"}
+              </h3>
+              <p style={{ margin: "0 0 22px", color: "#555", fontSize: "14px", lineHeight: 1.5 }}>
+                {feedbackModal.message}
+              </p>
+              <button
+                onClick={() => setFeedbackModal((current) => ({ ...current, show: false }))}
+                style={{ ...styles.modalButton, width: "100%", backgroundColor: "#001166", color: "white", border: "none" }}
+              >
+                Okay
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* HEADER */}
         <header style={styles.header} className="dashboard-page-header">
           <div style={styles.headerActions} className="header-actions">
@@ -260,7 +403,6 @@ function StaffAppointments() {
                 <div style={styles.sumRow}>
                   <span>Pending</span> <span>{summary.pending}</span>
                 </div>
-                {/* NEW: Display Canceled count */}
                 <div style={styles.sumRow}>
                   <span>Canceled</span> <span>{summary.canceled}</span>
                 </div>
@@ -288,39 +430,52 @@ function StaffAppointments() {
 
               <div className="appointment-list-scrollable">
                 {loading ? (
-                  <p>Loading Schedule...</p>
+                  <p style={{ color: "#666", padding: "20px 0" }}>Loading Schedule...</p>
                 ) : filteredAppointments.length === 0 ? (
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "#666", padding: "20px 0" }}>
                     No appointments found for this selection.
                   </p>
                 ) : (
-                  filteredAppointments.map((app) => {
-                    // Helper to determine badge color
+                  paginatedAppointments.map((app) => {
                     const isCanceled =
                       app.status === "Canceled" || app.status === "Cancelled";
-                    let badgeColor = "#f59e0b"; // Pending (Orange)
-                    let badgeText = "#001166";
+                    const isLateNoShow = app.status === "Late / No Show";
+                    let badgeColor = "#f59e0b";
+                    let badgeText = "#ffffff";
                     if (app.status === "Confirmed") {
-                      badgeColor = "#4ade80";
-                      badgeText = "#001166";
-                    } // Green
+                      badgeColor = "#10b981";
+                      badgeText = "white";
+                    }
                     if (isCanceled) {
                       badgeColor = "#ef4444";
                       badgeText = "white";
-                    } // Red
+                    }
+                    if (isLateNoShow) {
+                      badgeColor = "#dc2626";
+                      badgeText = "white";
+                    }
 
                     return (
                       <div
                         key={app.id}
-                        style={styles.appCard}
-                        className="appointment-card"
+                        style={{
+                          ...styles.appCard,
+                          borderLeft: `5px solid ${badgeColor}`,
+                        }}
                       >
                         <div style={styles.appMain}>
-                          <div
-                            style={styles.appTimeRow}
-                            className="appointment-time-row"
-                          >
-                            <span style={styles.appTime}>🕒 {app.time}</span>
+                          {/* Card Header */}
+                          <div style={styles.appHeaderRow} className="appointment-time-row">
+                            <div style={styles.timeDateGroup}>
+                              <span style={styles.appTime}>
+                                <Clock size={15} style={{ marginRight: "6px" }} />
+                                {app.time}
+                              </span>
+                              <span style={styles.appDate}>
+                                <Calendar size={15} style={{ marginRight: "6px" }} />
+                                {formatDisplayDate(app.date)}
+                              </span>
+                            </div>
                             <span
                               style={{
                                 ...styles.statusBadge,
@@ -331,31 +486,33 @@ function StaffAppointments() {
                               {app.status}
                             </span>
                           </div>
+
+                          {/* Info Grid */}
                           <div
                             style={styles.appInfoGrid}
                             className="appointment-info-grid"
                           >
-                            <div className="appointment-info-item">
+                            <div className="appointment-info-item" style={styles.infoItem}>
                               <p style={styles.infoLabel}>Patient</p>
-                              <p style={styles.infoVal}>{app.patient}</p>
+                              <p style={styles.infoVal} title={app.patient}>{app.patient}</p>
                             </div>
-                            <div className="appointment-info-item">
+                            <div className="appointment-info-item" style={styles.infoItem}>
                               <p style={styles.infoLabel}>Dentist</p>
-                              <p style={styles.infoVal}>{app.dentist}</p>
+                              <p style={styles.infoVal} title={app.dentist}>{app.dentist}</p>
                             </div>
-                            <div className="appointment-info-item">
-                              <p style={styles.infoLabel}>Type</p>
-                              <p style={styles.infoVal}>{app.type}</p>
+                            <div className="appointment-info-item" style={styles.infoItem}>
+                              <p style={styles.infoLabel}>Service Type</p>
+                              <p style={styles.infoVal} title={app.type}>{app.type}</p>
                             </div>
-                            <div className="appointment-info-item">
-                              <p style={styles.infoLabel}>ID</p>
-                              <p style={styles.infoVal}>{app.id}</p>
+                            <div className="appointment-info-item" style={styles.infoItem}>
+                              <p style={styles.infoLabel}>Booking ID</p>
+                              <p style={{ ...styles.infoVal, fontFamily: "monospace", letterSpacing: "0.5px" }}>{app.id}</p>
                             </div>
                           </div>
                         </div>
 
-                        {/* Conditionally render actions based on status */}
-                        {!isCanceled ? (
+                        {/* Card Actions */}
+                        {!isCanceled && !isLateNoShow ? (
                           <div
                             style={styles.appActions}
                             className="app-actions-container"
@@ -367,12 +524,12 @@ function StaffAppointments() {
                               style={{
                                 ...styles.actionBtn,
                                 background: app.approved
-                                  ? "#4ade80"
+                                  ? "#10b981"
                                   : "transparent",
                                 border: app.approved
                                   ? "none"
-                                  : "1px solid #4ade80",
-                                color: app.approved ? "white" : "#4ade80",
+                                  : "1px solid #10b981",
+                                color: app.approved ? "white" : "#10b981",
                                 cursor: app.approved ? "default" : "pointer",
                               }}
                             >
@@ -381,6 +538,19 @@ function StaffAppointments() {
                             <button style={styles.actionBtnOutline}>
                               Reschedule
                             </button>
+                            {app.status === "Confirmed" && (
+                              <button
+                                onClick={() => setLateNoShowAppointment(app)}
+                                style={{
+                                  ...styles.actionBtnOutline,
+                                  borderColor: "#fca5a5",
+                                  color: "#fca5a5",
+                                  backgroundColor: "rgba(220, 38, 38, 0.12)",
+                                }}
+                              >
+                                Late / No Show
+                              </button>
+                            )}
                           </div>
                         ) : (
                           <div
@@ -390,13 +560,13 @@ function StaffAppointments() {
                             <span
                               style={{
                                 fontSize: "13px",
-                                color: "#ef4444",
-                                fontWeight: "bold",
-                                fontStyle: "italic",
-                                paddingRight: "10px",
+                                color: "#f87171",
+                                fontWeight: "600",
+                                paddingRight: "6px",
+                                letterSpacing: "0.2px",
                               }}
                             >
-                              Canceled by Patient
+                              {isLateNoShow ? "Marked Late / No Show" : "Canceled by Patient"}
                             </span>
                           </div>
                         )}
@@ -405,6 +575,51 @@ function StaffAppointments() {
                   })
                 )}
               </div>
+
+              {!loading && filteredAppointments.length > 0 && (
+                <div style={styles.paginationContainer}>
+                  <span style={styles.paginationInfo}>
+                    Showing {startIndex + 1}-{Math.min(startIndex + appointmentsPerPage, filteredAppointments.length)} of {filteredAppointments.length}
+                  </span>
+                  <div style={styles.paginationControls}>
+                    <button
+                      onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                      disabled={currentPage === 1}
+                      style={{
+                        ...styles.paginationButton,
+                        ...(currentPage === 1 ? styles.paginationButtonDisabled : {}),
+                      }}
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                    {[...Array(totalPages)].map((_, index) => {
+                      const page = index + 1;
+                      return (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          style={{
+                            ...styles.paginationButton,
+                            ...(currentPage === page ? styles.paginationButtonActive : {}),
+                          }}
+                        >
+                          {page}
+                        </button>
+                      );
+                    })}
+                    <button
+                      onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                      disabled={currentPage === totalPages}
+                      style={{
+                        ...styles.paginationButton,
+                        ...(currentPage === totalPages ? styles.paginationButtonDisabled : {}),
+                      }}
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -520,11 +735,13 @@ const styles = {
   sumRow: {
     display: "flex",
     justifyContent: "space-between",
-    fontSize: "12px",
-    marginBottom: "10px",
-    opacity: 0.9,
+    fontSize: "13px",
+    marginBottom: "12px",
+    paddingBottom: "8px",
+    borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+    opacity: 0.95,
   },
-  rightCol: { display: "flex", flexDirection: "column", gap: "15px" },
+  rightCol: { display: "flex", flexDirection: "column", gap: "15px", minWidth: 0 },
   listHeader: {
     display: "flex",
     justifyContent: "space-between",
@@ -546,52 +763,163 @@ const styles = {
   },
   appCard: {
     background: "#001166",
-    borderRadius: "15px",
-    padding: "14px 20px",
+    borderRadius: "16px",
+    padding: "20px 24px",
     color: "white",
     display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: "column",
+    alignItems: "stretch",
+    marginBottom: "16px",
+    border: "1px solid rgba(255, 255, 255, 0.1)",
+    boxShadow: "0 8px 24px rgba(0, 17, 102, 0.12)",
+    boxSizing: "border-box",
+    width: "100%",
   },
-  appMain: { flex: 1 },
-  appTimeRow: {
+  appMain: { width: "100%", minWidth: 0 },
+  appHeaderRow: {
     display: "flex",
     alignItems: "center",
-    gap: "10px",
-    marginBottom: "15px",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: "12px",
+    marginBottom: "18px",
   },
-  appTime: { fontSize: "14px", fontWeight: "bold" },
+  timeDateGroup: {
+    display: "flex",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: "10px",
+  },
+  appTime: {
+    fontSize: "13px",
+    fontWeight: "600",
+    display: "inline-flex",
+    alignItems: "center",
+    background: "rgba(255, 255, 255, 0.12)",
+    padding: "6px 12px",
+    borderRadius: "8px",
+    letterSpacing: "0.2px",
+  },
+  appDate: {
+    fontSize: "13px",
+    fontWeight: "600",
+    color: "rgba(255, 255, 255, 0.95)",
+    display: "inline-flex",
+    alignItems: "center",
+    background: "rgba(255, 255, 255, 0.08)",
+    padding: "6px 12px",
+    borderRadius: "8px",
+  },
   statusBadge: {
-    fontSize: "10px",
-    padding: "4px 10px",
+    fontSize: "11px",
+    padding: "5px 13px",
     borderRadius: "20px",
-    fontWeight: "bold",
+    fontWeight: "700",
+    letterSpacing: "0.4px",
+    textTransform: "uppercase",
   },
   appInfoGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(4, 1fr)",
-    gap: "20px",
+    gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+    gap: "12px",
+    width: "100%",
   },
-  infoLabel: { fontSize: "10px", opacity: 0.6, marginBottom: "5px" },
-  infoVal: { fontSize: "12px", fontWeight: "500" },
-  appActions: { display: "flex", gap: "10px", alignItems: "center" },
+  infoItem: {
+    minWidth: 0,
+    padding: "12px 14px",
+    borderRadius: "10px",
+    background: "rgba(255, 255, 255, 0.06)",
+    border: "1px solid rgba(255, 255, 255, 0.08)",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    boxSizing: "border-box",
+  },
+  infoLabel: {
+    fontSize: "11px",
+    fontWeight: "600",
+    color: "rgba(255, 255, 255, 0.65)",
+    textTransform: "uppercase",
+    letterSpacing: "0.5px",
+    margin: "0 0 5px",
+    lineHeight: 1.2,
+  },
+  infoVal: {
+    fontSize: "14px",
+    fontWeight: "600",
+    color: "#ffffff",
+    margin: 0,
+    lineHeight: 1.4,
+    wordBreak: "break-word",
+  },
+  appActions: {
+    width: "100%",
+    display: "flex",
+    gap: "10px",
+    alignItems: "center",
+    flexWrap: "wrap",
+    justifyContent: "flex-end",
+    marginTop: "16px",
+    paddingTop: "14px",
+    borderTop: "1px solid rgba(255, 255, 255, 0.1)",
+    boxSizing: "border-box",
+  },
   actionBtn: {
-    padding: "8px 20px",
+    minHeight: "36px",
+    padding: "8px 18px",
     borderRadius: "8px",
-    fontWeight: "bold",
-    fontSize: "12px",
+    fontWeight: "600",
+    fontSize: "13px",
     transition: "0.2s",
+    whiteSpace: "nowrap",
   },
   actionBtnOutline: {
-    background: "transparent",
+    background: "rgba(255, 255, 255, 0.05)",
     color: "white",
-    border: "1px solid rgba(255,255,255,0.3)",
-    padding: "8px 20px",
+    border: "1px solid rgba(255, 255, 255, 0.3)",
+    minHeight: "36px",
+    padding: "8px 18px",
     borderRadius: "8px",
-    fontWeight: "bold",
+    fontWeight: "600",
     cursor: "pointer",
-    fontSize: "12px",
+    fontSize: "13px",
+    whiteSpace: "nowrap",
+    transition: "0.2s",
   },
+  modalButton: {
+    flex: 1,
+    padding: "11px 14px",
+    borderRadius: "8px",
+    fontWeight: "700",
+    cursor: "pointer",
+    fontFamily: "'Poppins', sans-serif",
+  },
+  paginationContainer: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "12px",
+    padding: "16px 4px 0",
+    flexWrap: "wrap",
+  },
+  paginationInfo: { fontSize: "13px", color: "#64748b", fontWeight: "500" },
+  paginationControls: { display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" },
+  paginationButton: {
+    minWidth: "34px",
+    height: "34px",
+    padding: "0 10px",
+    borderRadius: "8px",
+    border: "1px solid #dbe3f0",
+    background: "white",
+    color: "#001166",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    cursor: "pointer",
+    fontWeight: "700",
+  },
+  paginationButtonActive: { background: "#001166", color: "white", borderColor: "#001166" },
+  paginationButtonDisabled: { opacity: 0.4, cursor: "not-allowed" },
 };
 
 export default StaffAppointments;

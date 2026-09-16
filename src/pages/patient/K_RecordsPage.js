@@ -16,6 +16,38 @@ import {
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { API_BASE_URL } from "../../config/api";
+
+const fetchFinalDiagnoses = async (userId) => {
+  const response = await fetch(
+    `${API_BASE_URL}/api/patient-final-diagnoses/${encodeURIComponent(userId)}`,
+    { cache: "no-store" },
+  );
+  if (!response.ok) throw new Error("Unable to load saved final diagnoses. Please try again.");
+  const data = await response.json();
+  if (!Array.isArray(data)) throw new Error("Unexpected final diagnosis response.");
+  return data.filter((record) => record.ai_findings?.human_verified === true);
+};
+
+const getFinalFindingRows = (record) => {
+  // An empty annotations array is intentional: never restore removed AI predictions.
+  const annotations = record.ai_findings?.annotations;
+  if (!Array.isArray(annotations)) return [["Final finding details are unavailable."]];
+  if (!annotations.length) return [["No findings retained in the saved final diagnosis."]];
+  return annotations.map((finding) => [
+    typeof finding?.name === "string" && finding.name.trim()
+      ? finding.name
+      : "Unnamed saved finding",
+  ]);
+};
+
+const formatDiagnosticDate = (value) => {
+  if (!value) return "Not available";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "Not available" : date.toLocaleDateString("en-PH", {
+    year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Manila",
+  });
+};
 
 const DENTISTS_BY_BRANCH = {
   "Gil Puyat, Pasay": [
@@ -47,6 +79,26 @@ function RecordsPage() {
   const [analyticsData, setAnalyticsData] = useState(null);
   const [riskData, setRiskData] = useState(null);
   const [isDataLoading, setIsDataLoading] = useState(true);
+  const [finalDiagnoses, setFinalDiagnoses] = useState([]);
+  const [isDiagnosesLoading, setIsDiagnosesLoading] = useState(true);
+  const [diagnosesError, setDiagnosesError] = useState("");
+
+  useEffect(() => {
+    if (!userData.id) return undefined;
+    let active = true;
+    setIsDiagnosesLoading(true);
+    setDiagnosesError("");
+    fetchFinalDiagnoses(userData.id)
+      .then((data) => { if (active) setFinalDiagnoses(data); })
+      .catch((error) => {
+        if (active) {
+          setFinalDiagnoses([]);
+          setDiagnosesError(error.message);
+        }
+      })
+      .finally(() => { if (active) setIsDiagnosesLoading(false); });
+    return () => { active = false; };
+  }, [userData.id]);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -130,13 +182,14 @@ function RecordsPage() {
       const patientName = [userData.firstName, userData.lastName]
         .filter(Boolean)
         .join(" ");
-      const [analyticsRes, riskRes] = await Promise.all([
+      const [analyticsRes, riskRes, savedDiagnoses] = await Promise.all([
         fetch(
           `https://oravista-ai-engine-474976105474.asia-southeast1.run.app/api/patient/get/${userData.id}/analytics`,
         ),
         fetch(
           `https://oravista-ai-engine-474976105474.asia-southeast1.run.app/api/patient/get/${userData.id}/oral-health-risk`,
         ),
+        fetchFinalDiagnoses(userData.id),
       ]);
       let aData = {};
       let rData = {};
@@ -248,6 +301,39 @@ function RecordsPage() {
       doc.setFont("helvetica", "normal");
       const splitActions = doc.splitTextToSize(String(actionsText), 180);
       doc.text(splitActions, 14, currentY);
+
+      // Keep the existing checkup report and append finalized diagnosis pages.
+      doc.addPage();
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.setTextColor(0, 17, 102);
+      doc.text("Dentist-Saved Final Diagnoses", 14, 20);
+      if (!savedDiagnoses.length) {
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(11);
+        doc.setTextColor(0, 0, 0);
+        doc.text("No dentist-saved final diagnoses are available yet.", 14, 32);
+      }
+      savedDiagnoses.forEach((record, index) => {
+        if (index > 0) doc.addPage();
+        autoTable(doc, {
+          startY: index === 0 ? 30 : 20,
+          head: [[`Final Diagnosis #${record.id}`]],
+          body: [
+            [`Scan date: ${formatDiagnosticDate(record.scan_date)}`],
+            ["Final findings saved by the dentist"],
+            ...getFinalFindingRows(record),
+            ["Dentist's Clinical Notes"],
+            [typeof record.clinical_notes === "string" && record.clinical_notes.trim()
+              ? record.clinical_notes
+              : "No clinical notes were entered for this saved diagnosis."],
+          ],
+          theme: "striped",
+          headStyles: { fillColor: [0, 17, 102] },
+          styles: { overflow: "linebreak", cellPadding: 4, fontSize: 11 },
+          margin: { top: 20, bottom: 20, left: 14, right: 14 },
+        });
+      });
 
       addStamp(doc);
       doc.save(`${patientName.replace(/\s+/g, "_")}_OraVista_Report.pdf`);
@@ -926,6 +1012,37 @@ function RecordsPage() {
               </div>
             )}
           </div>
+
+          {/* Only diagnoses finalized with Save Final Diagnosis are shown here. */}
+          <section style={{ backgroundColor: "#f0f2f5", borderRadius: "20px", padding: isMobile ? "20px 16px" : "30px", marginBottom: "24px" }}>
+            <h2 style={{ color: "#001166", fontSize: isMobile ? "18px" : "22px", fontWeight: "800", margin: "0 0 20px" }}>Dentist-Saved Final Diagnoses</h2>
+            {isDiagnosesLoading ? (
+              <p role="status" style={{ color: "#666" }}>Loading final diagnoses...</p>
+            ) : diagnosesError ? (
+              <p role="alert" style={{ color: "#b91c1c" }}>{diagnosesError}</p>
+            ) : finalDiagnoses.length === 0 ? (
+              <p style={{ color: "#666" }}>No dentist-saved final diagnoses are available yet.</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                {finalDiagnoses.map((record) => (
+                  <article key={record.id} style={{ backgroundColor: "white", borderRadius: "12px", padding: "20px", overflowWrap: "anywhere" }}>
+                    <h3 style={{ color: "#001166", fontSize: "17px", margin: "0 0 6px" }}>Final Diagnosis #{record.id}</h3>
+                    <p style={{ color: "#666", fontSize: "13px", margin: "0 0 16px" }}>Scan date: {formatDiagnosticDate(record.scan_date)}</p>
+                    <h4 style={{ color: "#001166", margin: "0 0 10px" }}>Final Findings</h4>
+                    <ul style={{ color: "#333", paddingLeft: "22px", lineHeight: 1.7 }}>
+                      {getFinalFindingRows(record).map(([finding], index) => <li key={index} style={{ whiteSpace: "pre-wrap" }}>{finding}</li>)}
+                    </ul>
+                    <h4 style={{ color: "#001166", margin: "18px 0 10px" }}>Dentist’s Clinical Notes</h4>
+                    <p style={{ color: "#333", whiteSpace: "pre-wrap", lineHeight: 1.7, margin: 0 }}>
+                      {typeof record.clinical_notes === "string" && record.clinical_notes.trim()
+                        ? record.clinical_notes
+                        : "No clinical notes were entered for this saved diagnosis."}
+                    </p>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
 
           {/* Download Button */}
           <div style={{ display: "flex", justifyContent: "flex-start" }}>
