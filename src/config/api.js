@@ -6,5 +6,5 @@ const isLocalBrowser =
 // Local development uses the local Express server. Deployed builds continue to
 // use Cloud Run, unless REACT_APP_API_URL explicitly supplies another API URL.
 export const API_BASE_URL =
-  process.env.REACT_APP_API_URL ||
-  (isLocalBrowser ? "http://localhost:5000" : deployedApiUrl);
+  process.env.REACT_APP_API_BASE_URL ||
+  "https://oravista-server-474976105474.asia-southeast1.run.app";
