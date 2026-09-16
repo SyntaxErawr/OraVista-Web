@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, AlertCircle, CheckCircle2, X, Square, CheckSquare, ShieldCheck } from "lucide-react";
 import loginBg from "../../assets/BG_LOGINPAGE.jpg";
+import { API_BASE_URL } from "../../config/api";
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -105,7 +106,7 @@ function LoginPage() {
     setShowLoginOtpModal(true); // Show modal immediately while loading
 
     try {
-      const response = await fetch("https://oravista-server-474976105474.asia-southeast1.run.app/api/send-otp", {
+      const response = await fetch(`${API_BASE_URL}/api/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: userEmail, action: "login" }) // <--- ADDED ACTION TAG HERE
@@ -158,7 +159,7 @@ function LoginPage() {
     setStatusMessage("");
 
     try {
-      const response = await fetch("http://localhost:5000/api/login", {
+      const response = await fetch(`${API_BASE_URL}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -214,7 +215,7 @@ function LoginPage() {
     setIsOtpLoading(true);
 
     try {
-      const response = await fetch("https://oravista-server-474976105474.asia-southeast1.run.app/api/send-otp", {
+      const response = await fetch(`${API_BASE_URL}/api/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail, action: "forgot_password" }) // <--- ADDED ACTION TAG HERE
@@ -258,7 +259,7 @@ function LoginPage() {
     }
 
     try {
-      const response = await fetch("https://oravista-server-474976105474.asia-southeast1.run.app/api/reset-password-by-email", {
+      const response = await fetch(`${API_BASE_URL}/api/reset-password-by-email`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail, newPassword: newPassword }),
