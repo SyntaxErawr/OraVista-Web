@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/AdminLayout';
 import {
@@ -18,12 +18,25 @@ import {
 } from 'lucide-react';
 import { API_BASE_URL } from '../../config/api';
 
+// Display seconds without changing the saved booking time.
+function formatAppointmentTime(value) {
+  const match = String(value || "").trim().match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?$/i);
+  if (!match) return value || "Time not provided";
+  let hour = Number(match[1]);
+  const period = match[4]?.toUpperCase();
+  if (Number(match[2]) > 59 || Number(match[3] || 0) > 59 || hour > (period ? 12 : 23) || (period && hour < 1)) return value;
+  if (period) hour = hour % 12 + (period === "PM" ? 12 : 0);
+  return `${String(hour % 12 || 12).padStart(2, "0")}:${match[2]}:${match[3] || "00"} ${hour >= 12 ? "PM" : "AM"}`;
+}
+
 function AdminAppointments() {
   const navigate = useNavigate();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [appointments, setAppointments] = useState([]);
   const [summary, setSummary] = useState({ total: 0, confirmed: 0, pending: 0, completed: 0, canceled: 0 });
   const [loading, setLoading] = useState(true);
+  const [approvingId, setApprovingId] = useState(null);
+  const approvalInProgress = useRef(false);
   const [lateNoShowAppointment, setLateNoShowAppointment] = useState(null);
   const [feedbackModal, setFeedbackModal] = useState({
     show: false,
@@ -78,6 +91,8 @@ function AdminAppointments() {
           dentist: app.dentist,
           date: app.date,
           time: app.time,
+          requestedDate: app.requestedDate,
+          requestedTime: app.requestedTime,
           status: app.status,
           type: app.serviceType || 'Consultation',
           approved: app.status === 'Confirmed',
@@ -102,25 +117,46 @@ function AdminAppointments() {
 
   useEffect(() => {
     fetchAppointments();
+    const intervalId = window.setInterval(fetchAppointments, 30000);
+    window.addEventListener("focus", fetchAppointments);
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", fetchAppointments);
+    };
   }, [fetchAppointments]);
 
   // APPROVAL LOGIC
-  const handleApprove = async (appointmentId) => {
+  const handleApprove = async (appointment) => {
+    if (approvalInProgress.current) return;
+    approvalInProgress.current = true;
+    setApprovingId(appointment.dbId);
     try {
       const response = await fetch(`${API_BASE_URL}/api/update-appointment-status`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          appointment_id: appointmentId,
-          status: 'Confirmed'
+          appointment_id: appointment.dbId,
+          status: "Confirmed",
+          expected_status: appointment.status,
+          ...(appointment.status === "Reschedule Requested" ? {
+            expected_requested_date: appointment.requestedDate,
+            expected_requested_time: appointment.requestedTime,
+          } : {}),
         }),
       });
-
-      if (response.ok) {
-        fetchAppointments();
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.message || "Unable to approve the appointment.");
+      if (appointment.status === "Reschedule Requested") {
+        setFeedbackModal({ show: true, type: "success", message: result.warning
+          ? `${result.message} ${result.warning}`
+          : "Reschedule approved. The appointment now uses the requested date and time. The patient's dashboard notification has been saved and the email has been sent." });
       }
     } catch (err) {
-      console.error("Approval failed:", err);
+      setFeedbackModal({ show: true, type: "error", message: err.message || "Approval failed." });
+    } finally {
+      await fetchAppointments();
+      approvalInProgress.current = false;
+      setApprovingId(null);
     }
   };
 
@@ -393,7 +429,7 @@ function AdminAppointments() {
                             <div style={styles.timeDateGroup}>
                               <span style={styles.appTime}>
                                 <Clock size={15} style={{ marginRight: '6px' }} />
-                                {app.time}
+                                {formatAppointmentTime(app.time)}
                               </span>
                               <span style={styles.appDate}>
                                 <Calendar size={15} style={{ marginRight: '6px' }} />
@@ -410,6 +446,13 @@ function AdminAppointments() {
                               {app.status}
                             </span>
                           </div>
+
+                          {app.status === "Reschedule Requested" && (
+                            <div style={{ margin: "0 0 14px", padding: "10px 12px", borderRadius: "8px", backgroundColor: "#eff6ff", color: "#1e40af", fontSize: "13px", lineHeight: 1.6 }}>
+                              <strong>Requested schedule:</strong>{" "}
+                              {formatDisplayDate(app.requestedDate)} at {formatAppointmentTime(app.requestedTime)}
+                            </div>
+                          )}
 
                           {/* Info Grid: Spaced 4-Column Layout */}
                           <div style={styles.appInfoGrid} className="appointment-info-grid">
@@ -436,7 +479,8 @@ function AdminAppointments() {
                         {!isCanceled && !isLateNoShow ? (
                           <div style={styles.appActions} className="app-actions-container">
                             <button
-                              onClick={() => !app.approved && handleApprove(app.dbId)}
+                              onClick={() => handleApprove(app)}
+                              disabled={approvingId !== null || !["Pending", "Approved", "Reschedule Requested"].includes(app.status)}
                               style={{
                                 ...styles.actionBtn,
                                 background: app.approved ? '#10b981' : 'transparent',
@@ -445,11 +489,13 @@ function AdminAppointments() {
                                 cursor: app.approved ? 'default' : 'pointer',
                               }}
                             >
-                              {app.approved ? 'Approved' : 'Approve'}
+                              {approvingId === app.dbId ? "Approving..." : app.status === "Reschedule Requested" ? "Approve Reschedule" : app.approved ? "Approved" : "Approve"}
                             </button>
-                            <button style={styles.actionBtnOutline}>
-                              Reschedule
-                            </button>
+                            {app.status !== "Reschedule Requested" && (
+                              <button style={styles.actionBtnOutline}>
+                                Reschedule
+                              </button>
+                            )}
                             {app.status === "Confirmed" && (
                               <button
                                 onClick={() => setLateNoShowAppointment(app)}

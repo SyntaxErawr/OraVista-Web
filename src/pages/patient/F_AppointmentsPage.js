@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Menu,
@@ -22,6 +22,17 @@ import {
 } from "lucide-react";
 import { API_BASE_URL } from "../../config/api";
 
+// Display seconds without changing the saved booking time.
+function formatAppointmentTime(value) {
+  const match = String(value || "").trim().match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?$/i);
+  if (!match) return value || "Time not provided";
+  let hour = Number(match[1]);
+  const period = match[4]?.toUpperCase();
+  if (Number(match[2]) > 59 || Number(match[3] || 0) > 59 || hour > (period ? 12 : 23) || (period && hour < 1)) return value;
+  if (period) hour = hour % 12 + (period === "PM" ? 12 : 0);
+  return `${String(hour % 12 || 12).padStart(2, "0")}:${match[2]}:${match[3] || "00"} ${hour >= 12 ? "PM" : "AM"}`;
+}
+
 function AppointmentsPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -32,6 +43,10 @@ function AppointmentsPage() {
   const [userData, setUserData] = useState({ id: null, firstName: "User" });
 
   const [isEditing, setIsEditing] = useState(false);
+  const [isSavingChanges, setIsSavingChanges] = useState(false);
+  const editingRef = useRef(false);
+  const savingRef = useRef(false);
+  const appointmentFetchVersion = useRef(0);
   const [backupAppointments, setBackupAppointments] = useState([]);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -81,6 +96,7 @@ function AppointmentsPage() {
   }, []);
 
   const fetchAppointments = useCallback(async (userId) => {
+    const version = ++appointmentFetchVersion.current;
     try {
       const response = await fetch(
         `${API_BASE_URL}/api/user-appointments/${userId}`,
@@ -91,7 +107,9 @@ function AppointmentsPage() {
           ...appt,
           status: appt.status || "Pending",
         }));
-        setAppointments(mappedData);
+        if (!editingRef.current && version === appointmentFetchVersion.current) {
+          setAppointments(mappedData);
+        }
       }
     } catch (error) {
       console.error("Error fetching appointments:", error);
@@ -110,6 +128,19 @@ function AppointmentsPage() {
     loadUser();
   }, [loadUser]);
 
+  useEffect(() => {
+    if (!userData.id) return undefined;
+    const refresh = () => {
+      if (!editingRef.current && !savingRef.current) fetchAppointments(userData.id);
+    };
+    const intervalId = window.setInterval(refresh, 30000);
+    window.addEventListener("focus", refresh);
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", refresh);
+    };
+  }, [userData.id, fetchAppointments]);
+
   const handleLogout = () => {
     localStorage.removeItem("user");
     navigate("/");
@@ -121,6 +152,8 @@ function AppointmentsPage() {
   };
 
   const handleEditClick = () => {
+    editingRef.current = true;
+    appointmentFetchVersion.current += 1;
     setBackupAppointments(JSON.parse(JSON.stringify(appointments)));
     setIsEditing(true);
   };
@@ -128,42 +161,51 @@ function AppointmentsPage() {
   const handleApplyClick = () => setShowSaveChanges(true);
 
   const handleConfirmSaveChanges = async () => {
+    if (savingRef.current) return;
     const modifiedAppointments = appointments.filter((appt) => {
       const original = backupAppointments.find((b) => b.id === appt.id);
       return original && original.status !== appt.status;
     });
-
     if (modifiedAppointments.length === 0) {
+      editingRef.current = false;
       setIsEditing(false);
       setShowSaveChanges(false);
       return;
     }
-
-    try {
-      await Promise.all(
-        modifiedAppointments.map((appt) =>
-          fetch(
-            `${API_BASE_URL}/api/update-appointment-status`,
-            {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                appointment_id: appt.id,
-                status: appt.status,
-              }),
-            },
-          ),
-        ),
-      );
-      setIsEditing(false);
-      setShowSaveChanges(false);
+    savingRef.current = true;
+    setIsSavingChanges(true);
+    const results = await Promise.allSettled(modifiedAppointments.map(async (appt) => {
+      const original = backupAppointments.find((item) => item.id === appt.id);
+      const response = await fetch(`${API_BASE_URL}/api/appointments/${appt.id}/cancel`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userData.id, expected_status: original.status }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.message || "Unable to cancel the appointment.");
+      return appt.id;
+    }));
+    const savedIds = new Set(results.filter((result) => result.status === "fulfilled").map((result) => result.value));
+    const failures = results.filter((result) => result.status === "rejected");
+    setAppointments(backupAppointments.map((appt) => savedIds.has(appt.id)
+      ? { ...appt, status: "Cancelled", reschedule_requested_date: null, reschedule_requested_time: null }
+      : appt));
+    editingRef.current = false;
+    setIsEditing(false);
+    setShowSaveChanges(false);
+    await fetchAppointments(userData.id);
+    savingRef.current = false;
+    setIsSavingChanges(false);
+    if (failures.length) {
+      showFeedback(`${savedIds.size ? `${savedIds.size} cancellation(s) saved. ` : ""}${failures[0].reason.message || "Failed to save changes. Check connection."}`, "error");
+    } else {
       showFeedback("Changes saved successfully!", "success");
-    } catch (error) {
-      showFeedback("Failed to save changes. Check connection.", "error");
     }
   };
 
   const handleDiscardChanges = () => {
+    if (savingRef.current) return;
+    editingRef.current = false;
     setAppointments(backupAppointments);
     setIsEditing(false);
     setShowSaveChanges(false);
@@ -241,7 +283,7 @@ function AppointmentsPage() {
         return { ...base, backgroundColor: "#10b981" };
       case "Pending":
         return { ...base, backgroundColor: "#ffc107" };
-      case "Reschedule":
+      case "Reschedule Requested":
         return { ...base, backgroundColor: "#007bff" };
       case "Completed":
         return { ...base, backgroundColor: "#cc33cc" };
@@ -528,6 +570,7 @@ function AppointmentsPage() {
             <div style={{ display: "flex", gap: "10px" }}>
               <button
                 onClick={handleDiscardChanges}
+                disabled={isSavingChanges}
                 style={{
                   flex: 1,
                   padding: "12px",
@@ -542,6 +585,7 @@ function AppointmentsPage() {
               </button>
               <button
                 onClick={handleConfirmSaveChanges}
+                disabled={isSavingChanges}
                 style={{
                   flex: 1,
                   padding: "12px",
@@ -553,7 +597,7 @@ function AppointmentsPage() {
                   fontFamily: "'Poppins', sans-serif",
                 }}
               >
-                Yes
+                {isSavingChanges ? "Saving..." : "Yes"}
               </button>
             </div>
           </div>
@@ -1039,6 +1083,18 @@ function AppointmentsPage() {
                               },
                             )}
                           </div>
+                          <div style={{ color: "#001166", fontSize: "13px", marginTop: "4px" }}>
+                            {formatAppointmentTime(appt.appointment_time)}
+                          </div>
+                          {appt.status === "Reschedule Requested" && (
+                          <div style={{ marginTop: "8px", color: "#0056b3", fontSize: "12px", lineHeight: 1.5 }}>
+                            <strong>Requested:</strong>{" "}
+                            {appt.reschedule_requested_date
+                              ? new Date(String(appt.reschedule_requested_date).slice(0, 10) + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                              : "Date not provided"}
+                            <div>{formatAppointmentTime(appt.reschedule_requested_time)}</div>
+                          </div>
+                        )}
                           <div
                             style={{
                               color: "#333",
@@ -1153,8 +1209,17 @@ function AppointmentsPage() {
                             marginTop: "8px",
                           }}
                         >
-                          {appt.appointment_time || "Time not provided"}
+                          {formatAppointmentTime(appt.appointment_time)}
                         </div>
+                        {appt.status === "Reschedule Requested" && (
+                          <div style={{ marginTop: "8px", color: "#0056b3", fontSize: "12px", lineHeight: 1.5 }}>
+                            <strong>Requested:</strong>{" "}
+                            {appt.reschedule_requested_date
+                              ? new Date(String(appt.reschedule_requested_date).slice(0, 10) + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                              : "Date not provided"}
+                            <div>{formatAppointmentTime(appt.reschedule_requested_time)}</div>
+                          </div>
+                        )}
                       </div>
                       <div style={{ color: "#001166" }}>
                         {appt.service_type}

@@ -31,6 +31,17 @@ const dentalFacts = [
   "Just because teeth look white doesn't always mean they are completely healthy.",
 ];
 
+// Display seconds without changing the saved booking time.
+function formatAppointmentTime(value) {
+  const match = String(value || "").trim().match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?$/i);
+  if (!match) return value || "Time not provided";
+  let hour = Number(match[1]);
+  const period = match[4]?.toUpperCase();
+  if (Number(match[2]) > 59 || Number(match[3] || 0) > 59 || hour > (period ? 12 : 23) || (period && hour < 1)) return value;
+  if (period) hour = hour % 12 + (period === "PM" ? 12 : 0);
+  return `${String(hour % 12 || 12).padStart(2, "0")}:${match[2]}:${match[3] || "00"} ${hour >= 12 ? "PM" : "AM"}`;
+}
+
 function DashboardPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -166,10 +177,17 @@ function DashboardPage() {
 
   useEffect(() => {
     if (!userData.id) return undefined;
-    const refreshNotifications = () => fetchNotifications(userData.id);
+    const refreshNotifications = () => {
+      fetchNotifications(userData.id);
+      fetchAppointments(userData.id);
+    };
     const intervalId = window.setInterval(refreshNotifications, 30000);
-    return () => window.clearInterval(intervalId);
-  }, [userData.id, fetchNotifications]);
+    window.addEventListener("focus", refreshNotifications);
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", refreshNotifications);
+    };
+  }, [userData.id, fetchNotifications, fetchAppointments]);
 
   const unreadNotificationCount = notifications.filter(
     (notification) => !notification.is_read,
@@ -215,7 +233,7 @@ function DashboardPage() {
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ user_id: userData.id }),
+          body: JSON.stringify({ user_id: userData.id, expected_status: "Late / No Show" }),
         },
       );
       const result = await response.json().catch(() => ({}));
@@ -923,7 +941,7 @@ function DashboardPage() {
                           fontWeight: "600",
                         }}
                       >
-                        {upcomingAppt.appointment_time}
+                        {formatAppointmentTime(upcomingAppt.appointment_time)}
                       </p>
                       <p style={{ margin: 0, fontSize: "13px", opacity: 0.9 }}>
                         {upcomingAppt.service_type}
@@ -1104,6 +1122,9 @@ function DashboardPage() {
                                 day: "numeric",
                                 year: "numeric",
                               })}
+                              <div style={{ marginTop: "4px", fontSize: "12px", fontWeight: "400" }}>
+                                {formatAppointmentTime(appt.appointment_time)}
+                              </div>
                             </td>
                             <td style={{ padding: "10px 0" }}>
                               {appt.service_type}
