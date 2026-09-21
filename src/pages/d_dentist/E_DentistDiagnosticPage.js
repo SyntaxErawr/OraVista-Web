@@ -46,6 +46,16 @@ function DentistDiagnostics() {
 
   const [isSaving, setIsSaving] = useState(false);
 
+  const [isDiagnosisSaved, setIsDiagnosisSaved] = useState(false);
+
+  const [isEditingDiagnosis, setIsEditingDiagnosis] = useState(false);
+
+  const [diagnosisModal, setDiagnosisModal] = useState({
+
+    show: false, type: 'success', title: '', message: ''
+
+  });
+
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
 
   const [isCheckUpModalOpen, setIsCheckUpModalOpen] = useState(false);
@@ -167,6 +177,126 @@ function DentistDiagnostics() {
     }
 
   }, [patientIdParam]);
+
+
+
+  useEffect(() => {
+
+    if (!selectedPatient?.id) return undefined;
+
+    let active = true;
+
+    const loadLatestSavedDiagnosis = async () => {
+
+      setIsDiagnosisSaved(false);
+
+      setIsEditingDiagnosis(false);
+
+      setClinicalNotes("");
+
+      setDiagnosticData(null);
+
+      setAnnotations([]);
+
+      setFindings([]);
+
+      setAnalysisComplete(false);
+
+      setImageUploaded(false);
+
+      setSelectedFile(null);
+
+      try {
+
+        const response = await fetch(`${FASTAPI_API_BASE}/api/diagnostic-imaging/patient/${selectedPatient.id}/latest`, { cache: 'no-store' });
+
+        if (response.status === 404) return;
+
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+        const savedDiagnostic = await response.json();
+
+        if (!active || savedDiagnostic?.ai_findings?.human_verified !== true) return;
+
+        const savedAnnotations = Array.isArray(savedDiagnostic.ai_findings?.annotations)
+
+          ? savedDiagnostic.ai_findings.annotations
+
+          : [];
+
+        const savedPredictions = Array.isArray(savedDiagnostic.ai_findings?.predictions)
+
+          ? savedDiagnostic.ai_findings.predictions
+
+          : [];
+
+        setClinicalNotes(savedDiagnostic.clinical_notes || "");
+
+        setAnnotations(savedAnnotations);
+
+        setFindings(savedAnnotations.map((annotation, index) => ({
+
+          id: index + 1,
+
+          title: annotation.name || "Saved Finding",
+
+          confidence: Math.round((annotation.confidence || 0) * 100),
+
+          status: 'verified',
+
+          isDoctorCreated: true,
+
+          class_id: annotation.class_id,
+
+          coordinates: annotation.box ? {
+
+            top: `${annotation.box.y_min * 100}%`,
+
+            left: `${annotation.box.x_min * 100}%`,
+
+            width: `${annotation.box.width * 100}%`,
+
+            height: `${annotation.box.height * 100}%`
+
+          } : null
+
+        })));
+
+        setDiagnosticData({
+
+          diagnostic_id: savedDiagnostic.id,
+
+          patient_id: savedDiagnostic.patient_id,
+
+          file_path: null,
+
+          clinical_notes: "",
+
+          predictions: savedPredictions,
+
+          scan_date: savedDiagnostic.scan_date
+
+        });
+
+        setAnalysisComplete(true);
+
+        setIsDiagnosisSaved(true);
+
+        setIsEditingDiagnosis(false);
+
+      } catch (error) {
+
+        console.error("Error loading saved final diagnosis:", error);
+
+      }
+
+    };
+
+    loadLatestSavedDiagnosis();
+
+    return () => { active = false; };
+
+  }, [selectedPatient?.id]);
 
 
 
@@ -450,6 +580,10 @@ function DentistDiagnostics() {
 
     setClinicalNotes("");
 
+    setIsDiagnosisSaved(false);
+
+    setIsEditingDiagnosis(false);
+
     uploadFileAndAnalyze(file);
 
   };
@@ -716,7 +850,21 @@ function DentistDiagnostics() {
 
   const handleSaveDiagnosis = async () => {
 
-    if (!diagnosticData || !diagnosticData.diagnostic_id) { alert("No active diagnosis record to update. Please upload an image first."); return; }
+    if (!diagnosticData || !diagnosticData.diagnostic_id) {
+
+      setDiagnosisModal({
+
+        show: true, type: 'error', title: 'Unable to Save Final Diagnosis',
+
+        message: 'No active diagnosis record to update. Please upload an image first.'
+
+      });
+
+      return;
+
+    }
+
+    const wasAlreadySaved = isDiagnosisSaved;
 
     setIsSaving(true);
 
@@ -744,15 +892,51 @@ function DentistDiagnostics() {
 
       const data = await response.json();
 
-      if (response.ok) { alert("Success! The diagnostic record has been updated with annotations and clinical notes."); }
+      if (response.ok) {
 
-      else { alert(`Error: ${data.message || "Failed to update annotations"}`); }
+        setIsDiagnosisSaved(true);
+
+        setIsEditingDiagnosis(false);
+
+        setDiagnosisModal({
+
+          show: true,
+
+          type: 'success',
+
+          title: wasAlreadySaved ? 'Final Diagnosis Updated' : 'Final Diagnosis Saved',
+
+          message: wasAlreadySaved
+
+            ? 'The clinical notes have been updated successfully.'
+
+            : 'The final diagnosis, verified findings, and clinical notes have been saved successfully.'
+
+        });
+
+      } else {
+
+        setDiagnosisModal({
+
+          show: true, type: 'error', title: 'Unable to Save Final Diagnosis',
+
+          message: data.message || data.detail || 'Failed to update annotations.'
+
+        });
+
+      }
 
     } catch (error) {
 
       console.error("Save Failed:", error);
 
-      alert("Could not connect to the FastAPI server. Is it running on port 8000?");
+      setDiagnosisModal({
+
+        show: true, type: 'error', title: 'Unable to Save Final Diagnosis',
+
+        message: 'Could not connect to the FastAPI server. Please try again.'
+
+      });
 
     } finally { setIsSaving(false); }
 
@@ -1450,13 +1634,37 @@ function DentistDiagnostics() {
 
                 <textarea placeholder="Enter final diagnosis and recommendations here. AI findings are supportive only."
 
-                  style={styles.textarea} disabled={!analysisComplete}
+                  style={{ ...styles.textarea, opacity: isDiagnosisSaved && !isEditingDiagnosis ? 0.75 : 1 }}
+
+                  disabled={!analysisComplete || (isDiagnosisSaved && !isEditingDiagnosis)}
 
                   value={clinicalNotes} onChange={(e) => setClinicalNotes(e.target.value)} />
 
-                <button style={{ ...styles.saveBtn, opacity: analysisComplete && !isSaving ? 1 : 0.5, cursor: analysisComplete && !isSaving ? 'pointer' : 'not-allowed' }}
+                {isDiagnosisSaved && !isEditingDiagnosis && (
 
-                  disabled={!analysisComplete || isSaving} onClick={handleSaveDiagnosis}>
+                  <button
+
+                    style={{ ...styles.saveBtn, background: '#10b981', color: 'white', cursor: 'pointer' }}
+
+                    onClick={() => setIsEditingDiagnosis(true)}>
+
+                    Edit Clinical Notes
+
+                  </button>
+
+                )}
+
+                <button style={{
+
+                  ...styles.saveBtn,
+
+                  opacity: analysisComplete && !isSaving && (!isDiagnosisSaved || isEditingDiagnosis) ? 1 : 0.5,
+
+                  cursor: analysisComplete && !isSaving && (!isDiagnosisSaved || isEditingDiagnosis) ? 'pointer' : 'not-allowed'
+
+                }}
+
+                  disabled={!analysisComplete || isSaving || (isDiagnosisSaved && !isEditingDiagnosis)} onClick={handleSaveDiagnosis}>
 
                   {isSaving ? "Saving..." : "Save Final Diagnosis"}
 
@@ -1471,6 +1679,46 @@ function DentistDiagnostics() {
         </div>
 
       </div>
+
+
+
+      {/* Final Diagnosis Save / Update Modal */}
+
+      {diagnosisModal.show && (
+
+        <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 2000, padding: '15px', boxSizing: 'border-box' }}>
+
+          <div style={{ backgroundColor: "white", padding: "30px", borderRadius: "15px", width: "100%", maxWidth: "430px", boxShadow: "0 10px 25px rgba(0,0,0,0.2)", color: "#333", textAlign: 'center' }}>
+
+            <div style={{ width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px', backgroundColor: diagnosisModal.type === 'success' ? '#e8f5e9' : '#fee2e2' }}>
+
+              {diagnosisModal.type === 'success'
+
+                ? <CheckCircle size={32} color="#10b981" />
+
+                : <X size={32} color="#dc2626" />}
+
+            </div>
+
+            <h2 style={{ color: '#001166', margin: '0 0 12px', fontSize: '22px' }}>{diagnosisModal.title}</h2>
+
+            <p style={{ color: '#666', fontSize: '14px', lineHeight: 1.6, margin: '0 0 22px' }}>{diagnosisModal.message}</p>
+
+            <button
+
+              onClick={() => setDiagnosisModal(current => ({ ...current, show: false }))}
+
+              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: 'none', backgroundColor: '#001166', color: 'white', cursor: 'pointer', fontWeight: '700' }}>
+
+              Okay
+
+            </button>
+
+          </div>
+
+        </div>
+
+      )}
 
 
 
