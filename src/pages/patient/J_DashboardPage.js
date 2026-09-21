@@ -783,7 +783,8 @@ function DashboardPage() {
                       >
                         Notifications
                       </h4>
-                      {visibleNotifications.map((notification) => (
+                      <div style={{ maxHeight: "300px", overflowY: "auto" }}>
+                        {visibleNotifications.map((notification) => (
                         <div
                           key={notification.id}
                           onClick={() => markNotificationRead(notification.id)}
@@ -843,18 +844,19 @@ function DashboardPage() {
                             </div>
                           )}
                         </div>
-                      ))}
+                        ))}
+                        {notifications.length === 0 && (
+                          <p style={{ margin: 0, color: "#777", fontSize: "13px" }}>
+                            You have no notifications.
+                          </p>
+                        )}
+                      </div>
                       {notifications.length > notificationsPerPage && (
                         <nav aria-label="Notification pages" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", paddingTop: "10px", borderTop: "1px solid #e5e7eb" }}>
                           <button className="notification-page-btn" disabled={currentNotificationPage === 1} onClick={() => setNotificationPage(currentNotificationPage - 1)}>Previous</button>
                           <span aria-live="polite" style={{ fontSize: "12px", color: "#001166" }}>Page {currentNotificationPage} of {notificationPageCount}</span>
                           <button className="notification-page-btn" disabled={currentNotificationPage === notificationPageCount} onClick={() => setNotificationPage(currentNotificationPage + 1)}>Next</button>
                         </nav>
-                      )}
-                      {notifications.length === 0 && (
-                        <p style={{ margin: 0, color: "#777", fontSize: "13px" }}>
-                          You have no notifications.
-                        </p>
                       )}
                     </div>
                   )}
