@@ -77,6 +77,22 @@ function AdminAppointments() {
     });
   };
 
+  const formatBookedDateTime = (value) => {
+    if (!value) return "Not available";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return "Not available";
+    return d.toLocaleString("en-PH", {
+      timeZone: "Asia/Manila",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    });
+  };
+
   // FETCH LOGIC
   const fetchAppointments = useCallback(async () => {
     try {
@@ -95,6 +111,7 @@ function AdminAppointments() {
           requestedTime: app.requestedTime,
           status: app.status,
           type: app.serviceType || 'Consultation',
+          bookedAt: app.bookedAt,
           approved: app.status === 'Confirmed',
           online: false
         }));
@@ -217,9 +234,14 @@ function AdminAppointments() {
   };
 
   // --- APPOINTMENT FILTER LOGIC ---
-  const filteredAppointments = selectedDate
+  const filteredAppointments = (selectedDate
     ? appointments.filter(app => formatDbDate(app.date) === selectedDate)
-    : appointments;
+    : appointments
+  ).slice().sort((a, b) => {
+    const aTime = a.bookedAt ? new Date(a.bookedAt).getTime() : Number.MAX_SAFE_INTEGER;
+    const bTime = b.bookedAt ? new Date(b.bookedAt).getTime() : Number.MAX_SAFE_INTEGER;
+    return aTime - bTime || a.dbId - b.dbId;
+  });
 
   const totalPages = Math.max(1, Math.ceil(filteredAppointments.length / appointmentsPerPage));
   const startIndex = (currentPage - 1) * appointmentsPerPage;
@@ -429,11 +451,11 @@ function AdminAppointments() {
                             <div style={styles.timeDateGroup}>
                               <span style={styles.appTime}>
                                 <Clock size={15} style={{ marginRight: '6px' }} />
-                                {formatAppointmentTime(app.time)}
+                                Scheduled Time: {formatAppointmentTime(app.time)}
                               </span>
                               <span style={styles.appDate}>
                                 <Calendar size={15} style={{ marginRight: '6px' }} />
-                                {formatDisplayDate(app.date)}
+                                Scheduled Date: {formatDisplayDate(app.date)}
                               </span>
                             </div>
                             <span
@@ -471,6 +493,10 @@ function AdminAppointments() {
                             <div style={styles.infoItem} className="appointment-info-item">
                               <p style={styles.infoLabel}>Booking ID</p>
                               <p style={{ ...styles.infoVal, fontFamily: 'monospace', letterSpacing: '0.5px' }}>{app.id}</p>
+                            </div>
+                            <div style={styles.infoItem} className="appointment-info-item">
+                              <p style={styles.infoLabel}>Booked On</p>
+                              <p style={styles.infoVal}>{formatBookedDateTime(app.bookedAt)}</p>
                             </div>
                           </div>
                         </div>

@@ -33,6 +33,22 @@ function formatAppointmentTime(value) {
   return `${String(hour % 12 || 12).padStart(2, "0")}:${match[2]}:${match[3] || "00"} ${hour >= 12 ? "PM" : "AM"}`;
 }
 
+function formatBookedDateTime(value) {
+  if (!value) return "Not available";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "Not available";
+  return d.toLocaleString("en-PH", {
+    timeZone: "Asia/Manila",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+}
+
 function AppointmentsPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -1019,9 +1035,9 @@ function AppointmentsPage() {
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "minmax(170px, 1.4fr) minmax(180px, 1.5fr) minmax(180px, 1.5fr) minmax(110px, 1fr) minmax(130px, 1fr)",
+                  gridTemplateColumns: "minmax(170px, 1.4fr) minmax(180px, 1.4fr) minmax(180px, 1.5fr) minmax(180px, 1.5fr) minmax(110px, 1fr) minmax(130px, 1fr)",
                   columnGap: "24px",
-                  minWidth: "922px",
+                  minWidth: "1100px",
                   boxSizing: "border-box",
                   padding: "0 28px 20px 28px",
                   color: "white",
@@ -1031,6 +1047,7 @@ function AppointmentsPage() {
                 }}
               >
                 <div>Date &amp; Time</div>
+                <div>Booked On</div>
                 <div>Service</div>
                 <div>Dentist</div>
                 <div>Base Price</div>
@@ -1043,7 +1060,7 @@ function AppointmentsPage() {
                 display: "flex",
                 flexDirection: "column",
                 gap: isMobile ? "12px" : "18px",
-                minWidth: isMobile ? 0 : "922px",
+                minWidth: isMobile ? 0 : "1100px",
               }}
             >
               {filteredAppointments.length > 0 ? (
@@ -1103,6 +1120,9 @@ function AppointmentsPage() {
                             }}
                           >
                             {appt.service_type}
+                          </div>
+                          <div style={{ color: "#666", fontSize: "12px", marginTop: "8px", lineHeight: 1.5 }}>
+                            <strong>Booked On:</strong> {formatBookedDateTime(appt.created_at)}
                           </div>
                         </div>
                         <div
@@ -1185,7 +1205,7 @@ function AppointmentsPage() {
                       key={appt.id}
                       style={{
                         display: "grid",
-                        gridTemplateColumns: "minmax(170px, 1.4fr) minmax(180px, 1.5fr) minmax(180px, 1.5fr) minmax(110px, 1fr) minmax(130px, 1fr)",
+                        gridTemplateColumns: "minmax(170px, 1.4fr) minmax(180px, 1.4fr) minmax(180px, 1.5fr) minmax(180px, 1.5fr) minmax(110px, 1fr) minmax(130px, 1fr)",
                         backgroundColor: "white",
                         padding: "26px 28px",
                         borderRadius: "15px",
@@ -1220,6 +1240,9 @@ function AppointmentsPage() {
                             <div>{formatAppointmentTime(appt.reschedule_requested_time)}</div>
                           </div>
                         )}
+                      </div>
+                      <div style={{ color: "#001166", fontSize: "13px", lineHeight: 1.6 }}>
+                        {formatBookedDateTime(appt.created_at)}
                       </div>
                       <div style={{ color: "#001166" }}>
                         {appt.service_type}
