@@ -296,9 +296,50 @@ function DashboardPage() {
 
   const closeMobileSidebar = () => setIsMobileOpen(false);
 
-  const upcomingAppt = appointments.find((a) =>
-    ["Pending", "Approved", "Confirmed"].includes(a.status)
-  );
+  const getAppointmentDateTimeValue = (appointment) => {
+    const datePart = String(appointment?.appointment_date || "").slice(0, 10);
+    const timeMatch = String(appointment?.appointment_time || "")
+      .trim()
+      .match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?$/i);
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(datePart) || !timeMatch) return NaN;
+
+    let hour = Number(timeMatch[1]);
+    const minute = Number(timeMatch[2]);
+    const second = Number(timeMatch[3] || 0);
+    const period = timeMatch[4]?.toUpperCase();
+
+    if (
+      minute > 59 ||
+      second > 59 ||
+      hour > (period ? 12 : 23) ||
+      (period && hour < 1)
+    ) {
+      return NaN;
+    }
+
+    if (period) hour = hour % 12 + (period === "PM" ? 12 : 0);
+
+    return new Date(
+      `${datePart}T${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:${String(second).padStart(2, "0")}+08:00`
+    ).getTime();
+  };
+
+  const upcomingAppointments = appointments
+    .filter((appointment) => {
+      if (!['Pending', 'Approved', 'Confirmed'].includes(appointment.status)) {
+        return false;
+      }
+      const scheduledAt = getAppointmentDateTimeValue(appointment);
+      return Number.isFinite(scheduledAt) && scheduledAt > Date.now();
+    })
+    .sort(
+      (a, b) =>
+        getAppointmentDateTimeValue(a) - getAppointmentDateTimeValue(b)
+    );
+
+  const visibleUpcomingAppointments = upcomingAppointments.slice(0, 2);
+  const additionalUpcomingCount = Math.max(0, upcomingAppointments.length - 2);
 
   const sidebarWidth = isCollapsed ? "80px" : "260px";
 
@@ -905,7 +946,7 @@ function DashboardPage() {
             >
               <div style={cardStyle} className="dashboard-card">
                 <h3 style={{ margin: 0, fontSize: "20px" }}>
-                  Upcoming Appointment
+                  Upcoming Appointments
                 </h3>
                 <div
                   style={{
@@ -915,42 +956,75 @@ function DashboardPage() {
                     alignItems: "center",
                     justifyContent: "center",
                     marginTop: "10px",
+                    width: "100%",
                   }}
                 >
-                  {upcomingAppt ? (
+                  {visibleUpcomingAppointments.length > 0 ? (
                     <>
-                      <p
-                        className="upcoming-date"
-                        style={{
-                          margin: "0 0 5px 0",
-                          fontSize: "22px",
-                          fontWeight: "700",
-                          color: "#10b981",
-                        }}
-                      >
-                        {new Date(
-                          upcomingAppt.appointment_date
-                        ).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
-                      </p>
-                      <p
-                        style={{
-                          margin: "0 0 5px 0",
-                          fontSize: "15px",
-                          fontWeight: "600",
-                        }}
-                      >
-                        {formatAppointmentTime(upcomingAppt.appointment_time)}
-                      </p>
-                      <p style={{ margin: 0, fontSize: "13px", opacity: 0.9 }}>
-                        {upcomingAppt.service_type}
-                      </p>
+                      {visibleUpcomingAppointments.map((upcomingAppt, index) => (
+                        <div
+                          key={upcomingAppt.id}
+                          style={{
+                            width: "100%",
+                            textAlign: "center",
+                            padding:
+                              index === 0 && visibleUpcomingAppointments.length > 1
+                                ? "0 0 12px 0"
+                                : index > 0
+                                  ? "12px 0 0 0"
+                                  : 0,
+                            borderBottom:
+                              index === 0 && visibleUpcomingAppointments.length > 1
+                                ? "1px solid rgba(255,255,255,0.2)"
+                                : "none",
+                          }}
+                        >
+                          <p
+                            className="upcoming-date"
+                            style={{
+                              margin: "0 0 5px 0",
+                              fontSize: "22px",
+                              fontWeight: "700",
+                              color: "#10b981",
+                            }}
+                          >
+                            {new Date(
+                              upcomingAppt.appointment_date
+                            ).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                          </p>
+                          <p
+                            style={{
+                              margin: "0 0 5px 0",
+                              fontSize: "15px",
+                              fontWeight: "600",
+                            }}
+                          >
+                            {formatAppointmentTime(upcomingAppt.appointment_time)}
+                          </p>
+                          <p style={{ margin: 0, fontSize: "13px", opacity: 0.9 }}>
+                            {upcomingAppt.service_type}
+                          </p>
+                        </div>
+                      ))}
+                      {additionalUpcomingCount > 0 && (
+                        <p
+                          style={{
+                            margin: "12px 0 0 0",
+                            fontSize: "13px",
+                            fontWeight: "700",
+                            color: "#10b981",
+                          }}
+                        >
+                          +{additionalUpcomingCount} more
+                        </p>
+                      )}
                     </>
                   ) : (
-                    <p style={{ opacity: 0.8 }}>No upcoming appointment</p>
+                    <p style={{ opacity: 0.8 }}>No upcoming appointments</p>
                   )}
                 </div>
               </div>
