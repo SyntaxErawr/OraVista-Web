@@ -58,13 +58,13 @@ function I_AuditLogPage() {
             <h1 style={styles.title}>Action Audit Log</h1>
             <p style={styles.subtitle}>Monitor staff actions, billing updates, and system records.</p>
           </div>
-          <ClipboardList size={38} color="#001166" />
+          <ClipboardList size={38} color="#087F8C" />
         </div>
 
-        <div style={styles.card}>
+        <div className="ov-panel" style={styles.card}>
           <div style={styles.cardHeader}>
             <div style={styles.headerTitleGroup}>
-              <Activity size={24} color="#001166" />
+              <Activity size={24} color="#087F8C" />
               <h2 style={styles.sectionTitle}>System Activity</h2>
             </div>
             
@@ -135,14 +135,14 @@ function I_AuditLogPage() {
 }
 
 const styles = {
-  page: { padding: "32px", background: "#f4f7fe", minHeight: "100%", fontFamily: "Poppins, sans-serif" },
+  page: { padding: "32px", background: "#F3F9FA", minHeight: "100%", fontFamily: "Manrope, sans-serif" },
   header: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "25px" },
-  title: { margin: 0, color: "#001166", fontSize: "32px" },
+  title: { margin: 0, color: "#087F8C", fontSize: "32px" },
   subtitle: { margin: "6px 0 0", color: "#526078" },
-  card: { background: "white", borderRadius: "18px", padding: "26px", boxShadow: "0 4px 18px rgba(0,17,102,.08)" },
+  card: { background: "white", borderRadius: "18px", padding: "26px", boxShadow: "0 4px 18px rgba(8, 127, 140,.08)" },
   cardHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "15px", borderBottom: "1px solid #dce2ec", paddingBottom: "20px", marginBottom: "20px" },
   headerTitleGroup: { display: "flex", alignItems: "center", gap: "10px" },
-  sectionTitle: { margin: 0, color: "#001166", fontSize: "20px" },
+  sectionTitle: { margin: 0, color: "#087F8C", fontSize: "20px" },
   searchContainer: { position: "relative", width: "100%", maxWidth: "350px" },
   searchIcon: { position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)" },
   searchInput: { width: "100%", padding: "10px 10px 10px 38px", border: "1px solid #cdd6e4", borderRadius: "8px", font: "inherit", fontSize: "13px", outline: "none", boxSizing: "border-box" },
@@ -155,7 +155,7 @@ const styles = {
   tr: { borderBottom: "1px solid #e4e9f2", transition: "background 0.2s" },
   td: { padding: "14px", color: "#33415c", verticalAlign: "middle" },
   tdDetail: { padding: "14px", color: "#526078", maxWidth: "400px", lineHeight: "1.5" },
-  tdAmount: { padding: "14px", color: "#001166", fontWeight: 700, whiteSpace: "nowrap" },
+  tdAmount: { padding: "14px", color: "#087F8C", fontWeight: 700, whiteSpace: "nowrap" },
   timeGroup: { display: "flex", alignItems: "center", gap: "8px", color: "#526078", whiteSpace: "nowrap" },
   statusBadge: { borderRadius: "12px", padding: "4px 10px", fontSize: "11px", fontWeight: 700, display: "inline-block" },
   pending: { color: "#815f00", background: "#fff3cd" },

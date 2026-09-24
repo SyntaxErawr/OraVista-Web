@@ -1,3 +1,5 @@
+import AuthIntro from "../../components/AuthIntro";
+import BrandMark from "../../components/BrandMark";
 import React, { useState, useEffect } from 'react';
 import { User, Lock, Eye, EyeOff, AlertCircle, CheckCircle2, X, Square, CheckSquare } from 'lucide-react';
 
@@ -68,6 +70,9 @@ function LoginPage() {
   // --- FORGOT PASSWORD FUNCTIONS ---
   const sendOTP = async (e) => {
     e.preventDefault();
+    if (isOtpLoading) return;
+    setOtpSent("");
+    setOtpInput("");
     if (!forgotEmail) {
       setOtpMessage("Please enter your email.");
       return;
@@ -85,7 +90,7 @@ function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
-        setOtpSent(data.generatedOtp);
+        setOtpSent(String(data.generatedOtp || ""));
         setOtpStep("verify");
         setOtpMessage("Code sent! Check your email.");
       } else {
@@ -99,7 +104,7 @@ function LoginPage() {
   };
 
   const verifyOTP = () => {
-    if (otpInput === otpSent) {
+    if (!isOtpLoading && /^\d{6}$/.test(otpInput) && otpInput === otpSent) {
       setShowForgotModal(false);
       setShowResetModal(true);
       setOtpMessage("");
@@ -205,7 +210,7 @@ function LoginPage() {
   };
 
   // --- MODAL STYLES ---
-  const brandBlue = "#001166";
+  const brandBlue = "#087F8C";
   const modalOverlayStyle = {
     position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.6)",
     display: "flex", justifyContent: "center", alignItems: "center", zIndex: 2000, backdropFilter: "blur(5px)",
@@ -230,7 +235,7 @@ function LoginPage() {
       <style>
         {`
           .responsive-login-container {
-            background-color: #001166;
+            background-color: #087F8C;
             height: 100vh;
             width: 100vw;
             display: flex;
@@ -293,7 +298,8 @@ function LoginPage() {
         `}
       </style>
 
-      <div className="responsive-login-container">
+      <div className="responsive-login-container ov-auth-page">
+        <AuthIntro clinic />
 
         {/* FEEDBACK POPUP MODAL */}
         {feedbackModal.show && (
@@ -310,7 +316,7 @@ function LoginPage() {
                 {feedbackModal.type === "success" ? "Success!" : "Attention"}
               </h3>
               <p style={{ color: "#666", fontSize: "14px", marginBottom: "20px" }}>{feedbackModal.message}</p>
-              <button onClick={closeFeedback} style={{ width: "100%", padding: "12px", backgroundColor: brandBlue, color: "white", border: "none", borderRadius: "10px", fontWeight: "700", cursor: "pointer" }}>
+              <button onClick={closeFeedback} style={{ "--ov-on-color": "var(--ov-ink)", width: "100%", padding: "12px", backgroundColor: "var(--ov-primary)", color: "var(--ov-on-color, #fff)", border: "none", borderRadius: "10px", fontWeight: "700", cursor: "pointer" }}>
                 Okay
               </button>
             </div>
@@ -336,7 +342,7 @@ function LoginPage() {
                     onChange={(e) => setForgotEmail(e.target.value)}
                     style={{ ...inputStyle(false), marginBottom: "15px" }}
                   />
-                  <button onClick={sendOTP} disabled={isOtpLoading} style={{ width: "100%", padding: "12px", backgroundColor: brandBlue, color: "white", border: "none", borderRadius: "10px", fontWeight: "700", cursor: "pointer", opacity: isOtpLoading ? 0.7 : 1 }}>
+                  <button onClick={sendOTP} disabled={isOtpLoading} style={{ "--ov-on-color": "var(--ov-ink)", width: "100%", padding: "12px", backgroundColor: "var(--ov-primary)", color: "var(--ov-on-color, #fff)", border: "none", borderRadius: "10px", fontWeight: "700", cursor: "pointer", opacity: isOtpLoading ? 0.7 : 1 }}>
                     {isOtpLoading ? "Sending..." : "Send Code"}
                   </button>
                 </>
@@ -350,7 +356,7 @@ function LoginPage() {
                     style={{ ...inputStyle(false), marginBottom: "15px", letterSpacing: "5px", textAlign: "center", fontSize: "18px" }}
                     maxLength="6"
                   />
-                  <button onClick={verifyOTP} style={{ width: "100%", padding: "12px", backgroundColor: "#28a745", color: "white", border: "none", borderRadius: "10px", fontWeight: "700", cursor: "pointer" }}>
+                  <button onClick={verifyOTP} style={{ width: "100%", padding: "12px", backgroundColor: "#28a745", color: "var(--ov-on-color, #fff)", border: "none", borderRadius: "10px", fontWeight: "700", cursor: "pointer" }}>
                     Verify Code
                   </button>
                   <p onClick={() => setOtpStep("email")} style={{ marginTop: "15px", fontSize: "12px", color: brandBlue, cursor: "pointer", textDecoration: "underline" }}>
@@ -408,7 +414,7 @@ function LoginPage() {
 
               <button
                 onClick={handlePasswordReset}
-                style={{ width: "100%", padding: "12px", backgroundColor: brandBlue, color: "white", border: "none", borderRadius: "10px", fontWeight: "700", cursor: "pointer", opacity: !isPasswordValid ? 0.7 : 1 }}
+                style={{ "--ov-on-color": "var(--ov-ink)", width: "100%", padding: "12px", backgroundColor: "var(--ov-primary)", color: "var(--ov-on-color, #fff)", border: "none", borderRadius: "10px", fontWeight: "700", cursor: "pointer", opacity: !isPasswordValid ? 0.7 : 1 }}
               >
                 Change Password
               </button>
@@ -417,9 +423,9 @@ function LoginPage() {
         )}
 
         {/* MAIN LOGIN CARD */}
-        <div className="responsive-login-card">
-          <div style={styles.logoContainer}><div style={styles.logoCircle}></div></div>
-          <h1 className="login-title" style={styles.title}>OraVista</h1>
+        <div className="responsive-login-card ov-auth-card">
+          <BrandMark />
+          <h1 className="login-title" style={styles.title}>Team sign in</h1>
           <p style={styles.subtitle}>System Login - King Epres Dental Clinic</p>
 
           {/* ROLE TABS */}
@@ -428,10 +434,10 @@ function LoginPage() {
               <button
                 key={role}
                 onClick={() => { setLoginAs(role); setErrors({ email: '', password: '' }); }}
-                style={{
+                style={{ "--ov-on-color": "var(--ov-ink)",
                   ...styles.roleButton,
-                  backgroundColor: loginAs === role ? '#001166' : 'transparent',
-                  color: loginAs === role ? 'white' : '#666',
+                  backgroundColor: loginAs === role ? "var(--ov-primary)" : 'transparent',
+                  color: loginAs === role ? "var(--ov-ink)" : '#666',
                 }}
               >
                 {role}
@@ -478,20 +484,20 @@ function LoginPage() {
 
 const styles = {
   logoContainer: { width: '60px', height: '60px', backgroundColor: '#e0e0e0', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '15px' },
-  logoCircle: { width: '30px', height: '30px', borderRadius: '50%', backgroundColor: '#001166' },
-  title: { color: '#001166', fontSize: '28px', fontWeight: '800', margin: '0 0 5px 0' },
+  logoCircle: { "--ov-on-color": "var(--ov-ink)", width: '30px', height: '30px', borderRadius: '50%', backgroundColor: "var(--ov-primary)" },
+  title: { color: '#087F8C', fontSize: '28px', fontWeight: '800', margin: '0 0 5px 0' },
   subtitle: { color: '#666', fontSize: '13px', fontWeight: '400', margin: '0 0 30px 0', textAlign: 'center' },
   roleToggleContainer: { display: 'flex', backgroundColor: '#f0f2f5', borderRadius: '10px', padding: '5px', marginBottom: '20px', width: '100%', boxSizing: 'border-box' },
   roleButton: { flex: 1, padding: '10px 0', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.3s ease' },
   form: { width: '100%' },
   inputGroup: { marginBottom: '20px', textAlign: 'left', width: '100%' },
-  label: { display: 'block', color: '#001166', fontSize: '13px', fontWeight: '700', marginBottom: '8px', marginLeft: '5px' },
+  label: { display: 'block', color: '#087F8C', fontSize: '13px', fontWeight: '700', marginBottom: '8px', marginLeft: '5px' },
   inputWrapper: { position: 'relative', display: 'flex', alignItems: 'center' },
   inputIcon: { position: 'absolute', left: '15px', color: '#aaa', zIndex: 1 },
   eyeButton: { position: 'absolute', right: '15px', background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', zIndex: 2 },
   input: { width: '100%', padding: '12px 45px 12px 45px', borderRadius: '10px', border: '1px solid #e0e0e0', fontSize: '14px', color: '#333', backgroundColor: '#f9f9f9', outline: 'none', boxSizing: 'border-box' },
   fieldErrorText: { color: '#dc2626', fontSize: '12px', fontWeight: '600', marginTop: '5px', marginLeft: '5px' },
-  loginButton: { width: '100%', padding: '12px', backgroundColor: '#001166', border: 'none', borderRadius: '10px', color: 'white', fontSize: '15px', fontWeight: '700', cursor: 'pointer', marginTop: '10px', marginBottom: '20px', transition: 'background-color 0.3s ease', boxSizing: 'border-box' },
+  loginButton: { "--ov-on-color": "var(--ov-ink)", width: '100%', padding: '12px', backgroundColor: "var(--ov-primary)", border: 'none', borderRadius: '10px', color: "var(--ov-on-color, #fff)", fontSize: '15px', fontWeight: '700', cursor: 'pointer', marginTop: '10px', marginBottom: '20px', transition: 'background-color 0.3s ease', boxSizing: 'border-box' },
   forgotPassword: { color: '#666', fontSize: '12px', cursor: 'pointer', margin: 0, textDecoration: 'underline' }
 };
 

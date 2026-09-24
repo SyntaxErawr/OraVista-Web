@@ -104,7 +104,7 @@ function StaffBillingsPage() {
             <h1 style={styles.title}>Billing & Receipts</h1>
             <p style={styles.subtitle}>Approve patient bills and prepare the treatment-record receipt.</p>
           </div>
-          <CreditCard size={38} color="#001166" />
+          <CreditCard size={38} color="#087F8C" />
         </div>
 
         <div style={styles.layout}>
@@ -131,7 +131,7 @@ function StaffBillingsPage() {
 
           <section style={styles.receiptCard}>
             <div style={styles.receiptHeader}>
-              <ReceiptText size={28} color="#001166" />
+              <ReceiptText size={28} color="#087F8C" />
               <div>
                 <h2 style={styles.sectionTitle}>Treatment record receipt</h2>
                 <p style={styles.muted}>Customize the details before publishing to the patient.</p>
@@ -192,29 +192,29 @@ function StaffBillingsPage() {
 }
 
 const styles = {
-  page: { padding: "32px", background: "#f4f7fe", minHeight: "100%", fontFamily: "Poppins, sans-serif" },
+  page: { padding: "32px", background: "#F3F9FA", minHeight: "100%", fontFamily: "Manrope, sans-serif" },
   header: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "25px" },
-  title: { margin: 0, color: "#001166", fontSize: "32px" },
+  title: { margin: 0, color: "#087F8C", fontSize: "32px" },
   subtitle: { margin: "6px 0 0", color: "#526078" },
   layout: { display: "grid", gridTemplateColumns: "minmax(300px, .9fr) minmax(460px, 1.4fr)", gap: "24px", alignItems: "start" },
-  recordsCard: { background: "white", borderRadius: "18px", padding: "22px", boxShadow: "0 4px 18px rgba(0,17,102,.08)" },
-  receiptCard: { background: "white", borderRadius: "18px", padding: "26px", boxShadow: "0 4px 18px rgba(0,17,102,.08)" },
-  sectionTitle: { margin: 0, color: "#001166", fontSize: "18px" },
+  recordsCard: { background: "white", borderRadius: "18px", padding: "22px", boxShadow: "0 4px 18px rgba(8, 127, 140,.08)" },
+  receiptCard: { background: "white", borderRadius: "18px", padding: "26px", boxShadow: "0 4px 18px rgba(8, 127, 140,.08)" },
+  sectionTitle: { margin: 0, color: "#087F8C", fontSize: "18px" },
   muted: { color: "#65738a", fontSize: "13px" },
   billingRow: { width: "100%", border: "1px solid #e4e9f2", background: "white", borderRadius: "10px", marginTop: "10px", padding: "13px", textAlign: "left", cursor: "pointer", display: "grid", gap: "5px" },
-  selectedRow: { borderColor: "#001166", background: "#eef1ff" },
-  patientName: { color: "#001166", fontWeight: 700 }, service: { color: "#536176", fontSize: "13px" }, amount: { fontWeight: 700, fontSize: "13px" },
+  selectedRow: { borderColor: "#087F8C", background: "#eef1ff" },
+  patientName: { color: "#087F8C", fontWeight: 700 }, service: { color: "#536176", fontSize: "13px" }, amount: { fontWeight: 700, fontSize: "13px" },
   status: { width: "fit-content", borderRadius: "12px", padding: "3px 8px", fontSize: "11px", fontWeight: 700 }, pending: { color: "#815f00", background: "#fff3cd" }, paid: { color: "#09663b", background: "#d9f5e7" },
   receiptHeader: { display: "flex", gap: "12px", alignItems: "center", borderBottom: "1px solid #dce2ec", paddingBottom: "15px", marginBottom: "18px" },
   patientLine: { display: "flex", flexWrap: "wrap", gap: "20px", borderBottom: "1px solid #222", paddingBottom: "6px", fontSize: "13px" },
-  recordTitle: { textAlign: "center", fontSize: "13px", color: "#001166", fontWeight: 800, margin: "17px 0 12px" },
+  recordTitle: { textAlign: "center", fontSize: "13px", color: "#087F8C", fontWeight: 800, margin: "17px 0 12px" },
   formGrid: { display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "13px" },
   label: { color: "#33415c", display: "grid", gap: "5px", fontSize: "12px", fontWeight: 700 },
   input: { border: "1px solid #cdd6e4", borderRadius: "7px", padding: "9px", font: "inherit", fontSize: "13px" },
-  previewRow: { display: "grid", gridTemplateColumns: "1fr 2fr 1fr 1fr 1fr", gap: "2px", marginTop: "20px", border: "1px solid #001166", fontSize: "11px" },
+  previewRow: { display: "grid", gridTemplateColumns: "1fr 2fr 1fr 1fr 1fr", gap: "2px", marginTop: "20px", border: "1px solid #087F8C", fontSize: "11px" },
   actions: { display: "flex", justifyContent: "flex-end", flexWrap: "wrap", gap: "10px", marginTop: "18px" },
-  primaryButton: { display: "inline-flex", gap: "7px", alignItems: "center", border: 0, borderRadius: "8px", padding: "11px 14px", background: "#001166", color: "white", fontWeight: 700, cursor: "pointer" },
-  secondaryButton: { display: "inline-flex", gap: "7px", alignItems: "center", border: "1px solid #001166", borderRadius: "8px", padding: "11px 14px", background: "white", color: "#001166", fontWeight: 700, cursor: "pointer" },
+  primaryButton: { "--ov-on-color": "var(--ov-ink)", display: "inline-flex", gap: "7px", alignItems: "center", border: 0, borderRadius: "8px", padding: "11px 14px", background: "var(--ov-primary)", color: "var(--ov-on-color, #fff)", fontWeight: 700, cursor: "pointer" },
+  secondaryButton: { display: "inline-flex", gap: "7px", alignItems: "center", border: "1px solid #087F8C", borderRadius: "8px", padding: "11px 14px", background: "white", color: "#087F8C", fontWeight: 700, cursor: "pointer" },
   rejectButton: { border: "1px solid #b42318", borderRadius: "8px", padding: "11px 14px", background: "white", color: "#b42318", fontWeight: 700, cursor: "pointer" },
   message: { color: "#09663b", background: "#eaf8f0", padding: "10px", borderRadius: "7px", fontSize: "13px", marginBottom: 0 },
 };

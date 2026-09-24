@@ -1,3 +1,5 @@
+import PatientDialog from "../../components/PatientDialog";
+import BrandWordmark from "../../components/BrandWordmark";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -28,6 +30,8 @@ function ProfilePage() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [profilePreview, setProfilePreview] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
 
   const [userData, setUserData] = useState({
     firstName: "",
@@ -126,10 +130,13 @@ function ProfilePage() {
   };
 
   const handleImageUpload = async (e) => {
-    if (!isEditing) return;
+    if (!isEditing || isUploading) return;
 
     const file = e.target.files[0];
     if (file) {
+      const previousPreview = profilePreview;
+      setIsUploading(true);
+      setUploadError("");
       const imageUrl = URL.createObjectURL(file);
       setProfilePreview(imageUrl);
       const user = JSON.parse(localStorage.getItem("user"));
@@ -152,11 +159,17 @@ function ProfilePage() {
             `https://oravista-server-474976105474.asia-southeast1.run.app/${data.imagePath}`,
           );
         } else {
-          alert(data.message || "Failed to upload image.");
+          setProfilePreview(previousPreview);
+          setUploadError(data.message || "Your photo could not be uploaded. Please try again.");
         }
       } catch (error) {
         console.error("Upload error:", error);
-        alert("Server error connecting to upload endpoint.");
+        setProfilePreview(previousPreview);
+        setUploadError("We could not upload your photo. Please check your connection and retry.");
+      } finally {
+        URL.revokeObjectURL(imageUrl);
+        e.target.value = "";
+        setIsUploading(false);
       }
     }
   };
@@ -235,7 +248,7 @@ function ProfilePage() {
       display: "flex",
       alignItems: "center",
       gap: "15px",
-      color: "white",
+      color: "var(--ov-on-color, #fff)",
       textDecoration: "none",
       padding: "12px 15px",
       margin: "5px 0",
@@ -245,9 +258,9 @@ function ProfilePage() {
       transition: "all 0.3s ease",
       whiteSpace: "nowrap",
       overflow: "hidden",
-      backgroundColor: isActive ? "rgba(255, 255, 255, 0.2)" : "transparent",
+      backgroundColor: isActive ? "var(--ov-on-wash, rgba(255, 255, 255, 0.2))" : "transparent",
       fontWeight: isActive ? "700" : "400",
-      borderLeft: isActive ? "4px solid white" : "4px solid transparent",
+      borderLeft: isActive ? "4px solid #21B9C8" : "4px solid transparent",
     };
   };
 
@@ -257,7 +270,7 @@ function ProfilePage() {
     border: hasError ? "2px solid #ff4d4d" : "none",
     backgroundColor: isEditing && !isReadOnly ? "white" : "#e0e0e0",
     fontSize: "14px",
-    fontFamily: "'Poppins', sans-serif",
+    fontFamily: "'Manrope', sans-serif",
     width: "100%",
     boxSizing: "border-box",
     cursor: isEditing && !isReadOnly ? "text" : "not-allowed",
@@ -302,21 +315,19 @@ function ProfilePage() {
         }}
       >
         {(!isCollapsed || isMobile) && (
-          <h2 style={{ fontSize: "28px", fontWeight: "800", margin: 0 }}>
-            OraVista
-          </h2>
+          <h2 style={{ fontSize: "28px", fontWeight: "800", margin: 0 }}><BrandWordmark /></h2>
         )}
         {isMobile ? (
-          <div onClick={closeMobileSidebar} style={{ cursor: "pointer" }}>
+          <button className="ov-ui-button" onClick={closeMobileSidebar} style={{ cursor: "pointer" }} type="button" aria-label="Close navigation">
             <X size={24} />
-          </div>
+          </button>
         ) : (
-          <div
+          <button className="ov-ui-button"
             onClick={() => setIsCollapsed(!isCollapsed)}
             style={{ cursor: "pointer" }}
-          >
+           type="button" aria-label="Toggle sidebar">
             {isCollapsed ? <Menu size={24} /> : <X size={24} />}
-          </div>
+          </button>
         )}
       </div>
 
@@ -353,7 +364,7 @@ function ProfilePage() {
             label: "Billings",
           },
         ].map(({ path, icon, label }) => (
-          <div
+          <button aria-label={label} aria-current={location.pathname === path ? 'page' : undefined} type="button" className="ov-nav-item"
             key={path}
             style={getNavItemStyle(path)}
             onClick={() => {
@@ -367,17 +378,17 @@ function ProfilePage() {
                 {label}
               </span>
             )}
-          </div>
+          </button>
         ))}
       </nav>
 
       <div
         style={{
-          borderTop: "1px solid rgba(255,255,255,0.2)",
+          borderTop: "1px solid var(--ov-on-line, rgba(255,255,255,0.2))",
           paddingTop: "10px",
         }}
       >
-        <div
+        <button aria-label="Settings" aria-current={location.pathname === "/settings" ? 'page' : undefined} type="button" className="ov-nav-item"
           style={getNavItemStyle("/settings")}
           onClick={() => {
             navigate("/settings");
@@ -386,14 +397,14 @@ function ProfilePage() {
         >
           <Settings size={20} style={{ flexShrink: 0 }} />
           {(!isCollapsed || isMobile) && "Settings"}
-        </div>
-        <div
+        </button>
+        <button aria-label="Logout" aria-current={location.pathname === "/logout" ? 'page' : undefined} data-ov-action="logout" type="button" className="ov-nav-item"
           style={{ ...getNavItemStyle("/logout"), color: "#ff4d4d" }}
           onClick={handleLogout}
         >
           <LogOut size={20} style={{ flexShrink: 0 }} />
           {(!isCollapsed || isMobile) && "Logout"}
-        </div>
+        </button>
       </div>
     </>
   );
@@ -404,21 +415,21 @@ function ProfilePage() {
         display: "flex",
         minHeight: "100vh",
         width: "100%",
-        fontFamily: "'Poppins', sans-serif",
+        fontFamily: "'Manrope', sans-serif",
       }}
     >
       {/* Modals */}
       {showConfirmModal && (
-        <div style={modalOverlayStyle}>
+        <PatientDialog onClose={() => setShowConfirmModal(false)} style={modalOverlayStyle}>
           <div style={modalContentStyle}>
             <AlertTriangle
               size={50}
-              color="#001166"
+              color="#087F8C"
               style={{ marginBottom: "15px", margin: "0 auto" }}
             />
             <h3
               style={{
-                color: "#001166",
+                color: "#087F8C",
                 marginBottom: "10px",
                 fontWeight: "800",
               }}
@@ -441,34 +452,34 @@ function ProfilePage() {
                   backgroundColor: "white",
                   cursor: "pointer",
                   fontWeight: "600",
-                  fontFamily: "'Poppins', sans-serif",
+                  fontFamily: "'Manrope', sans-serif",
                 }}
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmSave}
-                style={{
+                style={{ "--ov-on-color": "var(--ov-ink)",
                   flex: 1,
                   padding: "12px",
                   borderRadius: "10px",
                   border: "none",
-                  backgroundColor: "#001166",
-                  color: "white",
+                  backgroundColor: "var(--ov-primary)",
+                  color: "var(--ov-on-color, #fff)",
                   cursor: "pointer",
                   fontWeight: "600",
-                  fontFamily: "'Poppins', sans-serif",
+                  fontFamily: "'Manrope', sans-serif",
                 }}
               >
                 Confirm
               </button>
             </div>
           </div>
-        </div>
+        </PatientDialog>
       )}
 
       {showSuccessModal && (
-        <div style={modalOverlayStyle}>
+        <PatientDialog onClose={() => setShowSuccessModal(false)} style={modalOverlayStyle}>
           <div style={modalContentStyle}>
             <CheckCircle2
               size={50}
@@ -477,7 +488,7 @@ function ProfilePage() {
             />
             <h3
               style={{
-                color: "#001166",
+                color: "#087F8C",
                 marginBottom: "10px",
                 fontWeight: "800",
               }}
@@ -491,22 +502,22 @@ function ProfilePage() {
             </p>
             <button
               onClick={() => setShowSuccessModal(false)}
-              style={{
+              style={{ "--ov-on-color": "var(--ov-ink)",
                 width: "100%",
                 padding: "12px",
                 borderRadius: "10px",
                 border: "none",
-                backgroundColor: "#001166",
-                color: "white",
+                backgroundColor: "var(--ov-primary)",
+                color: "var(--ov-on-color, #fff)",
                 cursor: "pointer",
                 fontWeight: "600",
-                fontFamily: "'Poppins', sans-serif",
+                fontFamily: "'Manrope', sans-serif",
               }}
             >
               Close
             </button>
           </div>
-        </div>
+        </PatientDialog>
       )}
 
       {/* Mobile overlay backdrop */}
@@ -524,12 +535,12 @@ function ProfilePage() {
 
       {/* Desktop Sidebar */}
       {!isMobile && (
-        <div
-          style={{
+        <div className="ov-sidebar"
+          style={{ "--ov-on-color": "var(--ov-ink)",
             width: sidebarWidth,
-            backgroundColor: "#001166",
+            backgroundColor: "var(--ov-primary)",
             height: "100vh",
-            color: "white",
+            color: "var(--ov-on-color, #fff)",
             padding: "20px 15px",
             display: "flex",
             flexDirection: "column",
@@ -548,12 +559,12 @@ function ProfilePage() {
 
       {/* Mobile Sidebar Drawer */}
       {isMobile && (
-        <div
-          style={{
+        <div inert={!isMobileOpen} aria-hidden={!isMobileOpen} className="ov-sidebar"
+          style={{ "--ov-on-color": "var(--ov-ink)",
             width: "260px",
-            backgroundColor: "#001166",
+            backgroundColor: "var(--ov-primary)",
             height: "100vh",
-            color: "white",
+            color: "var(--ov-on-color, #fff)",
             padding: "20px 15px",
             display: "flex",
             flexDirection: "column",
@@ -571,7 +582,7 @@ function ProfilePage() {
       )}
 
       {/* Main Content */}
-      <div
+      <div className="ov-workspace"
         style={{
           marginLeft: isMobile ? 0 : sidebarWidth,
           width: isMobile ? "100%" : `calc(100% - ${sidebarWidth})`,
@@ -585,34 +596,32 @@ function ProfilePage() {
       >
         {/* Mobile Top Bar */}
         {isMobile && (
-          <div
-            style={{
+          <div className="ov-color-surface"
+            style={{ "--ov-on-color": "var(--ov-ink)",
               display: "flex",
               alignItems: "center",
               padding: "15px 20px",
-              backgroundColor: "#001166",
-              color: "white",
+              backgroundColor: "var(--ov-primary)",
+              color: "var(--ov-on-color, #fff)",
               position: "sticky",
               top: 0,
               zIndex: 100,
             }}
           >
-            <div
+            <button className="ov-ui-button"
               onClick={() => setIsMobileOpen(true)}
               style={{ cursor: "pointer", marginRight: "15px" }}
-            >
+             type="button" aria-label="Open navigation">
               <Menu size={24} />
-            </div>
-            <h2 style={{ fontSize: "22px", fontWeight: "800", margin: 0 }}>
-              OraVista
-            </h2>
+            </button>
+            <h2 style={{ fontSize: "22px", fontWeight: "800", margin: 0 }}><BrandWordmark /></h2>
           </div>
         )}
 
         <div style={{ padding: isMobile ? "20px 16px" : "40px" }}>
           <h1
             style={{
-              color: "#001166",
+              color: "#087F8C",
               fontSize: isMobile ? "28px" : "42px",
               fontWeight: "800",
               marginBottom: "24px",
@@ -621,12 +630,12 @@ function ProfilePage() {
             Profile
           </h1>
 
-          <div
-            style={{
-              backgroundColor: "#001166",
+          <div className="ov-panel"
+            style={{ "--ov-on-color": "var(--ov-ink)",
+              backgroundColor: "var(--ov-primary)",
               borderRadius: "24px",
               padding: isMobile ? "24px 16px" : "50px",
-              color: "white",
+              color: "var(--ov-on-color, #fff)",
             }}
           >
             {/* Profile Header */}
@@ -649,6 +658,8 @@ function ProfilePage() {
                 }}
               >
                 <div
+                  role="img"
+                  aria-label="Profile photo"
                   style={{
                     width: isMobile ? "90px" : "120px",
                     height: isMobile ? "90px" : "120px",
@@ -670,7 +681,7 @@ function ProfilePage() {
                   {!profilePreview && (
                     <User
                       size={isMobile ? 36 : 50}
-                      color="#001166"
+                      color="#087F8C"
                       opacity={0.3}
                     />
                   )}
@@ -685,7 +696,7 @@ function ProfilePage() {
                 />
                 <button
                   onClick={triggerFileInput}
-                  disabled={!isEditing}
+                  disabled={!isEditing || isUploading}
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -693,16 +704,18 @@ function ProfilePage() {
                     padding: "6px 15px",
                     borderRadius: "15px",
                     border: "none",
-                    backgroundColor: "rgba(255,255,255,0.2)",
-                    color: "white",
+                    backgroundColor: "var(--ov-on-wash, rgba(255,255,255,0.2))",
+                    color: "var(--ov-on-color, #fff)",
                     fontSize: "12px",
                     cursor: isEditing ? "pointer" : "not-allowed",
                     opacity: isEditing ? 1 : 0.5,
-                    fontFamily: "'Poppins', sans-serif",
+                    fontFamily: "'Manrope', sans-serif",
                   }}
                 >
-                  <Upload size={14} /> Update Photo
+                  <Upload size={14} /> {isUploading ? "Uploading..." : "Update Photo"}
                 </button>
+                {uploadError && <p className="ov-inline-error" role="alert">{uploadError}</p>}
+                {isEditing && <p className="ov-availability-note" style={{ maxWidth: "220px", textAlign: "center" }}>Photo uploads save immediately. Discard Changes applies to the form fields.</p>}
               </div>
 
               <div>
@@ -723,14 +736,14 @@ function ProfilePage() {
                     borderRadius: "20px",
                     border: "none",
                     backgroundColor: "white",
-                    color: "#001166",
+                    color: "#087F8C",
                     fontSize: "14px",
                     fontWeight: "700",
                     cursor: "pointer",
                     display: "inline-flex",
                     alignItems: "center",
                     gap: "8px",
-                    fontFamily: "'Poppins', sans-serif",
+                    fontFamily: "'Manrope', sans-serif",
                   }}
                 >
                   <Pencil size={14} /> Edit Information
@@ -765,7 +778,7 @@ function ProfilePage() {
                   >
                     <label
                       style={{
-                        color: "white",
+                        color: "var(--ov-on-color, #fff)",
                         fontSize: "13px",
                         fontWeight: "600",
                         display: "block",
@@ -774,7 +787,7 @@ function ProfilePage() {
                     >
                       {label}
                     </label>
-                    <input
+                    <input aria-label={label}
                       name={name}
                       style={inputStyle(errors[name])}
                       type={type}
@@ -814,7 +827,7 @@ function ProfilePage() {
                 >
                   <label
                     style={{
-                      color: "white",
+                      color: "var(--ov-on-color, #fff)",
                       fontSize: "13px",
                       fontWeight: "600",
                       display: "block",
@@ -823,7 +836,7 @@ function ProfilePage() {
                   >
                     Sex
                   </label>
-                  <select
+                  <select aria-label="sex"
                     name="sex"
                     style={inputStyle()}
                     value={userData.sex}
@@ -844,7 +857,7 @@ function ProfilePage() {
                 >
                   <label
                     style={{
-                      color: "white",
+                      color: "var(--ov-on-color, #fff)",
                       fontSize: "13px",
                       fontWeight: "600",
                       display: "block",
@@ -853,7 +866,7 @@ function ProfilePage() {
                   >
                     Date of Birth
                   </label>
-                  <input
+                  <input aria-label="dob"
                     name="dob"
                     style={inputStyle()}
                     type="date"
@@ -871,7 +884,7 @@ function ProfilePage() {
                 >
                   <label
                     style={{
-                      color: "white",
+                      color: "var(--ov-on-color, #fff)",
                       fontSize: "13px",
                       fontWeight: "600",
                       display: "block",
@@ -880,7 +893,7 @@ function ProfilePage() {
                   >
                     Age
                   </label>
-                  <input
+                  <input aria-label="Auto-computed"
                     name="age"
                     style={inputStyle(false, true)}
                     type="text"
@@ -909,7 +922,7 @@ function ProfilePage() {
                 >
                   <label
                     style={{
-                      color: "white",
+                      color: "var(--ov-on-color, #fff)",
                       fontSize: "13px",
                       fontWeight: "600",
                       display: "block",
@@ -918,7 +931,7 @@ function ProfilePage() {
                   >
                     Phone Number
                   </label>
-                  <input
+                  <input aria-label="phone"
                     name="phone"
                     style={inputStyle()}
                     type="text"
@@ -936,7 +949,7 @@ function ProfilePage() {
                 >
                   <label
                     style={{
-                      color: "white",
+                      color: "var(--ov-on-color, #fff)",
                       fontSize: "13px",
                       fontWeight: "600",
                       display: "block",
@@ -945,7 +958,7 @@ function ProfilePage() {
                   >
                     Occupation
                   </label>
-                  <input
+                  <input aria-label="Enter your occupation"
                     name="occupation"
                     style={inputStyle(errors.occupation)}
                     type="text"
@@ -987,10 +1000,10 @@ function ProfilePage() {
                     borderRadius: "10px",
                     border: "none",
                     backgroundColor: isEditing ? "white" : "#ccc",
-                    color: "#001166",
+                    color: "#087F8C",
                     fontWeight: "700",
                     cursor: isEditing ? "pointer" : "not-allowed",
-                    fontFamily: "'Poppins', sans-serif",
+                    fontFamily: "'Manrope', sans-serif",
                     width: isMobile ? "100%" : "auto",
                   }}
                 >
@@ -1004,10 +1017,10 @@ function ProfilePage() {
                     borderRadius: "10px",
                     border: "none",
                     backgroundColor: isEditing ? "white" : "#ccc",
-                    color: "#001166",
+                    color: "#087F8C",
                     fontWeight: "700",
                     cursor: isEditing ? "pointer" : "not-allowed",
-                    fontFamily: "'Poppins', sans-serif",
+                    fontFamily: "'Manrope', sans-serif",
                     width: isMobile ? "100%" : "auto",
                   }}
                 >

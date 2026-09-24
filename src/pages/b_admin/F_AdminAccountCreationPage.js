@@ -79,28 +79,28 @@ function AdminAccountCreation() {
       <style>
         {`
           .aac-container { display: flex; flex-direction: column; width: 100%; font-family: sans-serif; }
-          .aac-header { height: 80px; background: #001166; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; position: sticky; top: 0; z-index: 10; }
+          .aac-header { height: 80px; background: #087F8C; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; position: sticky; top: 0; z-index: 10; }
           
           .aac-search-wrapper { display: flex; align-items: center; }
           .aac-search-box { display: flex; align-items: center; background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 12px; width: 350px; transition: all 0.3s ease; box-sizing: border-box; }
           .aac-search-icon { flex-shrink: 0; }
-          .aac-search-input { border: none; background: transparent; margin-left: 10px; outline: none; width: 100%; color: white; }
-          .aac-search-input::placeholder { color: rgba(255,255,255,0.6); }
+          .aac-search-input { border: none; background: transparent; margin-left: 10px; outline: none; width: 100%; color: var(--ov-on-color, #fff); }
+          .aac-search-input::placeholder { color: var(--ov-on-muted, rgba(255,255,255,0.75)); }
           .aac-mobile-toggle { display: none; }
 
           .aac-header-actions { display: flex; align-items: center; gap: 25px; margin-left: auto; }
           .aac-profile { display: flex; align-items: center; gap: 15px; border-left: 1px solid rgba(255,255,255,0.2); padding-left: 20px; }
           .aac-profile-text { text-align: right; }
-          .aac-user-name { margin: 0; font-weight: bold; font-size: 14px; color: white; }
-          .aac-user-role { margin: 0; font-size: 12px; color: rgba(255,255,255,0.6); }
+          .aac-user-name { margin: 0; font-weight: bold; font-size: 14px; color: var(--ov-on-color, #fff); }
+          .aac-user-role { margin: 0; font-size: 12px; color: var(--ov-on-muted, rgba(255,255,255,0.75)); }
           .aac-avatar { width: 40px; height: 40px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
-          .aac-content { padding: 40px; background-color: #F4F7FE; min-height: calc(100vh - 80px); }
+          .aac-content { padding: 40px; background-color: #F3F9FA; min-height: calc(100vh - 80px); }
           .aac-title-section { margin-bottom: 30px; }
-          .aac-page-title { font-size: 28px; font-weight: 700; color: #001166; margin: 0; }
+          .aac-page-title { font-size: 28px; font-weight: 700; color: #087F8C; margin: 0; }
           .aac-page-subtitle { font-size: 14px; color: #666; margin-top: 5px; }
 
-          .aac-form-card { background: #001166; padding: 30px; border-radius: 15px; color: white; margin-bottom: 30px; }
+          .aac-form-card { background: #087F8C; padding: 30px; border-radius: 15px; color: var(--ov-on-color, #fff); margin-bottom: 30px; }
           .aac-field-label { font-size: 13px; font-weight: 600; margin-bottom: 10px; display: block; }
           .aac-field-label span { color: #ff4d4d; }
           
@@ -114,26 +114,26 @@ function AdminAccountCreation() {
           
           .aac-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
           .aac-input-group { display: flex; flex-direction: column; }
-          .aac-input { padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white; outline: none; appearance: auto; box-sizing: border-box; width: 100%; }
+          .aac-input { padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: var(--ov-on-color, #fff); outline: none; appearance: auto; box-sizing: border-box; width: 100%; }
           .aac-email-input { width: calc(50% - 10px); }
 
           .aac-form-actions { display: flex; justify-content: flex-end; gap: 15px; margin-top: 40px; }
-          .aac-cancel-btn { padding: 10px 30px; border-radius: 8px; border: 1px solid white; background: transparent; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
+          .aac-cancel-btn { padding: 10px 30px; border-radius: 8px; border: 1px solid white; background: transparent; color: var(--ov-on-color, #fff); font-weight: bold; cursor: pointer; transition: 0.2s; }
           .aac-cancel-btn:hover { background: rgba(255,255,255,0.1); }
-          .aac-create-btn { padding: 10px 30px; border-radius: 8px; border: none; background: white; color: #001166; font-weight: bold; cursor: pointer; transition: 0.2s; }
+          .aac-create-btn { padding: 10px 30px; border-radius: 8px; border: none; background: white; color: #087F8C; font-weight: bold; cursor: pointer; transition: 0.2s; }
           .aac-create-btn:hover { background: #f0f0f0; }
 
-          .aac-guidelines-card { background: #001166; padding: 30px; border-radius: 15px; color: white; }
+          .aac-guidelines-card { background: #087F8C; padding: 30px; border-radius: 15px; color: var(--ov-on-color, #fff); }
           .aac-guideline-list { margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.8; opacity: 0.9; }
-          .aac-guideline-list strong { color: white; opacity: 1; }
+          .aac-guideline-list strong { color: var(--ov-on-color, #fff); opacity: 1; }
 
           /* MODAL STYLES */
           .aac-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; padding: 20px; box-sizing: border-box; }
           .aac-modal-content { background-color: white; padding: 40px; border-radius: 20px; width: 400px; max-width: 100%; text-align: center; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2); box-sizing: border-box; }
           .aac-modal-close { position: absolute; top: 15px; right: 15px; border: none; background: transparent; cursor: pointer; color: #666; }
-          .aac-modal-title { font-size: 20px; font-weight: bold; margin: 20px 0 10px; color: #001166; }
+          .aac-modal-title { font-size: 20px; font-weight: bold; margin: 20px 0 10px; color: #087F8C; }
           .aac-modal-text { font-size: 14px; color: #666; line-height: 1.5; margin-bottom: 25px; }
-          .aac-modal-btn { width: 100%; padding: 12px; border-radius: 10px; border: none; background: #001166; color: white; font-weight: bold; cursor: pointer; }
+          .aac-modal-btn { width: 100%; padding: 12px; border-radius: 10px; border: none; background: #087F8C; color: var(--ov-on-color, #fff); font-weight: bold; cursor: pointer; }
 
           /* Responsive Mobile View */
           @media (max-width: 768px) {
@@ -141,14 +141,14 @@ function AdminAccountCreation() {
             
             .aac-search-wrapper { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); z-index: 20; }
             .aac-search-box { width: 44px; height: 44px; padding: 0; justify-content: center; cursor: pointer; }
-            .aac-search-box.expanded { width: calc(100vw - 40px); background: #002288; border: 1px solid rgba(255,255,255,0.2); padding: 0 15px; justify-content: space-between; }
+            .aac-search-box.expanded { width: calc(100vw - 40px); background: #066875; border: 1px solid rgba(255,255,255,0.2); padding: 0 15px; justify-content: space-between; }
             
             .aac-search-input { display: none; }
             .aac-search-box.expanded .aac-search-input { display: block; }
             
             .aac-search-box:not(.expanded) .aac-search-icon { display: none; }
             
-            .aac-mobile-toggle { display: flex; align-items: center; justify-content: center; background: transparent; border: none; color: white; padding: 0; cursor: pointer; }
+            .aac-mobile-toggle { display: flex; align-items: center; justify-content: center; background: transparent; border: none; color: var(--ov-on-color, #fff); padding: 0; cursor: pointer; }
             .aac-search-box.expanded .aac-mobile-toggle { margin-left: 10px; }
 
             .aac-header-actions { gap: 15px; transition: opacity 0.3s ease; }
@@ -190,7 +190,7 @@ function AdminAccountCreation() {
         <header className="aac-header">
           <div className="aac-search-wrapper">
             <div className={`aac-search-box ${isSearchExpanded ? 'expanded' : ''}`}>
-              <Search className="aac-search-icon" size={18} color="rgba(255,255,255,0.6)" />
+              <Search className="aac-search-icon" size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
               <input 
                 type="text" 
                 placeholder="Search patients, appointments..." 
@@ -206,14 +206,14 @@ function AdminAccountCreation() {
           </div>
           
           <div className={`aac-header-actions ${isSearchExpanded ? 'hidden' : ''}`}>
-            <Bell size={20} color="white" />
-            <MessageSquare size={20} color="white" />
+            <Bell size={20} color="var(--ov-on-color, #fff)" />
+            <MessageSquare size={20} color="var(--ov-on-color, #fff)" />
             <div className="aac-profile">
               <div className="aac-profile-text">
                 <p className="aac-user-name">Admin User</p>
                 <p className="aac-user-role">Administrator</p>
               </div>
-              <div className="aac-avatar"><User size={20} color="#001166" /></div>
+              <div className="aac-avatar"><User size={20} color="#087F8C" /></div>
             </div>
           </div>
         </header>

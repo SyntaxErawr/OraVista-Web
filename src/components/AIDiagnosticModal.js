@@ -83,7 +83,7 @@ function AIDiagnosticModal({ isOpen, onClose, record }) {
                     <span style={{
                       position: 'absolute',
                       left: '-2px',
-                      color: 'white',
+                      color: "var(--ov-on-color, #fff)",
                       fontSize: '10px',
                       fontWeight: '700',
                       padding: '2px 6px',
@@ -99,7 +99,7 @@ function AIDiagnosticModal({ isOpen, onClose, record }) {
               })}
             </div>
           ) : (
-            <p style={{ color: 'rgba(255,255,255,0.4)' }}>No diagnostic image available</p>
+            <p style={{ color: "var(--ov-on-muted, rgba(255,255,255,0.75))" }}>No diagnostic image available</p>
           )}
         </div>
       </div>
@@ -140,12 +140,12 @@ function AIDiagnosticModal({ isOpen, onClose, record }) {
       <h3 style={{ ...styles.columnTitle, marginBottom: '16px' }}>Clinical Notes</h3>
       <div style={styles.scrollableContent}>
         {record.clinical_notes && record.clinical_notes.trim() !== "" ? (
-          <div style={styles.notesCard}>
+          <div className="ov-panel" style={styles.notesCard}>
             <p style={styles.notesText}>{record.clinical_notes}</p>
           </div>
         ) : (
           <div style={styles.emptyContainer}>
-            <FileText size={32} color="rgba(255,255,255,0.2)" style={{ marginBottom: '10px' }} />
+            <FileText size={32} color="var(--ov-on-muted, rgba(255,255,255,0.75))" style={{ marginBottom: '10px' }} />
             <p style={styles.emptyText}>No clinical notes available for this patient document.</p>
           </div>
         )}
@@ -159,7 +159,7 @@ function AIDiagnosticModal({ isOpen, onClose, record }) {
         *, *::before, *::after { box-sizing: border-box; }
 
         .ai-modal-content {
-          background: #091238;
+          background: #123C45;
           border: 1px solid rgba(255,255,255,0.1);
           border-radius: 20px;
           padding: 30px;
@@ -169,7 +169,7 @@ function AIDiagnosticModal({ isOpen, onClose, record }) {
           max-height: 90vh;
           display: flex;
           flex-direction: column;
-          color: white;
+          color: var(--ov-on-color, #fff);
           position: relative;
           box-shadow: 0 25px 50px rgba(0,0,0,0.6);
           box-sizing: border-box;
@@ -191,7 +191,7 @@ function AIDiagnosticModal({ isOpen, onClose, record }) {
         .ai-tab-panel { display: none; }
 
         /* Mobile title truncation */
-        .ai-modal-title { font-size: 22px; font-weight: 700; color: white; margin: 0; }
+        .ai-modal-title { font-size: 22px; font-weight: 700; color: var(--ov-on-color, #fff); margin: 0; }
 
         @media (max-width: 768px) {
           .ai-modal-content {
@@ -219,7 +219,7 @@ function AIDiagnosticModal({ isOpen, onClose, record }) {
             background: none;
             border: none;
             border-bottom: 3px solid transparent;
-            color: rgba(255,255,255,0.5);
+            color: var(--ov-on-muted, rgba(255,255,255,0.75));
             font-size: 12px;
             font-weight: 600;
             padding: 10px 4px;
@@ -285,7 +285,7 @@ function AIDiagnosticModal({ isOpen, onClose, record }) {
             )}
           </div>
           <button style={styles.closeHeaderBtn} onClick={onClose} title="Close Modal">
-            <X size={22} color="white" />
+            <X size={22} color="var(--ov-on-color, #fff)" />
           </button>
         </header>
 
@@ -339,7 +339,7 @@ const styles = {
   },
   modalHeader: {
     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-    borderBottom: '1px solid rgba(255,255,255,0.1)',
+    borderBottom: "1px solid var(--ov-on-line, rgba(255,255,255,0.1))",
     paddingBottom: '20px', marginBottom: '20px', flexShrink: 0,
   },
   headerTitleGroup: { display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 },
@@ -360,23 +360,23 @@ const styles = {
     display: 'flex', justifyContent: 'space-between',
     alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px',
   },
-  columnTitle: { fontSize: '14px', fontWeight: '700', color: 'rgba(255,255,255,0.8)', margin: 0 },
+  columnTitle: { fontSize: '14px', fontWeight: '700', color: "var(--ov-on-color, #fff)", margin: 0 },
   viewerActions: { display: 'flex', gap: '6px', flexWrap: 'wrap' },
-  vBtn: {
-    background: 'rgba(255,255,255,0.05)',
-    border: '1px solid rgba(255,255,255,0.1)',
-    color: 'white', padding: '5px 10px', borderRadius: '8px',
+  vBtn: { "--ov-on-color": "#087F8C",
+    background: "var(--ov-on-wash, rgba(255,255,255,0.05))",
+    border: "1px solid var(--ov-on-line, rgba(255,255,255,0.1))",
+    color: "var(--ov-on-color, #fff)", padding: '5px 10px', borderRadius: '8px',
     fontSize: '12px', display: 'flex', alignItems: 'center',
     gap: '4px', cursor: 'pointer',
   },
-  toggleBtn: {
-    background: 'rgba(255,255,255,0.08)', border: 'none',
-    color: 'white', fontSize: '11px', fontWeight: '600',
+  toggleBtn: { "--ov-on-color": "#087F8C",
+    background: "var(--ov-on-wash, rgba(255,255,255,0.08))", border: 'none',
+    color: "var(--ov-on-color, #fff)", fontSize: '11px', fontWeight: '600',
     padding: '5px 10px', borderRadius: '6px', cursor: 'pointer',
   },
   imageAreaContainer: {
-    flex: 1, backgroundColor: '#00051e', borderRadius: '12px',
-    border: '1px solid rgba(255,255,255,0.05)',
+    flex: 1, backgroundColor: '#06343C', borderRadius: '12px',
+    border: "1px solid var(--ov-on-line, rgba(255,255,255,0.05))",
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     overflow: 'auto', padding: '10px', minHeight: 0,
   },
@@ -384,30 +384,30 @@ const styles = {
   scrollableContent: { flex: 1, overflowY: 'auto', paddingRight: '4px' },
   findingsList: { display: 'flex', flexDirection: 'column', gap: '10px' },
   findingCard: {
-    background: 'rgba(255,255,255,0.03)',
-    border: '1px solid rgba(255,255,255,0.05)',
+    background: "var(--ov-on-wash, rgba(255,255,255,0.03))",
+    border: "1px solid var(--ov-on-line, rgba(255,255,255,0.05))",
     borderRadius: '10px', padding: '12px',
   },
-  findingName: { fontSize: '13px', fontWeight: '600', margin: '0 0 6px 0', color: 'white' },
+  findingName: { fontSize: '13px', fontWeight: '600', margin: '0 0 6px 0', color: "var(--ov-on-color, #fff)" },
   confBadge: {
     fontSize: '10px', padding: '2px 7px', borderRadius: '10px',
-    fontWeight: 'bold', color: 'white', display: 'inline-block',
+    fontWeight: 'bold', color: "var(--ov-on-color, #fff)", display: 'inline-block',
   },
   notesCard: {
-    background: 'rgba(255,255,255,0.03)',
-    border: '1px solid rgba(255,255,255,0.05)',
+    background: "var(--ov-on-wash, rgba(255,255,255,0.03))",
+    border: "1px solid var(--ov-on-line, rgba(255,255,255,0.05))",
     borderRadius: '10px', padding: '16px',
   },
   notesText: {
     fontSize: '13px', lineHeight: '1.6',
-    color: 'rgba(255,255,255,0.9)', margin: 0, whiteSpace: 'pre-wrap',
+    color: "var(--ov-on-color, #fff)", margin: 0, whiteSpace: 'pre-wrap',
   },
   emptyContainer: {
     display: 'flex', flexDirection: 'column',
     alignItems: 'center', justifyContent: 'center',
     height: '100%', minHeight: '160px', opacity: 0.6,
   },
-  emptyText: { fontSize: '13px', color: 'rgba(255,255,255,0.5)', textAlign: 'center', margin: 0 },
+  emptyText: { fontSize: '13px', color: "var(--ov-on-muted, rgba(255,255,255,0.75))", textAlign: 'center', margin: 0 },
 };
 
 export default AIDiagnosticModal;

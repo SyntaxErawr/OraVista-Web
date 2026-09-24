@@ -1,3 +1,4 @@
+import BrandWordmark from "../../components/BrandWordmark";
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -53,6 +54,8 @@ function BillingsPage() {
     sex: "",
   });
   const [billings, setBillings] = useState([]);
+  const [billingsError, setBillingsError] = useState("");
+  const [billingsLoading, setBillingsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("pending");
 
   useEffect(() => {
@@ -84,10 +87,17 @@ function BillingsPage() {
       );
       if (response.ok) {
         const data = await response.json();
+        if (!Array.isArray(data)) throw new Error("Invalid billing response");
         setBillings(data);
+        setBillingsError("");
+      } else {
+        throw new Error("Billing request failed");
       }
     } catch (error) {
       console.error("Error fetching billings:", error);
+      setBillingsError("We could not load your billing information. Please retry.");
+    } finally {
+      setBillingsLoading(false);
     }
   }, []);
 
@@ -145,9 +155,9 @@ function BillingsPage() {
   };
 
   const getStatusStyle = (status) => {
-    if (status === "Paid") return { backgroundColor: "#10b981", color: "white" };
-    if (status === "Approved") return { backgroundColor: "#2563eb", color: "white" };
-    if (status === "Denied") return { backgroundColor: "#dc2626", color: "white" };
+    if (status === "Paid") return { backgroundColor: "#10b981", color: "var(--ov-on-color, #fff)" };
+    if (status === "Approved") return { backgroundColor: "#2563eb", color: "var(--ov-on-color, #fff)" };
+    if (status === "Denied") return { backgroundColor: "#dc2626", color: "var(--ov-on-color, #fff)" };
     return { backgroundColor: "#ffc107", color: "#5f4500" };
   };
 
@@ -157,7 +167,7 @@ function BillingsPage() {
       display: "flex",
       alignItems: "center",
       gap: "15px",
-      color: "white",
+      color: "var(--ov-on-color, #fff)",
       textDecoration: "none",
       padding: "12px 15px",
       margin: "5px 0",
@@ -167,9 +177,9 @@ function BillingsPage() {
       transition: "all 0.3s ease",
       whiteSpace: "nowrap",
       overflow: "hidden",
-      backgroundColor: isActive ? "rgba(255, 255, 255, 0.2)" : "transparent",
+      backgroundColor: isActive ? "var(--ov-on-wash, rgba(255, 255, 255, 0.2))" : "transparent",
       fontWeight: isActive ? "700" : "400",
-      borderLeft: isActive ? "4px solid white" : "4px solid transparent",
+      borderLeft: isActive ? "4px solid #21B9C8" : "4px solid transparent",
     };
   };
 
@@ -184,21 +194,19 @@ function BillingsPage() {
         }}
       >
         {(!isCollapsed || isMobile) && (
-          <h2 style={{ fontSize: "28px", fontWeight: "800", margin: 0 }}>
-            OraVista
-          </h2>
+          <h2 style={{ fontSize: "28px", fontWeight: "800", margin: 0 }}><BrandWordmark /></h2>
         )}
         {isMobile ? (
-          <div onClick={closeMobileSidebar} style={{ cursor: "pointer" }}>
+          <button className="ov-ui-button" onClick={closeMobileSidebar} style={{ cursor: "pointer" }} type="button" aria-label="Close navigation">
             <X size={24} />
-          </div>
+          </button>
         ) : (
-          <div
+          <button className="ov-ui-button"
             onClick={() => setIsCollapsed(!isCollapsed)}
             style={{ cursor: "pointer" }}
-          >
+           type="button" aria-label="Toggle sidebar">
             {isCollapsed ? <Menu size={24} /> : <X size={24} />}
-          </div>
+          </button>
         )}
       </div>
 
@@ -235,7 +243,7 @@ function BillingsPage() {
             label: "Billings",
           },
         ].map(({ path, icon, label }) => (
-          <div
+          <button aria-label={label} aria-current={location.pathname === path ? 'page' : undefined} type="button" className="ov-nav-item"
             key={path}
             style={getNavItemStyle(path)}
             onClick={() => {
@@ -249,17 +257,17 @@ function BillingsPage() {
                 {label}
               </span>
             )}
-          </div>
+          </button>
         ))}
       </nav>
 
       <div
         style={{
-          borderTop: "1px solid rgba(255,255,255,0.2)",
+          borderTop: "1px solid var(--ov-on-line, rgba(255,255,255,0.2))",
           paddingTop: "10px",
         }}
       >
-        <div
+        <button aria-label="Settings" aria-current={location.pathname === "/settings" ? 'page' : undefined} type="button" className="ov-nav-item"
           style={getNavItemStyle("/settings")}
           onClick={() => {
             navigate("/settings");
@@ -268,14 +276,14 @@ function BillingsPage() {
         >
           <Settings size={20} style={{ flexShrink: 0 }} />
           {(!isCollapsed || isMobile) && "Settings"}
-        </div>
-        <div
+        </button>
+        <button aria-label="Logout" aria-current={location.pathname === "/logout" ? 'page' : undefined} data-ov-action="logout" type="button" className="ov-nav-item"
           style={{ ...getNavItemStyle("/logout"), color: "#ff4d4d" }}
           onClick={handleLogout}
         >
           <LogOut size={20} style={{ flexShrink: 0 }} />
           {(!isCollapsed || isMobile) && "Logout"}
-        </div>
+        </button>
       </div>
     </>
   );
@@ -289,7 +297,7 @@ function BillingsPage() {
         display: "flex",
         minHeight: "100vh",
         width: "100%",
-        fontFamily: "'Poppins', sans-serif",
+        fontFamily: "'Manrope', sans-serif",
         backgroundColor: "white",
       }}
     >
@@ -308,12 +316,12 @@ function BillingsPage() {
 
       {/* Desktop Sidebar */}
       {!isMobile && (
-        <div
-          style={{
+        <div className="ov-sidebar"
+          style={{ "--ov-on-color": "var(--ov-ink)",
             width: sidebarWidth,
-            backgroundColor: "#001166",
+            backgroundColor: "var(--ov-primary)",
             height: "100vh",
-            color: "white",
+            color: "var(--ov-on-color, #fff)",
             padding: "20px 15px",
             display: "flex",
             flexDirection: "column",
@@ -332,12 +340,12 @@ function BillingsPage() {
 
       {/* Mobile Sidebar Drawer */}
       {isMobile && (
-        <div
-          style={{
+        <div inert={!isMobileOpen} aria-hidden={!isMobileOpen} className="ov-sidebar"
+          style={{ "--ov-on-color": "var(--ov-ink)",
             width: "260px",
-            backgroundColor: "#001166",
+            backgroundColor: "var(--ov-primary)",
             height: "100vh",
-            color: "white",
+            color: "var(--ov-on-color, #fff)",
             padding: "20px 15px",
             display: "flex",
             flexDirection: "column",
@@ -355,7 +363,7 @@ function BillingsPage() {
       )}
 
       {/* Main Content */}
-      <div
+      <div className="ov-workspace"
         style={{
           marginLeft: isMobile ? 0 : sidebarWidth,
           width: isMobile ? "100%" : `calc(100% - ${sidebarWidth})`,
@@ -367,27 +375,25 @@ function BillingsPage() {
       >
         {/* Mobile Top Bar */}
         {isMobile && (
-          <div
-            style={{
+          <div className="ov-color-surface"
+            style={{ "--ov-on-color": "var(--ov-ink)",
               display: "flex",
               alignItems: "center",
               padding: "15px 20px",
-              backgroundColor: "#001166",
-              color: "white",
+              backgroundColor: "var(--ov-primary)",
+              color: "var(--ov-on-color, #fff)",
               position: "sticky",
               top: 0,
               zIndex: 100,
             }}
           >
-            <div
+            <button className="ov-ui-button"
               onClick={() => setIsMobileOpen(true)}
               style={{ cursor: "pointer", marginRight: "15px" }}
-            >
+             type="button" aria-label="Open navigation">
               <Menu size={24} />
-            </div>
-            <h2 style={{ fontSize: "22px", fontWeight: "800", margin: 0 }}>
-              OraVista
-            </h2>
+            </button>
+            <h2 style={{ fontSize: "22px", fontWeight: "800", margin: 0 }}><BrandWordmark /></h2>
           </div>
         )}
 
@@ -396,7 +402,7 @@ function BillingsPage() {
           <h1
             className="page-title"
             style={{
-              color: "#001166",
+              color: "#087F8C",
               fontSize: "48px",
               fontWeight: "800",
               marginBottom: "10px",
@@ -406,7 +412,7 @@ function BillingsPage() {
           </h1>
           <p
             style={{
-              color: "#001166",
+              color: "#087F8C",
               fontWeight: "600",
               marginBottom: "40px",
             }}
@@ -414,6 +420,7 @@ function BillingsPage() {
             Manage your payments and transaction history.
           </p>
 
+          {billingsError && <div className="ov-inline-error" role="alert">{billingsError} <button type="button" className="ov-ui-button ov-text-link" onClick={() => fetchBillings(userData.id)}>Retry</button></div>}
           {/* Summary Cards */}
           <div
             className="summary-grid"
@@ -444,7 +451,7 @@ function BillingsPage() {
                   flexShrink: 0,
                 }}
               >
-                <DollarSign size={30} color="white" />
+                <DollarSign size={30} color="var(--ov-on-color, #fff)" />
               </div>
               <div>
                 <p
@@ -466,7 +473,7 @@ function BillingsPage() {
                     fontWeight: "800",
                   }}
                 >
-                  ₱{totalOutstanding.toLocaleString()}
+                  {billingsLoading ? "Loading..." : billingsError ? "Unavailable" : `₱${totalOutstanding.toLocaleString()}`}
                 </h2>
               </div>
             </div>
@@ -491,7 +498,7 @@ function BillingsPage() {
                   flexShrink: 0,
                 }}
               >
-                <Receipt size={30} color="white" />
+                <Receipt size={30} color="var(--ov-on-color, #fff)" />
               </div>
               <div>
                 <p
@@ -513,7 +520,7 @@ function BillingsPage() {
                     fontWeight: "800",
                   }}
                 >
-                  ₱{totalPaid.toLocaleString()}
+                  {billingsLoading ? "Loading..." : billingsError ? "Unavailable" : `₱${totalPaid.toLocaleString()}`}
                 </h2>
               </div>
             </div>
@@ -536,15 +543,15 @@ function BillingsPage() {
                 key={key}
                 className="tab-btn"
                 onClick={() => setActiveTab(key)}
-                style={{
+                style={{ "--ov-on-color": "var(--ov-ink)",
                   padding: "12px 30px",
                   borderRadius: "30px",
                   border: "none",
                   fontWeight: "700",
                   cursor: "pointer",
                   transition: "all 0.3s",
-                  backgroundColor: activeTab === key ? "#001166" : "#e8ebf5",
-                  color: activeTab === key ? "white" : "#001166",
+                  backgroundColor: activeTab === key ? "var(--ov-primary)" : "#EAF5F6",
+                  color: activeTab === key ? "var(--ov-ink)" : "#087F8C",
                 }}
               >
                 {label}
@@ -556,7 +563,7 @@ function BillingsPage() {
           <div
             className="table-wrap"
             style={{
-              backgroundColor: "#e8ebf5",
+              backgroundColor: "#EAF5F6",
               borderRadius: "30px",
               padding: "40px",
             }}
@@ -569,9 +576,9 @@ function BillingsPage() {
                 gridTemplateColumns:
                   activeTab === "history" ? "1fr 1.5fr 1.5fr 1fr 1fr 1.2fr" : "1fr 1.5fr 1.5fr 1fr 1fr",
                 padding: "0 20px 15px 20px",
-                color: "#001166",
+                color: "#087F8C",
                 fontWeight: "800",
-                borderBottom: "2px dashed #001166",
+                borderBottom: "2px dashed #087F8C",
                 marginBottom: "20px",
               }}
             >
@@ -613,7 +620,7 @@ function BillingsPage() {
                     </div>
                     <div
                       data-label="Date"
-                      style={{ color: "#001166", fontWeight: "600" }}
+                      style={{ color: "#087F8C", fontWeight: "600" }}
                     >
                       {new Date(item.appointment_date).toLocaleDateString(
                         "en-US",
@@ -624,7 +631,7 @@ function BillingsPage() {
                         },
                       )}
                     </div>
-                    <div data-label="Service" style={{ color: "#001166" }}>
+                    <div data-label="Service" style={{ color: "#087F8C" }}>
                       {item.service_type}
                     </div>
                     <div
@@ -655,15 +662,15 @@ function BillingsPage() {
                         <button
                           type="button"
                           onClick={() => exportReceiptPDF(userData, item)}
-                          style={{
+                          style={{ "--ov-on-color": "var(--ov-ink)",
                             display: "inline-flex",
                             alignItems: "center",
                             gap: "6px",
                             border: "none",
                             borderRadius: "8px",
                             padding: "9px 12px",
-                            backgroundColor: "#001166",
-                            color: "white",
+                            backgroundColor: "var(--ov-primary)",
+                            color: "var(--ov-on-color, #fff)",
                             cursor: "pointer",
                             fontWeight: "700",
                             fontSize: "12px",
@@ -681,7 +688,7 @@ function BillingsPage() {
                   style={{
                     textAlign: "center",
                     padding: "60px 0",
-                    color: "#001166",
+                    color: "#087F8C",
                   }}
                 >
                   <Receipt

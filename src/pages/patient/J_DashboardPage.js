@@ -1,8 +1,8 @@
+import BrandWordmark from "../../components/BrandWordmark";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Search,
-  Mail,
   Bell,
   Menu,
   X,
@@ -14,7 +14,6 @@ import {
   Settings,
   LogOut,
   CreditCard,
-  ChevronUp,
 } from "lucide-react";
 import { API_BASE_URL } from "../../config/api";
 
@@ -48,7 +47,7 @@ function DashboardPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [historySearch, setHistorySearch] = useState("");
   const [showNotifications, setShowNotifications] = useState(false);
   const [appLanguage] = useState(localStorage.getItem("language") || "English");
   const [userData, setUserData] = useState({
@@ -58,6 +57,12 @@ function DashboardPage() {
   });
   const [funFact, setFunFact] = useState("");
   const [appointments, setAppointments] = useState([]);
+  const [appointmentsError, setAppointmentsError] = useState("");
+  const [notificationsError, setNotificationsError] = useState("");
+  const historyAppointments = appointments.filter(appt =>
+    [appt.service_type, appt.dentist_name, appt.status, appt.appointment_date]
+      .join(" ").toLowerCase().includes(historySearch.trim().toLowerCase())
+  );
   const [notifications, setNotifications] = useState([]);
   const [notificationPage, setNotificationPage] = useState(1);
   const [notificationChoices, setNotificationChoices] = useState({});
@@ -140,10 +145,15 @@ function DashboardPage() {
       );
       if (response.ok) {
         const data = await response.json();
+        if (!Array.isArray(data)) throw new Error("Invalid appointments response");
         setAppointments(data);
+        setAppointmentsError("");
+      } else {
+        throw new Error("Appointments request failed");
       }
     } catch (error) {
       console.error("Error fetching appointments:", error);
+      setAppointmentsError("Appointments could not be loaded. Please retry.");
     }
   }, []);
 
@@ -154,10 +164,15 @@ function DashboardPage() {
       );
       if (response.ok) {
         const data = await response.json();
-        setNotifications(Array.isArray(data) ? data : []);
+        if (!Array.isArray(data)) throw new Error("Invalid notifications response");
+        setNotifications(data);
+        setNotificationsError("");
+      } else {
+        throw new Error("Notifications request failed");
       }
     } catch (error) {
       console.error("Error fetching notifications:", error);
+      setNotificationsError("Notifications could not be loaded. Please retry.");
     }
   }, []);
 
@@ -349,7 +364,7 @@ function DashboardPage() {
       display: "flex",
       alignItems: "center",
       gap: "15px",
-      color: "white",
+      color: "var(--ov-on-color, #fff)",
       textDecoration: "none",
       padding: "12px 15px",
       margin: "5px 0",
@@ -359,17 +374,17 @@ function DashboardPage() {
       transition: "all 0.3s ease",
       whiteSpace: "nowrap",
       overflow: "hidden",
-      backgroundColor: isActive ? "rgba(255, 255, 255, 0.2)" : "transparent",
+      backgroundColor: isActive ? "var(--ov-on-wash, rgba(255, 255, 255, 0.2))" : "transparent",
       fontWeight: isActive ? "700" : "400",
-      borderLeft: isActive ? "4px solid white" : "4px solid transparent",
+      borderLeft: isActive ? "4px solid #21B9C8" : "4px solid transparent",
     };
   };
 
-  const cardStyle = {
-    backgroundColor: "#001166",
+  const cardStyle = { "--ov-on-color": "var(--ov-ink)",
+    backgroundColor: "var(--ov-primary)",
     borderRadius: "15px",
     padding: "25px",
-    color: "white",
+    color: "var(--ov-on-color, #fff)",
     display: "flex",
     flexDirection: "column",
     justifyContent: "space-between",
@@ -387,21 +402,19 @@ function DashboardPage() {
         }}
       >
         {(!isCollapsed || isMobile) && (
-          <h2 style={{ fontSize: "28px", fontWeight: "800", margin: 0 }}>
-            OraVista
-          </h2>
+          <h2 style={{ fontSize: "28px", fontWeight: "800", margin: 0 }}><BrandWordmark /></h2>
         )}
         {isMobile ? (
-          <div onClick={closeMobileSidebar} style={{ cursor: "pointer" }}>
+          <button className="ov-ui-button" onClick={closeMobileSidebar} style={{ cursor: "pointer" }} type="button" aria-label="Close navigation">
             <X size={24} />
-          </div>
+          </button>
         ) : (
-          <div
+          <button className="ov-ui-button"
             onClick={() => setIsCollapsed(!isCollapsed)}
             style={{ cursor: "pointer" }}
-          >
+           type="button" aria-label="Toggle sidebar">
             {isCollapsed ? <Menu size={24} /> : <X size={24} />}
-          </div>
+          </button>
         )}
       </div>
 
@@ -438,7 +451,7 @@ function DashboardPage() {
             label: "Billings",
           },
         ].map(({ path, icon, label }) => (
-          <div
+          <button aria-label={label} aria-current={location.pathname === path ? 'page' : undefined} type="button" className="ov-nav-item"
             key={path}
             style={getNavItemStyle(path)}
             onClick={() => {
@@ -452,17 +465,17 @@ function DashboardPage() {
                 {label}
               </span>
             )}
-          </div>
+          </button>
         ))}
       </nav>
 
       <div
         style={{
-          borderTop: "1px solid rgba(255,255,255,0.2)",
+          borderTop: "1px solid var(--ov-on-line, rgba(255,255,255,0.2))",
           paddingTop: "10px",
         }}
       >
-        <div
+        <button aria-label="Settings" aria-current={location.pathname === "/settings" ? 'page' : undefined} type="button" className="ov-nav-item"
           style={getNavItemStyle("/settings")}
           onClick={() => {
             navigate("/settings");
@@ -471,14 +484,14 @@ function DashboardPage() {
         >
           <Settings size={20} style={{ flexShrink: 0 }} />
           {(!isCollapsed || isMobile) && "Settings"}
-        </div>
-        <div
+        </button>
+        <button aria-label="Logout" aria-current={location.pathname === "/logout" ? 'page' : undefined} data-ov-action="logout" type="button" className="ov-nav-item"
           style={{ ...getNavItemStyle("/logout"), color: "#ff4d4d" }}
           onClick={handleLogout}
         >
           <LogOut size={20} style={{ flexShrink: 0 }} />
           {(!isCollapsed || isMobile) && "Logout"}
-        </div>
+        </button>
       </div>
     </>
   );
@@ -492,13 +505,13 @@ function DashboardPage() {
         .patient-mail-btn { display: none !important; }
 
         .notification-action-btn:disabled { opacity: 0.45; cursor: not-allowed !important; }
-        .notification-page-btn { border: 1px solid #d5dbea; border-radius: 6px; background: white; color: #001166; padding: 6px 8px; cursor: pointer; }
+        .notification-page-btn { border: 1px solid #d5dbea; border-radius: 6px; background: white; color: #087F8C; padding: 6px 8px; cursor: pointer; }
         .notification-page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        .notification-page-btn:not(:disabled):hover { background: #f0f4ff; }
+        .notification-page-btn:not(:disabled):hover { background: #E4F7F9; }
         .notification-cancel-dialog::backdrop { background: rgba(0, 17, 60, 0.5); }
         .notification-modal-btn { padding: 10px 16px; border-radius: 8px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
         .notification-modal-btn:disabled { opacity: 0.5; cursor: wait; }
-        .notification-modal-btn:focus-visible { outline: 3px solid #63a9ed; outline-offset: 3px; }
+        .notification-modal-btn:focus-visible { outline: 3px solid #27B8C7; outline-offset: 3px; }
 
         /* ── MOBILE OVERRIDES ── */
         @media (max-width: 768px) {
@@ -558,7 +571,7 @@ function DashboardPage() {
             event.preventDefault();
             if (!actionInProgress.current) setCancelModal(null);
           }}
-          style={{ border: "none", borderRadius: "18px", padding: "28px", width: "min(440px, calc(100vw - 32px))", color: "#001166", fontFamily: "'Poppins', sans-serif", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}
+          style={{ border: "none", borderRadius: "18px", padding: "28px", width: "min(440px, calc(100vw - 32px))", color: "#087F8C", fontFamily: "'Manrope', sans-serif", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}
         >
           <h2 id="notification-cancel-title" style={{ fontSize: "22px", margin: "0 0 12px" }}>
             {cancelModal.stage === "success" ? "Appointment cancelled" : "Cancel appointment?"}
@@ -573,11 +586,11 @@ function DashboardPage() {
           )}
           <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
             {cancelModal.stage === "success" ? (
-              <button className="notification-modal-btn" onClick={() => setCancelModal(null)} style={{ background: "#001166", color: "white", border: "none" }}>Done</button>
+              <button className="notification-modal-btn" onClick={() => setCancelModal(null)} style={{ "--ov-on-color": "var(--ov-ink)", background: "var(--ov-primary)", color: "var(--ov-on-color, #fff)", border: "none" }}>Done</button>
             ) : (
               <>
-                <button className="notification-modal-btn" disabled={isCancelling} onClick={() => setCancelModal(null)} style={{ background: "white", color: "#001166", border: "1px solid #d5dbea" }}>Keep appointment</button>
-                <button className="notification-modal-btn" disabled={isCancelling} onClick={confirmLateNoShowCancel} style={{ background: "#dc2626", color: "white", border: "none" }}>{isCancelling ? "Cancelling…" : "Yes, cancel"}</button>
+                <button className="notification-modal-btn" disabled={isCancelling} onClick={() => setCancelModal(null)} style={{ background: "white", color: "#087F8C", border: "1px solid #d5dbea" }}>Keep appointment</button>
+                <button className="notification-modal-btn" disabled={isCancelling} onClick={confirmLateNoShowCancel} style={{ background: "#dc2626", color: "var(--ov-on-color, #fff)", border: "none" }}>{isCancelling ? "Cancelling…" : "Yes, cancel"}</button>
               </>
             )}
           </div>
@@ -589,7 +602,7 @@ function DashboardPage() {
           display: "flex",
           minHeight: "100vh",
           width: "100%",
-          fontFamily: "'Poppins', sans-serif",
+          fontFamily: "'Manrope', sans-serif",
         }}
       >
         {/* Mobile overlay backdrop */}
@@ -607,12 +620,12 @@ function DashboardPage() {
 
         {/* Desktop Sidebar */}
         {!isMobile && (
-          <div
-            style={{
+          <div className="ov-sidebar"
+            style={{ "--ov-on-color": "var(--ov-ink)",
               width: sidebarWidth,
-              backgroundColor: "#001166",
+              backgroundColor: "var(--ov-primary)",
               height: "100vh",
-              color: "white",
+              color: "var(--ov-on-color, #fff)",
               padding: "20px 15px",
               display: "flex",
               flexDirection: "column",
@@ -631,12 +644,12 @@ function DashboardPage() {
 
         {/* Mobile Sidebar Drawer */}
         {isMobile && (
-          <div
-            style={{
+          <div inert={!isMobileOpen} aria-hidden={!isMobileOpen} className="ov-sidebar"
+            style={{ "--ov-on-color": "var(--ov-ink)",
               width: "260px",
-              backgroundColor: "#001166",
+              backgroundColor: "var(--ov-primary)",
               height: "100vh",
-              color: "white",
+              color: "var(--ov-on-color, #fff)",
               padding: "20px 15px",
               display: "flex",
               flexDirection: "column",
@@ -654,7 +667,7 @@ function DashboardPage() {
         )}
 
         {/* Main Content */}
-        <div
+        <div className="ov-workspace"
           style={{
             marginLeft: isMobile ? 0 : sidebarWidth,
             width: isMobile ? "100%" : `calc(100% - ${sidebarWidth})`,
@@ -668,27 +681,25 @@ function DashboardPage() {
         >
           {/* Mobile Top Bar */}
           {isMobile && (
-            <div
-              style={{
+            <div className="ov-color-surface"
+              style={{ "--ov-on-color": "var(--ov-ink)",
                 display: "flex",
                 alignItems: "center",
                 padding: "15px 20px",
-                backgroundColor: "#001166",
-                color: "white",
+                backgroundColor: "var(--ov-primary)",
+                color: "var(--ov-on-color, #fff)",
                 position: "sticky",
                 top: 0,
                 zIndex: 100,
               }}
             >
-              <div
+              <button className="ov-ui-button"
                 onClick={() => setIsMobileOpen(true)}
                 style={{ cursor: "pointer", marginRight: "15px" }}
-              >
+               type="button" aria-label="Open navigation">
                 <Menu size={24} />
-              </div>
-              <h2 style={{ fontSize: "22px", fontWeight: "800", margin: 0 }}>
-                OraVista
-              </h2>
+              </button>
+              <h2 style={{ fontSize: "22px", fontWeight: "800", margin: 0 }}><BrandWordmark /></h2>
             </div>
           )}
 
@@ -713,7 +724,7 @@ function DashboardPage() {
               <div className="patient-header-text">
                 <h1
                   style={{
-                    color: "#001166",
+                    color: "#087F8C",
                     fontSize: "42px",
                     fontWeight: "800",
                     margin: 0,
@@ -724,7 +735,7 @@ function DashboardPage() {
                 </h1>
                 <p
                   style={{
-                    color: "#001166",
+                    color: "#087F8C",
                     fontSize: "18px",
                     marginTop: "5px",
                     margin: 0,
@@ -739,40 +750,12 @@ function DashboardPage() {
                 className="patient-header-actions"
               >
                 {/* Mobile search toggle */}
-                <button
-                  className="patient-search-toggle-btn"
-                  onClick={() => setIsSearchOpen(!isSearchOpen)}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    color: "#001166",
-                    padding: "4px",
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
-                  {isSearchOpen ? (
-                    <ChevronUp size={22} />
-                  ) : (
-                    <Search size={22} />
-                  )}
-                </button>
-
-                <Mail
-                  className="patient-mail-btn"
-                  color="#001166"
-                  size={22}
-                  style={{ cursor: "pointer", flexShrink: 0 }}
-                  onClick={() => alert("Inbox is currently empty.")}
-                />
-
                 <div style={{ position: "relative", flexShrink: 0 }}>
-                  <div
+                  <button className="ov-ui-button"
                     style={{ cursor: "pointer", position: "relative" }}
                     onClick={toggleNotifications}
-                  >
-                    <Bell color="#001166" size={22} />
+                   aria-expanded={showNotifications} type="button" aria-label="Notifications">
+                    <Bell color="#087F8C" size={22} />
                     {unreadNotificationCount > 0 && (
                       <div
                         style={{
@@ -783,7 +766,7 @@ function DashboardPage() {
                           height: "16px",
                           padding: "0 3px",
                           backgroundColor: "#ff4d4d",
-                          color: "white",
+                          color: "var(--ov-on-color, #fff)",
                           borderRadius: "10px",
                           border: "2px solid white",
                           fontSize: "10px",
@@ -797,7 +780,7 @@ function DashboardPage() {
                         {unreadNotificationCount}
                       </div>
                     )}
-                  </div>
+                  </button>
                   {showNotifications && (
                     <div
                       className="notif-dropdown"
@@ -817,8 +800,8 @@ function DashboardPage() {
                       <h4
                         style={{
                           margin: "0 0 15px 0",
-                          color: "#001166",
-                          borderBottom: "2px solid #f0f4ff",
+                          color: "#087F8C",
+                          borderBottom: "2px solid #E4F7F9",
                           paddingBottom: "10px",
                         }}
                       >
@@ -832,9 +815,9 @@ function DashboardPage() {
                           style={{
                             marginBottom: "12px",
                             padding: "12px",
-                            backgroundColor: notification.is_read ? "#f9f9f9" : "#f0f4ff",
+                            backgroundColor: notification.is_read ? "#f9f9f9" : "#E4F7F9",
                             borderRadius: "10px",
-                            borderLeft: "4px solid #001166",
+                            borderLeft: "4px solid #087F8C",
                             cursor: notification.is_read ? "default" : "pointer",
                           }}
                         >
@@ -842,7 +825,7 @@ function DashboardPage() {
                             style={{
                               margin: 0,
                               fontSize: "14px",
-                              color: "#001166",
+                              color: "#087F8C",
                               fontWeight: "700",
                             }}
                           >
@@ -867,7 +850,7 @@ function DashboardPage() {
                                   event.stopPropagation();
                                   handleLateNoShowCancel(notification);
                                 }}
-                                style={{ border: "none", borderRadius: "6px", background: "#dc2626", color: "white", padding: "7px 9px", fontSize: "11px", fontWeight: "700", cursor: "pointer" }}
+                                style={{ border: "none", borderRadius: "6px", background: "#dc2626", color: "var(--ov-on-color, #fff)", padding: "7px 9px", fontSize: "11px", fontWeight: "700", cursor: "pointer" }}
                               >
                                 Cancel
                               </button>
@@ -878,7 +861,7 @@ function DashboardPage() {
                                   event.stopPropagation();
                                   handleLateNoShowReschedule(notification);
                                 }}
-                                style={{ border: "none", borderRadius: "6px", background: "#001166", color: "white", padding: "7px 9px", fontSize: "11px", fontWeight: "700", cursor: "pointer" }}
+                                style={{ "--ov-on-color": "var(--ov-ink)", border: "none", borderRadius: "6px", background: "var(--ov-primary)", color: "var(--ov-on-color, #fff)", padding: "7px 9px", fontSize: "11px", fontWeight: "700", cursor: "pointer" }}
                               >
                                 Reschedule
                               </button>
@@ -888,14 +871,14 @@ function DashboardPage() {
                         ))}
                         {notifications.length === 0 && (
                           <p style={{ margin: 0, color: "#777", fontSize: "13px" }}>
-                            You have no notifications.
+                            {notificationsError ? "Notifications are currently unavailable." : "You have no notifications."}
                           </p>
                         )}
                       </div>
                       {notifications.length > notificationsPerPage && (
                         <nav aria-label="Notification pages" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", paddingTop: "10px", borderTop: "1px solid #e5e7eb" }}>
                           <button className="notification-page-btn" disabled={currentNotificationPage === 1} onClick={() => setNotificationPage(currentNotificationPage - 1)}>Previous</button>
-                          <span aria-live="polite" style={{ fontSize: "12px", color: "#001166" }}>Page {currentNotificationPage} of {notificationPageCount}</span>
+                          <span aria-live="polite" style={{ fontSize: "12px", color: "#087F8C" }}>Page {currentNotificationPage} of {notificationPageCount}</span>
                           <button className="notification-page-btn" disabled={currentNotificationPage === notificationPageCount} onClick={() => setNotificationPage(currentNotificationPage + 1)}>Next</button>
                         </nav>
                       )}
@@ -905,37 +888,8 @@ function DashboardPage() {
               </div>
             </div>
 
-            {/* Collapsible search (mobile only) */}
-            {isSearchOpen && (
-              <div className="patient-search-collapsible">
-                <div style={{ position: "relative", width: "100%" }}>
-                  <Search
-                    style={{
-                      position: "absolute",
-                      left: "15px",
-                      top: "12px",
-                      color: "#666",
-                    }}
-                    size={20}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Search here..."
-                    style={{
-                      padding: "12px 15px 12px 45px",
-                      borderRadius: "25px",
-                      border: "1px solid #ddd",
-                      backgroundColor: "#f0f2f5",
-                      width: "100%",
-                      fontSize: "14px",
-                      boxSizing: "border-box",
-                    }}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* ── DASHBOARD GRID ── */}
+            {appointmentsError && <div className="ov-inline-error" role="alert">{appointmentsError} <button type="button" className="ov-ui-button ov-text-link" onClick={() => fetchAppointments(userData.id)}>Retry appointments</button></div>}
+            {notificationsError && <div className="ov-inline-error" role="alert">{notificationsError} <button type="button" className="ov-ui-button ov-text-link" onClick={() => fetchNotifications(userData.id)}>Retry notifications</button></div>}
             <div
               style={{
                 display: "grid",
@@ -944,7 +898,7 @@ function DashboardPage() {
               }}
               className="patient-dashboard-grid"
             >
-              <div style={cardStyle} className="dashboard-card">
+              <div style={cardStyle} className="dashboard-card ov-panel">
                 <h3 style={{ margin: 0, fontSize: "20px" }}>
                   Upcoming Appointments
                 </h3>
@@ -975,7 +929,7 @@ function DashboardPage() {
                                   : 0,
                             borderBottom:
                               index === 0 && visibleUpcomingAppointments.length > 1
-                                ? "1px solid rgba(255,255,255,0.2)"
+                                ? "1px solid var(--ov-on-line, rgba(255,255,255,0.2))"
                                 : "none",
                           }}
                         >
@@ -1029,7 +983,7 @@ function DashboardPage() {
                 </div>
               </div>
 
-              <div style={cardStyle} className="dashboard-card">
+              <div style={cardStyle} className="dashboard-card ov-panel">
                 <h3 style={{ margin: 0, fontSize: "20px" }}>
                   Today's Fun Fact
                 </h3>
@@ -1054,7 +1008,7 @@ function DashboardPage() {
                 </div>
               </div>
 
-              <div style={cardStyle} className="dashboard-card">
+              <div style={cardStyle} className="dashboard-card ov-panel">
                 <h3 style={{ margin: 0, fontSize: "20px" }}>
                   Dental Summary
                 </h3>
@@ -1083,7 +1037,7 @@ function DashboardPage() {
                   marginTop: "10px",
                   justifyContent: "flex-start",
                 }}
-                className="dashboard-card grid-span-3"
+                className="dashboard-card grid-span-3 ov-panel"
               >
                 <div
                   style={{
@@ -1104,7 +1058,7 @@ function DashboardPage() {
                     style={{
                       padding: "8px 20px",
                       backgroundColor: "white",
-                      color: "#001166",
+                      color: "#087F8C",
                       border: "none",
                       borderRadius: "20px",
                       fontWeight: "700",
@@ -1115,6 +1069,11 @@ function DashboardPage() {
                     Book Appointment
                   </button>
                 </div>
+                <label className="ov-field-label" htmlFor="history-search">Search appointment history</label>
+                <div className="ov-search-field">
+                  <Search size={18} aria-hidden="true" />
+                  <input id="history-search" type="search" value={historySearch} onChange={event => setHistorySearch(event.target.value)} placeholder="Search service, dentist, status or date" />
+                </div>
                 <div
                   style={{
                     overflowX: "auto",
@@ -1122,7 +1081,7 @@ function DashboardPage() {
                     maxHeight: "180px",
                   }}
                 >
-                  {appointments.length > 0 ? (
+                  {historyAppointments.length > 0 ? (
                     <table
                       className="history-table"
                       style={{
@@ -1136,7 +1095,7 @@ function DashboardPage() {
                       <thead>
                         <tr
                           style={{
-                            borderBottom: "1px solid rgba(255,255,255,0.3)",
+                            borderBottom: "1px solid var(--ov-on-line, rgba(255,255,255,0.3))",
                           }}
                         >
                           <th
@@ -1178,11 +1137,11 @@ function DashboardPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {appointments.map((appt) => (
+                        {historyAppointments.map((appt) => (
                           <tr
                             key={appt.id}
                             style={{
-                              borderBottom: "1px solid rgba(255,255,255,0.1)",
+                              borderBottom: "1px solid var(--ov-on-line, rgba(255,255,255,0.1))",
                             }}
                           >
                             <td
@@ -1224,6 +1183,8 @@ function DashboardPage() {
                                     ? "#ffc107"
                                     : appt.status === "Cancelled"
                                     ? "#ff4d4d"
+                                    : appt.status === "Completed"
+                                    ? "var(--ov-completed, #2864c5)"
                                     : "#10b981",
                               }}
                             >
@@ -1244,8 +1205,7 @@ function DashboardPage() {
                       }}
                     >
                       <p style={{ fontSize: "14px", opacity: 0.8, margin: 0 }}>
-                        You have no appointments yet. Book your first
-                        appointment now.
+                        {appointmentsError ? "Appointment history is currently unavailable." : historySearch ? "No appointments match your search. Try another keyword." : "You have no appointments yet. Book your first appointment now."}
                       </p>
                     </div>
                   )}

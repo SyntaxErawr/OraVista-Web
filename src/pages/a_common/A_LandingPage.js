@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import BrandLogo from '../../components/BrandLogo';
 
 function LandingPage() {
   const navigate = useNavigate();
@@ -9,7 +10,7 @@ function LandingPage() {
       <style>
         {`
           .landing-container {
-            background-color: #001166;
+            background-color: #087F8C;
             height: 100vh;
             width: 100vw;
             display: flex;
@@ -54,11 +55,11 @@ function LandingPage() {
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background-color: #001166;
+            background-color: #087F8C;
           }
 
           .landing-title {
-            color: #001166;
+            color: #087F8C;
             font-size: 48px;
             font-weight: 800;
             margin: 0 0 10px 0;
@@ -75,9 +76,9 @@ function LandingPage() {
           .landing-button {
             padding: 12px 40px;
             background-color: white;
-            border: 2px solid #001166;
+            border: 2px solid #087F8C;
             border-radius: 30px;
-            color: #001166;
+            color: #087F8C;
             font-size: 14px;
             font-weight: 700;
             cursor: pointer;
@@ -85,8 +86,8 @@ function LandingPage() {
           }
 
           .landing-button:hover {
-            background-color: #001166;
-            color: white;
+            background-color: #087F8C;
+            color: var(--ov-on-color, #fff);
           }
 
           .landing-footer {
@@ -119,11 +120,7 @@ function LandingPage() {
       <div className="landing-container">
         <div className="landing-card">
           
-          <div className="landing-logo-container">
-            <div className="landing-logo-circle"></div>
-          </div>
-
-          <h1 className="landing-title">OraVista</h1>
+          <h1 className="ov-clinic-brand"><BrandLogo variant="stacked" /></h1>
           <p className="landing-subtitle">Dental Clinic Management System</p>
 
           <button 

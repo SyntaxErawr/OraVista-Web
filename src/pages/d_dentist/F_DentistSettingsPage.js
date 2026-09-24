@@ -116,26 +116,26 @@ function DentistSettings() {
     <AdminLayout>
       <div style={styles.container}>
         {/* HEADER */}
-        <header style={styles.header} className="dashboard-page-header">
+        <header style={styles.header} className="dashboard-page-header ov-header">
           <div style={styles.searchBox} className="header-search-box">
-            <Search size={18} color="rgba(255,255,255,0.6)" />
+            <Search size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
             <input type="text" placeholder="Search settings..." style={styles.searchInput} />
           </div>
           <div style={styles.headerActions} className="header-actions">
-            <Bell size={20} color="white" />
-            <MessageSquare size={20} color="white" />
+            <Bell size={20} color="var(--ov-on-color, #fff)" />
+            <MessageSquare size={20} color="var(--ov-on-color, #fff)" />
             <div style={styles.profile} className="header-profile">
               <div style={styles.profileText} className="header-profile-text">
                 <p style={styles.userName}>Dr. {profileData.lastName}</p>
                 <p style={styles.userRole}>Dentist</p>
               </div>
-              <div style={styles.avatar}><User size={20} color="#001166" /></div>
+              <div style={styles.avatar}><User size={20} color="#087F8C" /></div>
             </div>
           </div>
         </header>
 
         {/* CONTENT AREA */}
-        <div style={styles.content} className="settings-content">
+        <div style={styles.content} className="settings-content ov-workspace-content">
           <div style={styles.titleSection}>
             <h1 style={styles.pageTitle}>Settings</h1>
             <p style={styles.pageSubtitle}>Manage your profile and account security</p>
@@ -144,7 +144,7 @@ function DentistSettings() {
           <div style={styles.mainGrid} className="settings-grid">
             {/* LEFT COLUMN */}
             <div style={styles.leftCol}>
-              <div style={styles.formCard}>
+              <div className="ov-panel" style={styles.formCard}>
                 <div style={styles.cardHeader}>
                   <User size={18} style={{ marginRight: '10px' }} />
                   <h3 style={styles.cardTitle}>Account Settings</h3>
@@ -192,7 +192,7 @@ function DentistSettings() {
                 <button style={styles.saveBtn} onClick={handleProfileUpdate}>Update Profile</button>
               </div>
 
-              <div style={{ ...styles.formCard, marginTop: '25px' }}>
+              <div className="ov-panel" style={{ ...styles.formCard, marginTop: '25px' }}>
                 <div style={styles.cardHeader}>
                   <Lock size={18} style={{ marginRight: '10px' }} />
                   <h3 style={styles.cardTitle}>Change Password</h3>
@@ -209,7 +209,7 @@ function DentistSettings() {
                       style={styles.input}
                     />
                     <button type="button" onClick={() => setShowCurrent(!showCurrent)} style={styles.eyeBtn}>
-                      {showCurrent ? <EyeOff size={18} color="rgba(255,255,255,0.6)" /> : <Eye size={18} color="rgba(255,255,255,0.6)" />}
+                      {showCurrent ? <EyeOff size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" /> : <Eye size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />}
                     </button>
                   </div>
                 </div>
@@ -225,7 +225,7 @@ function DentistSettings() {
                       style={styles.input}
                     />
                     <button type="button" onClick={() => setShowNew(!showNew)} style={styles.eyeBtn}>
-                      {showNew ? <EyeOff size={18} color="rgba(255,255,255,0.6)" /> : <Eye size={18} color="rgba(255,255,255,0.6)" />}
+                      {showNew ? <EyeOff size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" /> : <Eye size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />}
                     </button>
                   </div>
 
@@ -260,7 +260,7 @@ function DentistSettings() {
                       style={styles.input}
                     />
                     <button type="button" onClick={() => setShowConfirm(!showConfirm)} style={styles.eyeBtn}>
-                      {showConfirm ? <EyeOff size={18} color="rgba(255,255,255,0.6)" /> : <Eye size={18} color="rgba(255,255,255,0.6)" />}
+                      {showConfirm ? <EyeOff size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" /> : <Eye size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />}
                     </button>
                   </div>
                 </div>
@@ -271,7 +271,7 @@ function DentistSettings() {
 
             {/* RIGHT COLUMN - ROLE BASED ACCESS */}
             <div style={styles.rightCol}>
-              <div style={styles.infoCard}>
+              <div className="ov-panel" style={styles.infoCard}>
                 <div style={styles.cardHeader}>
                   <Shield size={18} style={{ marginRight: '10px' }} />
                   <h3 style={styles.cardTitle}>Role-Based Access</h3>
@@ -280,7 +280,7 @@ function DentistSettings() {
                 {/* ROLE BOX 1: CLINIC OWNER */}
                 <div style={styles.roleBoxInactive}>
                   <div style={styles.roleHeader}>
-                    <Briefcase size={16} color="white" />
+                    <Briefcase size={16} color="var(--ov-on-color, #fff)" />
                     <span style={styles.roleNameLabel}>Clinic Owner</span>
                   </div>
                   <p style={styles.roleSubtext}>Full Access</p>
@@ -295,10 +295,10 @@ function DentistSettings() {
                 <div style={styles.roleBoxActive}>
                   <div style={styles.activeHeader}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <User size={16} color="#001166" />
+                      <User size={16} color="#087F8C" />
                       <span style={styles.activeRoleName}>Dentist (Current)</span>
                     </div>
-                    <CheckCircle2 size={16} color="#001166" />
+                    <CheckCircle2 size={16} color="#087F8C" />
                   </div>
                   <p style={styles.activeSubtext}>Clinical Tools</p>
                   <ul style={styles.activeRoleList}>
@@ -312,7 +312,7 @@ function DentistSettings() {
                 {/* ROLE BOX 3: RECEPTIONIST */}
                 <div style={styles.roleBoxInactive}>
                   <div style={styles.roleHeader}>
-                    <Activity size={16} color="white" />
+                    <Activity size={16} color="var(--ov-on-color, #fff)" />
                     <span style={styles.roleNameLabel}>Receptionist / Staff</span>
                   </div>
                   <p style={styles.roleSubtext}>Billing & Scheduling</p>
@@ -329,7 +329,7 @@ function DentistSettings() {
               </div>
 
               {/* SYSTEM STATUS CARD */}
-              <div style={{ ...styles.infoCard, marginTop: '25px' }}>
+              <div className="ov-panel" style={{ ...styles.infoCard, marginTop: '25px' }}>
                 <div style={styles.cardHeader}>
                   <Activity size={18} style={{ marginRight: '10px' }} />
                   <h3 style={styles.cardTitle}>System Status</h3>
@@ -348,46 +348,46 @@ function DentistSettings() {
 
 const styles = {
   container: { display: 'flex', flexDirection: 'column', width: '100%' },
-  header: { height: '80px', background: '#001166', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px', position: 'sticky', top: 0, zIndex: 10 },
-  searchBox: { display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.1)', padding: '10px 20px', borderRadius: '12px', width: '350px' },
-  searchInput: { border: 'none', background: 'transparent', marginLeft: '10px', outline: 'none', width: '100%', color: 'white' },
+  header: { "--ov-on-color": "var(--ov-ink)", height: '80px', background: "var(--ov-primary)", display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px', position: 'sticky', top: 0, zIndex: 10 },
+  searchBox: { display: 'flex', alignItems: 'center', background: "var(--ov-on-wash, rgba(255,255,255,0.1))", padding: '10px 20px', borderRadius: '12px', width: '350px' },
+  searchInput: { border: 'none', background: 'transparent', marginLeft: '10px', outline: 'none', width: '100%', color: "var(--ov-on-color, #fff)" },
   headerActions: { display: 'flex', alignItems: 'center', gap: '25px' },
-  profile: { display: 'flex', alignItems: 'center', gap: '15px', borderLeft: '1px solid rgba(255,255,255,0.2)', paddingLeft: '20px' },
+  profile: { display: 'flex', alignItems: 'center', gap: '15px', borderLeft: "1px solid var(--ov-on-line, rgba(255,255,255,0.2))", paddingLeft: '20px' },
   profileText: { textAlign: 'right' },
-  userName: { margin: 0, fontWeight: 'bold', fontSize: '14px', color: 'white' },
-  userRole: { margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.6)' },
+  userName: { margin: 0, fontWeight: 'bold', fontSize: '14px', color: "var(--ov-on-color, #fff)" },
+  userRole: { margin: 0, fontSize: '12px', color: "var(--ov-on-muted, rgba(255,255,255,0.75))" },
   avatar: { width: '40px', height: '40px', background: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  content: { padding: '40px', backgroundColor: '#F4F7FE', minHeight: 'calc(100vh - 80px)' },
+  content: { padding: '40px', backgroundColor: '#F3F9FA', minHeight: 'calc(100vh - 80px)' },
   titleSection: { marginBottom: '30px' },
-  pageTitle: { fontSize: '28px', fontWeight: '700', color: '#001166', margin: 0 },
+  pageTitle: { fontSize: '28px', fontWeight: '700', color: '#087F8C', margin: 0 },
   pageSubtitle: { fontSize: '14px', color: '#666', marginTop: '5px' },
   mainGrid: { display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: '25px' },
-  formCard: { background: '#001166', borderRadius: '15px', padding: '25px', color: 'white' },
+  formCard: { "--ov-on-color": "var(--ov-ink)", background: "var(--ov-primary)", borderRadius: '15px', padding: '25px', color: "var(--ov-on-color, #fff)" },
   cardHeader: { display: 'flex', alignItems: 'center', marginBottom: '20px' },
   cardTitle: { margin: 0, fontSize: '16px', fontWeight: 'bold' },
   inputGroup: { marginBottom: '20px' },
   label: { display: 'block', fontSize: '12px', marginBottom: '8px', opacity: 0.8 },
   inputWrapper: { position: 'relative', display: 'flex', alignItems: 'center' },
-  input: { width: '100%', padding: '12px 45px 12px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: 'white', outline: 'none', boxSizing: 'border-box' },
+  input: { width: '100%', padding: '12px 45px 12px 12px', borderRadius: '8px', border: "1px solid var(--ov-on-line, rgba(255,255,255,0.1))", background: "var(--ov-on-wash, rgba(255,255,255,0.05))", color: "var(--ov-on-color, #fff)", outline: 'none', boxSizing: 'border-box' },
   eyeBtn: { position: 'absolute', right: '15px', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' },
-  saveBtn: { padding: '10px 25px', background: 'white', color: '#001166', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' },
+  saveBtn: { padding: '10px 25px', background: 'white', color: '#087F8C', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' },
 
   validationContainer: { marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '6px' },
   valItem: { margin: 0, fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '600', transition: 'color 0.2s' },
 
-  infoCard: { background: '#001166', borderRadius: '15px', padding: '25px', color: 'white' },
-  roleBoxInactive: { border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '15px', marginBottom: '15px', opacity: 0.6 },
+  infoCard: { "--ov-on-color": "var(--ov-ink)", background: "var(--ov-primary)", borderRadius: '15px', padding: '25px', color: "var(--ov-on-color, #fff)" },
+  roleBoxInactive: { border: "1px solid var(--ov-on-line, rgba(255,255,255,0.1))", borderRadius: '12px', padding: '15px', marginBottom: '15px', opacity: 0.6 },
   roleHeader: { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '5px' },
   roleNameLabel: { fontSize: '14px', fontWeight: 'bold' },
   roleSubtext: { fontSize: '11px', opacity: 0.6, margin: 0 },
   inactiveList: { margin: 0, paddingLeft: '18px', fontSize: '10px', opacity: 0.4, listStyleType: 'disc' },
-  roleBoxActive: { background: 'white', color: '#001166', borderRadius: '12px', padding: '20px', marginBottom: '15px', boxShadow: '0 8px 20px rgba(0,0,0,0.1)' },
+  roleBoxActive: { background: 'white', color: '#087F8C', borderRadius: '12px', padding: '20px', marginBottom: '15px', boxShadow: '0 8px 20px rgba(0,0,0,0.1)' },
   activeHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' },
   activeRoleName: { fontSize: '14px', fontWeight: '700' },
-  activeSubtext: { fontSize: '11px', opacity: 0.7, margin: '0 0 12px 0', borderBottom: '1px solid rgba(0,17,102,0.1)', paddingBottom: '8px' },
+  activeSubtext: { fontSize: '11px', opacity: 0.7, margin: '0 0 12px 0', borderBottom: '1px solid rgba(8, 127, 140,0.1)', paddingBottom: '8px' },
   activeRoleList: { margin: 0, paddingLeft: '18px', fontSize: '11px', lineHeight: '1.8' },
   permissionFooter: { fontSize: '10px', opacity: 0.4, fontStyle: 'italic', textAlign: 'center', marginTop: '15px' },
-  statusRow: { display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' },
+  statusRow: { display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: "1px solid var(--ov-on-line, rgba(255,255,255,0.05))" },
   stLabel: { margin: 0, fontSize: '11px', opacity: 0.6 },
   stVal: { margin: 0, fontSize: '11px', fontWeight: 'bold' }
 };

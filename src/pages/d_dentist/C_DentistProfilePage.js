@@ -38,32 +38,32 @@ function DentistProfile() {
       <style>
         {`
           .dp-container { display: flex; flex-direction: column; width: 100%; font-family: sans-serif; }
-          .dp-header { height: 80px; background: #001166; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; position: sticky; top: 0; z-index: 10; }
+          .dp-header { height: 80px; background: #087F8C; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; position: sticky; top: 0; z-index: 10; }
           
           .dp-search-wrapper { display: flex; align-items: center; }
           .dp-search-box { display: flex; align-items: center; background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 12px; width: 350px; transition: all 0.3s ease; box-sizing: border-box; }
           .dp-search-icon { flex-shrink: 0; }
-          .dp-search-input { border: none; background: transparent; margin-left: 10px; outline: none; width: 100%; color: white; }
-          .dp-search-input::placeholder { color: rgba(255,255,255,0.6); }
+          .dp-search-input { border: none; background: transparent; margin-left: 10px; outline: none; width: 100%; color: var(--ov-on-color, #fff); }
+          .dp-search-input::placeholder { color: var(--ov-on-muted, rgba(255,255,255,0.75)); }
           .dp-mobile-toggle { display: none; }
           
           .dp-header-actions { display: flex; align-items: center; gap: 25px; margin-left: auto; }
           .dp-profile { display: flex; align-items: center; gap: 15px; border-left: 1px solid rgba(255,255,255,0.2); padding-left: 20px; }
           .dp-profile-text { text-align: right; }
-          .dp-user-name { margin: 0; font-weight: bold; font-size: 14px; color: white; }
-          .dp-user-role { margin: 0; font-size: 12px; color: rgba(255,255,255,0.6); }
+          .dp-user-name { margin: 0; font-weight: bold; font-size: 14px; color: var(--ov-on-color, #fff); }
+          .dp-user-role { margin: 0; font-size: 12px; color: var(--ov-on-muted, rgba(255,255,255,0.75)); }
           .dp-avatar { width: 40px; height: 40px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
-          .dp-content { padding: 30px; background-color: #F4F7FE; min-height: calc(100vh - 80px); }
+          .dp-content { padding: 30px; background-color: #F3F9FA; min-height: calc(100vh - 80px); }
           .dp-page-header { margin-bottom: 30px; }
           .dp-page-title { font-size: 24px; font-weight: bold; color: #333; margin: 0; }
           .dp-page-subtitle { font-size: 14px; color: #666; margin-top: 5px; }
 
           .dp-dashboard-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 25px; align-items: start; }
-          .dp-card { background-color: #001166; border-radius: 15px; padding: 30px; color: white; }
+          .dp-card { background-color: #087F8C; border-radius: 15px; padding: 30px; color: var(--ov-on-color, #fff); }
 
           .dp-profile-top { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 25px; margin-bottom: 25px; }
-          .dp-avatar-large { width: 100px; height: 100px; border-radius: 50%; background: #E8EAF6; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; }
+          .dp-avatar-large { width: 100px; height: 100px; border-radius: 50%; background: #E8F6F7; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; }
           .dp-dentist-name { font-size: 18px; font-weight: bold; margin: 0; }
           .dp-dentist-id { font-size: 12px; opacity: 0.6; margin: 5px 0; }
           .dp-dentist-service { font-size: 14px; margin: 10px 0; }
@@ -78,7 +78,7 @@ function DentistProfile() {
           .dp-table { width: 100%; border-collapse: collapse; min-width: 450px; }
           .dp-th { text-align: left; font-size: 11px; opacity: 0.6; padding-bottom: 15px; font-weight: normal; }
           .dp-td { font-size: 12px; padding: 15px 0; border-top: 1px solid rgba(255,255,255,0.05); }
-          .dp-view-btn { background: white; color: #001166; border: none; padding: 5px 15px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; }
+          .dp-view-btn { background: white; color: #087F8C; border: none; padding: 5px 15px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; }
 
           .dp-summary-item { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; margin-bottom: 15px; }
           .dp-summary-label { font-size: 11px; opacity: 0.6; margin: 0; }
@@ -97,14 +97,14 @@ function DentistProfile() {
             
             .dp-search-wrapper { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); z-index: 20; }
             .dp-search-box { width: 44px; height: 44px; padding: 0; justify-content: center; cursor: pointer; }
-            .dp-search-box.expanded { width: calc(100vw - 40px); background: #002288; border: 1px solid rgba(255,255,255,0.2); padding: 0 15px; justify-content: space-between; }
+            .dp-search-box.expanded { width: calc(100vw - 40px); background: #066875; border: 1px solid rgba(255,255,255,0.2); padding: 0 15px; justify-content: space-between; }
             
             .dp-search-input { display: none; }
             .dp-search-box.expanded .dp-search-input { display: block; }
             
             .dp-search-box:not(.expanded) .dp-search-icon { display: none; }
             
-            .dp-mobile-toggle { display: flex; align-items: center; justify-content: center; background: transparent; border: none; color: white; padding: 0; cursor: pointer; }
+            .dp-mobile-toggle { display: flex; align-items: center; justify-content: center; background: transparent; border: none; color: var(--ov-on-color, #fff); padding: 0; cursor: pointer; }
             .dp-search-box.expanded .dp-mobile-toggle { margin-left: 10px; }
 
             .dp-header-actions { gap: 15px; transition: opacity 0.3s ease; }
@@ -144,7 +144,7 @@ function DentistProfile() {
         <header className="dp-header">
           <div className="dp-search-wrapper">
             <div className={`dp-search-box ${isSearchExpanded ? 'expanded' : ''}`}>
-              <Search className="dp-search-icon" size={18} color="rgba(255,255,255,0.6)" />
+              <Search className="dp-search-icon" size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
               <input 
                 type="text" 
                 placeholder="Search patients, appointments..." 
@@ -160,15 +160,15 @@ function DentistProfile() {
           </div>
 
           <div className={`dp-header-actions ${isSearchExpanded ? 'hidden' : ''}`}>
-            <Bell size={20} color="white" />
-            <MessageSquare size={20} color="white" />
+            <Bell size={20} color="var(--ov-on-color, #fff)" />
+            <MessageSquare size={20} color="var(--ov-on-color, #fff)" />
             <div className="dp-profile">
               <div className="dp-profile-text">
                 <p className="dp-user-name">{dentistData ? `Dr. ${dentistData.last_name}` : 'Loading...'}</p>
                 <p className="dp-user-role">Dentist</p>
               </div>
               <div className="dp-avatar">
-                <User size={20} color="#001166" />
+                <User size={20} color="#087F8C" />
               </div>
             </div>
           </div>
@@ -182,14 +182,14 @@ function DentistProfile() {
           </div>
 
           {loading ? (
-            <p style={{ color: '#001166' }}>Loading data from database...</p>
+            <p style={{ color: '#087F8C' }}>Loading data from database...</p>
           ) : (
             <div className="dp-dashboard-grid">
               {/* CARD 1: PROFILE */}
               <div className="dp-card">
                 <div className="dp-profile-top">
                   <div className="dp-avatar-large">
-                    <User size={50} color="#001166" />
+                    <User size={50} color="#087F8C" />
                   </div>
                   <h2 className="dp-dentist-name">Dr. {dentistData?.first_name} {dentistData?.last_name}</h2>
                   <p className="dp-dentist-id">ID: DT-10{dentistData?.id}</p>

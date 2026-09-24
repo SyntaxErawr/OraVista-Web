@@ -1,10 +1,10 @@
-/* 1. Import Poppins from Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+/* 1. Import Manrope from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
 
 body {
   margin: 0;
-  /* 2. Set Poppins as the primary font */
-  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  /* 2. Set Manrope as the primary font */
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -24,7 +24,7 @@ code {
   background: none;
   border: none;
   cursor: pointer;
-  color: #001166;
+  color: #087F8C;
   padding: 5px;
   z-index: 1100;
 }
@@ -74,7 +74,7 @@ code {
 .mobile-top-bar {
   display: none;
   height: 60px;
-  background-color: #001166;
+  background-color: #087F8C;
   color: white;
   align-items: center;
   justify-content: space-between;
@@ -256,13 +256,13 @@ code {
 .no-show-list-scroll::-webkit-scrollbar-thumb,
 .annotations-list-scroll::-webkit-scrollbar-thumb,
 .card-scrollable-content::-webkit-scrollbar-thumb {
-  background: rgba(0, 17, 102, 0.15);
+  background: rgba(8, 127, 140, 0.15);
   border-radius: 3px;
 }
 .no-show-list-scroll::-webkit-scrollbar-thumb:hover,
 .annotations-list-scroll::-webkit-scrollbar-thumb:hover,
 .card-scrollable-content::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 17, 102, 0.3);
+  background: rgba(8, 127, 140, 0.3);
 }
 
 /* Analytics Responsive Media Query */
@@ -410,14 +410,14 @@ code {
 }
 
 .settings-page-title {
-  color: #001166;
+  color: #087F8C;
   font-size: 48px;
   font-weight: 800;
   margin-bottom: 50px;
 }
 
 .settings-card-item {
-  background-color: #e8ebf5;
+  background-color: #EAF5F6;
   border-radius: 20px;
   padding: 30px 40px;
   display: flex;
@@ -433,7 +433,7 @@ code {
 }
 
 .settings-card-label {
-  color: #001166;
+  color: #087F8C;
   font-size: 24px;
   font-weight: 800;
   margin: 0;
@@ -550,7 +550,7 @@ code {
   display: none;
   flex-direction: column;
   gap: 12px;
-  background-color: #000c4a;
+  background-color: #064E58;
   padding: 15px 20px;
   border-bottom: 1px solid rgba(255,255,255,0.1);
   box-sizing: border-box;
@@ -709,11 +709,11 @@ code {
   background: transparent;
 }
 .appointment-list-scrollable::-webkit-scrollbar-thumb {
-  background: rgba(0, 17, 102, 0.15);
+  background: rgba(8, 127, 140, 0.15);
   border-radius: 3px;
 }
 .appointment-list-scrollable::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 17, 102, 0.3);
+  background: rgba(8, 127, 140, 0.3);
 }
 
 @media (max-width: 1024px) {

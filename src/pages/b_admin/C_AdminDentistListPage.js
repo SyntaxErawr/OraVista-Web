@@ -57,9 +57,9 @@ function AdminDentistList() {
 
   const getStatusStyle = (status) => {
     switch (status) {
-      case 'Available': return { backgroundColor: '#10b981', color: 'white' };
-      case 'Busy': return { backgroundColor: '#f59e0b', color: 'white' };
-      case 'Off Duty': return { backgroundColor: '#6b7280', color: 'white' };
+      case 'Available': return { backgroundColor: '#10b981', color: "var(--ov-on-color, #fff)" };
+      case 'Busy': return { backgroundColor: '#f59e0b', color: "var(--ov-on-color, #fff)" };
+      case 'Off Duty': return { backgroundColor: '#6b7280', color: "var(--ov-on-color, #fff)" };
       default: return { backgroundColor: '#eee', color: '#333' };
     }
   };
@@ -73,7 +73,7 @@ function AdminDentistList() {
             display: none;
             background: none;
             border: none;
-            color: white;
+            color: var(--ov-on-color, #fff);
             cursor: pointer;
             padding: 5px;
           }
@@ -112,7 +112,7 @@ function AdminDentistList() {
             .mobile-search-collapsible {
               display: block;
               padding: 15px 20px;
-              background-color: #001166;
+              background-color: #087F8C;
               border-top: 1px solid rgba(255, 255, 255, 0.1);
             }
             .header-profile-text {
@@ -150,9 +150,9 @@ function AdminDentistList() {
       </style>
 
       <div style={styles.container}>
-        <header style={styles.header} className="dashboard-page-header">
+        <header style={styles.header} className="dashboard-page-header ov-header">
           <div style={styles.searchBox} className="header-search-box">
-            <ChevronDown size={18} color="rgba(255,255,255,0.6)" />
+            <ChevronDown size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
             <input
               type="text"
               placeholder="Quick search..."
@@ -170,14 +170,14 @@ function AdminDentistList() {
               {isSearchOpen ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
             </button>
 
-            <Bell size={20} color="white" style={{ cursor: 'pointer' }} />
-            <MessageSquare size={20} color="white" style={{ cursor: 'pointer' }} />
+            <Bell size={20} color="var(--ov-on-color, #fff)" style={{ cursor: 'pointer' }} />
+            <MessageSquare size={20} color="var(--ov-on-color, #fff)" style={{ cursor: 'pointer' }} />
             <div style={styles.profile} className="header-profile">
               <div style={styles.profileText} className="header-profile-text">
                 <p style={styles.userName}>Admin User</p>
                 <p style={styles.userRole}>Administrator</p>
               </div>
-              <div style={styles.avatar}><User size={20} color="#001166" /></div>
+              <div style={styles.avatar}><User size={20} color="#087F8C" /></div>
             </div>
           </div>
         </header>
@@ -186,7 +186,7 @@ function AdminDentistList() {
         {isSearchOpen && (
           <div className="mobile-search-collapsible">
             <div style={{ ...styles.searchBox, width: "100%", boxSizing: "border-box" }}>
-              <Search size={18} color="rgba(255,255,255,0.6)" />
+              <Search size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
               <input
                 type="text"
                 placeholder="Search dentists..."
@@ -198,7 +198,7 @@ function AdminDentistList() {
           </div>
         )}
 
-        <div style={styles.content} className="settings-content">
+        <div style={styles.content} className="settings-content ov-workspace-content">
           <div style={styles.titleSection}>
             <h1 style={styles.pageTitle} className="page-title">Dentist Directory</h1>
             <p style={styles.pageSubtitle}>Centralized management of clinical staff and availability</p>
@@ -221,9 +221,9 @@ function AdminDentistList() {
             </button>
           </div>
 
-          <div style={styles.tableContainer} className="table-container-scrollable">
+          <div style={styles.tableContainer} className="table-container-scrollable ov-panel">
             {loading ? (
-              <p style={{ padding: '20px', color: 'white', textAlign: 'center' }}>Synchronizing with database...</p>
+              <p style={{ padding: '20px', color: "var(--ov-on-color, #fff)", textAlign: 'center' }}>Synchronizing with database...</p>
             ) : (
               <table style={styles.table} className="dentist-table">
                 <thead>
@@ -242,7 +242,7 @@ function AdminDentistList() {
                       <td style={styles.td}>{dentist.id}</td>
                       <td style={styles.td}>
                         <div style={styles.nameCell}>
-                          <div style={styles.nameAvatar}><User size={16} color="#001166" style={{ margin: '8px' }} /></div>
+                          <div style={styles.nameAvatar}><User size={16} color="#087F8C" style={{ margin: '8px' }} /></div>
                           <div>
                             <p style={{ margin: 0, fontWeight: '600' }}>{dentist.name}</p>
                             <p style={{ margin: 0, fontSize: '11px', opacity: 0.6 }}>{dentist.branch}</p>
@@ -276,19 +276,19 @@ function AdminDentistList() {
           </div>
 
           <div style={styles.summaryGrid} className="summary-grid">
-            <div style={styles.summaryCard} className="summary-card">
+            <div style={styles.summaryCard} className="summary-card ov-panel">
               <p style={styles.summaryLabel} className="summary-label">Total Staff</p>
               <h2 style={styles.summaryValue} className="summary-value">{summary.total}</h2>
             </div>
-            <div style={styles.summaryCard} className="summary-card">
+            <div style={styles.summaryCard} className="summary-card ov-panel">
               <p style={styles.summaryLabel} className="summary-label">Available</p>
               <h2 style={styles.summaryValue} className="summary-value">{summary.available}</h2>
             </div>
-            <div style={styles.summaryCard} className="summary-card">
+            <div style={styles.summaryCard} className="summary-card ov-panel">
               <p style={styles.summaryLabel} className="summary-label">On-Call / Busy</p>
               <h2 style={styles.summaryValue} className="summary-value">{summary.busy}</h2>
             </div>
-            <div style={styles.summaryCard} className="summary-card">
+            <div style={styles.summaryCard} className="summary-card ov-panel">
               <p style={styles.summaryLabel} className="summary-label">Off Duty</p>
               <h2 style={styles.summaryValue} className="summary-value">{summary.offDuty}</h2>
             </div>
@@ -300,31 +300,31 @@ function AdminDentistList() {
 }
 
 const styles = {
-  container: { display: 'flex', flexDirection: 'column', width: '100%', minHeight: '100vh', backgroundColor: '#f4f6f9', fontFamily: "'Poppins', sans-serif" },
-  header: { height: '80px', background: '#001166', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px', position: 'sticky', top: 0, zIndex: 10, boxSizing: 'border-box' },
-  searchBox: { display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.1)', padding: '10px 20px', borderRadius: '12px', width: '350px' },
-  searchInput: { border: 'none', background: 'transparent', marginLeft: '10px', outline: 'none', width: '100%', color: 'white' },
+  container: { display: 'flex', flexDirection: 'column', width: '100%', minHeight: '100vh', backgroundColor: '#f4f6f9', fontFamily: "'Manrope', sans-serif" },
+  header: { "--ov-on-color": "var(--ov-ink)", height: '80px', background: "var(--ov-primary)", display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px', position: 'sticky', top: 0, zIndex: 10, boxSizing: 'border-box' },
+  searchBox: { display: 'flex', alignItems: 'center', background: "var(--ov-on-wash, rgba(255,255,255,0.1))", padding: '10px 20px', borderRadius: '12px', width: '350px' },
+  searchInput: { border: 'none', background: 'transparent', marginLeft: '10px', outline: 'none', width: '100%', color: "var(--ov-on-color, #fff)" },
   headerActions: { display: 'flex', alignItems: 'center', gap: '25px' },
-  profile: { display: 'flex', alignItems: 'center', gap: '15px', borderLeft: '1px solid rgba(255,255,255,0.2)', paddingLeft: '20px' },
+  profile: { display: 'flex', alignItems: 'center', gap: '15px', borderLeft: "1px solid var(--ov-on-line, rgba(255,255,255,0.2))", paddingLeft: '20px' },
   profileText: { textAlign: 'right' },
-  userName: { margin: 0, fontWeight: 'bold', fontSize: '14px', color: 'white' },
-  userRole: { margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.6)' },
+  userName: { margin: 0, fontWeight: 'bold', fontSize: '14px', color: "var(--ov-on-color, #fff)" },
+  userRole: { margin: 0, fontSize: '12px', color: "var(--ov-on-muted, rgba(255,255,255,0.75))" },
   avatar: { width: '40px', height: '40px', background: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   content: { padding: '40px', boxSizing: 'border-box', width: '100%' },
   titleSection: { marginBottom: '30px' },
-  pageTitle: { fontSize: '28px', fontWeight: '700', color: '#001166', margin: 0 },
+  pageTitle: { fontSize: '28px', fontWeight: '700', color: '#087F8C', margin: 0 },
   pageSubtitle: { fontSize: '14px', color: '#666', marginTop: '5px' },
   tableControls: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
   innerSearch: { position: 'relative', width: '300px' },
   innerSearchIcon: { position: 'absolute', left: '12px', top: '12px' },
-  innerSearchInput: { width: '100%', padding: '10px 15px 10px 40px', borderRadius: '8px', border: '1px solid #ddd', outline: 'none', boxSizing: 'border-box', fontFamily: "'Poppins', sans-serif" },
-  addButton: { backgroundColor: '#001166', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', cursor: 'pointer', fontFamily: "'Poppins', sans-serif" },
-  tableContainer: { backgroundColor: '#001166', borderRadius: '15px', overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', marginBottom: '30px' },
-  table: { borderCollapse: 'collapse', color: 'white' },
-  theadRow: { backgroundColor: 'rgba(255,255,255,0.05)' },
-  th: { textAlign: 'left', padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.1)', fontSize: '14px', fontWeight: '600', opacity: 0.8, whiteSpace: 'nowrap' },
+  innerSearchInput: { width: '100%', padding: '10px 15px 10px 40px', borderRadius: '8px', border: '1px solid #ddd', outline: 'none', boxSizing: 'border-box', fontFamily: "'Manrope', sans-serif" },
+  addButton: { "--ov-on-color": "var(--ov-ink)", backgroundColor: "var(--ov-primary)", color: "var(--ov-on-color, #fff)", border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', cursor: 'pointer', fontFamily: "'Manrope', sans-serif" },
+  tableContainer: { "--ov-on-color": "var(--ov-ink)", backgroundColor: "var(--ov-primary)", borderRadius: '15px', overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', marginBottom: '30px' },
+  table: { borderCollapse: 'collapse', color: "var(--ov-on-color, #fff)" },
+  theadRow: { backgroundColor: "var(--ov-on-wash, rgba(255,255,255,0.05))" },
+  th: { textAlign: 'left', padding: '20px', borderBottom: "1px solid var(--ov-on-line, rgba(255,255,255,0.1))", fontSize: '14px', fontWeight: '600', opacity: 0.8, whiteSpace: 'nowrap' },
   tbodyRow: { transition: 'background-color 0.2s' },
-  td: { padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.05)', fontSize: '14px', whiteSpace: 'nowrap' },
+  td: { padding: '20px', borderBottom: "1px solid var(--ov-on-line, rgba(255,255,255,0.05))", fontSize: '14px', whiteSpace: 'nowrap' },
   nameCell: { display: 'flex', alignItems: 'center', gap: '12px' },
   nameAvatar: { width: '32px', height: '32px', backgroundColor: 'white', borderRadius: '50%', opacity: 0.9, flexShrink: 0 },
   statusBadge: { padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600', display: 'inline-block' },
@@ -332,7 +332,7 @@ const styles = {
   viewIcon: { cursor: 'pointer', opacity: 0.8 },
   editIcon: { cursor: 'pointer', opacity: 0.8 },
   summaryGrid: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px' },
-  summaryCard: { backgroundColor: '#001166', borderRadius: '15px', padding: '20px', color: 'white', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' },
+  summaryCard: { "--ov-on-color": "var(--ov-ink)", backgroundColor: "var(--ov-primary)", borderRadius: '15px', padding: '20px', color: "var(--ov-on-color, #fff)", boxShadow: '0 4px 15px rgba(0,0,0,0.05)' },
   summaryLabel: { fontSize: '13px', opacity: 0.8, marginBottom: '8px', fontWeight: '500' },
   summaryValue: { fontSize: '28px', fontWeight: 'bold', margin: 0 }
 };

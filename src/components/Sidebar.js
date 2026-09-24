@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import BrandMark from './BrandMark';
+import BrandWordmark from './BrandWordmark';
 import { 
   LayoutDashboard, Users, UserRound, Calendar, 
   Stethoscope, UserPlus, Settings, LogOut, ChevronLeft, ChevronRight, X, CreditCard,
@@ -80,7 +82,7 @@ const Sidebar = ({ onToggle, isMobileOpen, onMobileClose }) => {
             top: '15px',
             background: 'none',
             border: 'none',
-            color: 'white',
+            color: "var(--ov-on-color, #fff)",
             cursor: 'pointer',
             padding: '5px',
             display: 'flex',
@@ -94,15 +96,14 @@ const Sidebar = ({ onToggle, isMobileOpen, onMobileClose }) => {
       )}
 
       <div style={styles.logoSection}>
-        <div style={styles.logoIcon}></div>
-        {!collapsed && <h2 style={styles.logoText}>OraVista</h2>}
+        {collapsed ? <BrandMark /> : <BrandWordmark />}
       </div>
 
       <nav style={styles.nav}>
         {menuItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
-            <div 
+            <button type="button" aria-current={isActive ? "page" : undefined} className="ov-nav-item"
               key={item.name} 
               onClick={() => {
                 navigate(item.path);
@@ -110,14 +111,14 @@ const Sidebar = ({ onToggle, isMobileOpen, onMobileClose }) => {
               }}
               style={{
                 ...styles.navItem,
-                backgroundColor: isActive ? 'white' : 'transparent',
-                color: isActive ? '#001166' : 'white',
+                backgroundColor: isActive ? '#DDF6F8' : 'transparent',
+                color: isActive ? '#087F8C' : '#526F77',
                 justifyContent: collapsed ? 'center' : 'flex-start'
               }}
             >
               {item.icon}
               {!collapsed && <span style={styles.navText}>{item.name}</span>}
-            </div>
+            </button>
           );
         })}
       </nav>
@@ -130,7 +131,7 @@ const Sidebar = ({ onToggle, isMobileOpen, onMobileClose }) => {
           if (onMobileClose) onMobileClose();
         }}
       >
-        <div style={{...styles.navItem, justifyContent: collapsed ? 'center' : 'flex-start', color: 'white'}}>
+        <div style={{...styles.navItem, justifyContent: collapsed ? 'center' : 'flex-start', color: "var(--ov-on-color, #fff)"}}>
           <LogOut size={20} />
           {!collapsed && <span style={styles.navText}>Log Out</span>}
         </div>
@@ -140,15 +141,15 @@ const Sidebar = ({ onToggle, isMobileOpen, onMobileClose }) => {
 };
 
 const styles = {
-  sidebar: { height: '100vh', backgroundColor: '#001166', display: 'flex', flexDirection: 'column', position: 'fixed', transition: 'width 0.3s ease', zIndex: 1000 },
+  sidebar: { "--ov-on-color": "var(--ov-ink)", height: '100vh', backgroundColor: "var(--ov-primary)", display: 'flex', flexDirection: 'column', position: 'fixed', transition: 'width 0.3s ease', zIndex: 1000 },
   toggleBtn: { position: 'absolute', right: '-12px', top: '35px', backgroundColor: 'white', border: '1px solid #ddd', borderRadius: '50%', cursor: 'pointer', width: '25px', height: '25px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
   logoSection: { padding: '40px 20px', display: 'flex', alignItems: 'center', gap: '15px' },
   logoIcon: { width: '30px', height: '30px', backgroundColor: 'white', borderRadius: '8px' },
-  logoText: { color: 'white', margin: 0, fontSize: '20px', fontWeight: 'bold' },
+  logoText: { color: "var(--ov-on-color, #fff)", margin: 0, fontSize: '20px', fontWeight: 'bold' },
   nav: { flex: 1, padding: '0 15px' },
   navItem: { display: 'flex', alignItems: 'center', padding: '12px 15px', borderRadius: '10px 0 0 10px', cursor: 'pointer', marginBottom: '8px', transition: 'all 0.2s', fontSize: '14px' },
   navText: { marginLeft: '12px', fontWeight: '500' },
-  logoutSection: { padding: '20px 15px', borderTop: '1px solid rgba(255,255,255,0.1)' }
+  logoutSection: { padding: '20px 15px', borderTop: "1px solid var(--ov-on-line, rgba(255,255,255,0.1))" }
 };
 
 export default Sidebar;

@@ -1,3 +1,4 @@
+import BrandWordmark from "../../components/BrandWordmark";
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -12,7 +13,6 @@ import {
   Settings,
   LogOut,
   CreditCard,
-  ChevronDown,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -49,24 +49,13 @@ const formatDiagnosticDate = (value) => {
   });
 };
 
-const DENTISTS_BY_BRANCH = {
-  "Gil Puyat, Pasay": [
-    "Dra. Theresa Madrid",
-    "Dra. Ruth Bozar",
-    "Dr. Vicente Epres",
-    "Dra. Queenie Balmedina",
-  ],
-  "Sta. Ana, Manila": ["Dra. Queenie Balmedina", "Dr. Vicente Epres"],
-  "Angeles, Pampanga": ["Dra. Paulette Maliit", "Dr. Vicente Epres"],
-};
-
 function RecordsPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [selectedDentist, setSelectedDentist] = useState("");
+  const [recordSearch, setRecordSearch] = useState("");
 
   const [userData, setUserData] = useState({
     id: null,
@@ -74,14 +63,19 @@ function RecordsPage() {
     lastName: "",
     branch: "",
   });
-  const dentistsList = DENTISTS_BY_BRANCH[userData.branch] || [];
   const [isDownloadingReport, setIsDownloadingReport] = useState(false);
   const [analyticsData, setAnalyticsData] = useState(null);
   const [riskData, setRiskData] = useState(null);
   const [isDataLoading, setIsDataLoading] = useState(true);
+  const [dataError, setDataError] = useState("");
   const [finalDiagnoses, setFinalDiagnoses] = useState([]);
   const [isDiagnosesLoading, setIsDiagnosesLoading] = useState(true);
   const [diagnosesError, setDiagnosesError] = useState("");
+
+  const visibleDiagnoses = finalDiagnoses.filter(record =>
+    [record.id, formatDiagnosticDate(record.scan_date), record.clinical_notes,
+      ...getFinalFindingRows(record).flat()].join(" ").toLowerCase().includes(recordSearch.trim().toLowerCase())
+  );
 
   useEffect(() => {
     if (!userData.id) return undefined;
@@ -109,6 +103,7 @@ function RecordsPage() {
 
   const fetchData = useCallback(async (userId) => {
     setIsDataLoading(true);
+    setDataError("");
     try {
       const [analyticsRes, riskRes] = await Promise.all([
         fetch(
@@ -118,10 +113,12 @@ function RecordsPage() {
           `https://oravista-ai-engine-474976105474.asia-southeast1.run.app/api/patient/get/${userId}/oral-health-risk`,
         ),
       ]);
+      if (!analyticsRes.ok || !riskRes.ok) setDataError("Some health information could not be loaded. Please retry.");
       if (analyticsRes.ok) setAnalyticsData(await analyticsRes.json());
       if (riskRes.ok) setRiskData(await riskRes.json());
     } catch (err) {
       console.error("Error fetching data:", err);
+      setDataError("Health information could not be loaded. Please retry.");
     } finally {
       setIsDataLoading(false);
     }
@@ -353,7 +350,7 @@ function RecordsPage() {
       display: "flex",
       alignItems: "center",
       gap: "15px",
-      color: "white",
+      color: "var(--ov-on-color, #fff)",
       textDecoration: "none",
       padding: "12px 15px",
       margin: "5px 0",
@@ -363,9 +360,9 @@ function RecordsPage() {
       transition: "all 0.3s ease",
       whiteSpace: "nowrap",
       overflow: "hidden",
-      backgroundColor: isActive ? "rgba(255,255,255,0.2)" : "transparent",
+      backgroundColor: isActive ? "var(--ov-on-wash, rgba(255,255,255,0.2))" : "transparent",
       fontWeight: isActive ? "700" : "400",
-      borderLeft: isActive ? "4px solid white" : "4px solid transparent",
+      borderLeft: isActive ? "4px solid #21B9C8" : "4px solid transparent",
     };
   };
 
@@ -391,24 +388,22 @@ function RecordsPage() {
         }}
       >
         {(!isCollapsed || isMobile) && (
-          <h2 style={{ fontSize: "28px", fontWeight: "800", margin: 0 }}>
-            OraVista
-          </h2>
+          <h2 style={{ fontSize: "28px", fontWeight: "800", margin: 0 }}><BrandWordmark /></h2>
         )}
         {isMobile ? (
-          <div
+          <button className="ov-ui-button"
             onClick={() => setIsMobileOpen(false)}
             style={{ cursor: "pointer" }}
-          >
+           type="button" aria-label="Close navigation">
             <X size={24} />
-          </div>
+          </button>
         ) : (
-          <div
+          <button className="ov-ui-button"
             onClick={() => setIsCollapsed(!isCollapsed)}
             style={{ cursor: "pointer" }}
-          >
+           type="button" aria-label="Toggle sidebar">
             {isCollapsed ? <Menu size={24} /> : <X size={24} />}
-          </div>
+          </button>
         )}
       </div>
       <nav style={{ flexGrow: 1 }}>
@@ -444,7 +439,7 @@ function RecordsPage() {
             label: "Billings",
           },
         ].map(({ path, icon, label }) => (
-          <div
+          <button aria-label={label} aria-current={location.pathname === path ? 'page' : undefined} type="button" className="ov-nav-item"
             key={path}
             style={getNavItemStyle(path)}
             onClick={() => {
@@ -458,16 +453,16 @@ function RecordsPage() {
                 {label}
               </span>
             )}
-          </div>
+          </button>
         ))}
       </nav>
       <div
         style={{
-          borderTop: "1px solid rgba(255,255,255,0.2)",
+          borderTop: "1px solid var(--ov-on-line, rgba(255,255,255,0.2))",
           paddingTop: "10px",
         }}
       >
-        <div
+        <button aria-label="Settings" aria-current={location.pathname === "/settings" ? 'page' : undefined} type="button" className="ov-nav-item"
           style={getNavItemStyle("/settings")}
           onClick={() => {
             navigate("/settings");
@@ -476,14 +471,14 @@ function RecordsPage() {
         >
           <Settings size={20} style={{ flexShrink: 0 }} />
           {(!isCollapsed || isMobile) && "Settings"}
-        </div>
-        <div
+        </button>
+        <button aria-label="Logout" aria-current={location.pathname === "/logout" ? 'page' : undefined} data-ov-action="logout" type="button" className="ov-nav-item"
           style={{ ...getNavItemStyle("/logout"), color: "#ff4d4d" }}
           onClick={handleLogout}
         >
           <LogOut size={20} style={{ flexShrink: 0 }} />
           {(!isCollapsed || isMobile) && "Logout"}
-        </div>
+        </button>
       </div>
     </>
   );
@@ -494,7 +489,7 @@ function RecordsPage() {
         display: "flex",
         minHeight: "100vh",
         width: "100%",
-        fontFamily: "'Poppins', sans-serif",
+        fontFamily: "'Manrope', sans-serif",
       }}
     >
       {/* Mobile backdrop */}
@@ -512,12 +507,12 @@ function RecordsPage() {
 
       {/* Desktop Sidebar */}
       {!isMobile && (
-        <div
-          style={{
+        <div className="ov-sidebar"
+          style={{ "--ov-on-color": "var(--ov-ink)",
             width: sidebarWidth,
-            backgroundColor: "#001166",
+            backgroundColor: "var(--ov-primary)",
             height: "100vh",
-            color: "white",
+            color: "var(--ov-on-color, #fff)",
             padding: "20px 15px",
             display: "flex",
             flexDirection: "column",
@@ -536,12 +531,12 @@ function RecordsPage() {
 
       {/* Mobile Sidebar Drawer */}
       {isMobile && (
-        <div
-          style={{
+        <div inert={!isMobileOpen} aria-hidden={!isMobileOpen} className="ov-sidebar"
+          style={{ "--ov-on-color": "var(--ov-ink)",
             width: "260px",
-            backgroundColor: "#001166",
+            backgroundColor: "var(--ov-primary)",
             height: "100vh",
-            color: "white",
+            color: "var(--ov-on-color, #fff)",
             padding: "20px 15px",
             display: "flex",
             flexDirection: "column",
@@ -559,7 +554,7 @@ function RecordsPage() {
       )}
 
       {/* Main Content */}
-      <div
+      <div className="ov-workspace"
         style={{
           marginLeft: isMobile ? 0 : sidebarWidth,
           width: isMobile ? "100%" : `calc(100% - ${sidebarWidth})`,
@@ -573,27 +568,25 @@ function RecordsPage() {
       >
         {/* Mobile Top Bar */}
         {isMobile && (
-          <div
-            style={{
+          <div className="ov-color-surface"
+            style={{ "--ov-on-color": "var(--ov-ink)",
               display: "flex",
               alignItems: "center",
               padding: "15px 20px",
-              backgroundColor: "#001166",
-              color: "white",
+              backgroundColor: "var(--ov-primary)",
+              color: "var(--ov-on-color, #fff)",
               position: "sticky",
               top: 0,
               zIndex: 100,
             }}
           >
-            <div
+            <button className="ov-ui-button"
               onClick={() => setIsMobileOpen(true)}
               style={{ cursor: "pointer", marginRight: "15px" }}
-            >
+             type="button" aria-label="Open navigation">
               <Menu size={24} />
-            </div>
-            <h2 style={{ fontSize: "22px", fontWeight: "800", margin: 0 }}>
-              OraVista
-            </h2>
+            </button>
+            <h2 style={{ fontSize: "22px", fontWeight: "800", margin: 0 }}><BrandWordmark /></h2>
           </div>
         )}
 
@@ -611,7 +604,7 @@ function RecordsPage() {
           >
             <h1
               style={{
-                color: "#001166",
+                color: "#087F8C",
                 fontSize: isMobile ? "28px" : "42px",
                 fontWeight: "800",
                 margin: 0,
@@ -621,7 +614,7 @@ function RecordsPage() {
             </h1>
             <p
               style={{
-                color: "#001166",
+                color: "#087F8C",
                 fontSize: "14px",
                 fontWeight: "600",
                 margin: 0,
@@ -629,110 +622,6 @@ function RecordsPage() {
             >
               Active User: {userData.firstName}
             </p>
-          </div>
-
-          {/* Search & Filter row */}
-          <div
-            style={{
-              display: "flex",
-              flexDirection: isMobile ? "column" : "row",
-              justifyContent: "space-between",
-              gap: "12px",
-              marginBottom: "24px",
-            }}
-          >
-            <div
-              style={{
-                position: "relative",
-                flex: isMobile ? "unset" : "0 0 auto",
-                width: isMobile ? "100%" : "auto",
-              }}
-            >
-              <Search
-                style={{
-                  position: "absolute",
-                  left: "14px",
-                  top: "13px",
-                  color: "#666",
-                }}
-                size={18}
-              />
-              <input
-                type="text"
-                placeholder="Search records here..."
-                style={{
-                  padding: "12px 15px 12px 42px",
-                  borderRadius: "25px",
-                  border: "none",
-                  backgroundColor: "#f0f2f5",
-                  width: isMobile ? "100%" : "280px",
-                  fontSize: "14px",
-                  boxSizing: "border-box",
-                  fontFamily: "'Poppins', sans-serif",
-                }}
-              />
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                gap: "10px",
-                alignItems: "center",
-                flexWrap: "wrap",
-              }}
-            >
-              <div style={{ position: "relative", flex: 1, minWidth: "140px" }}>
-                <select
-                  value={selectedDentist}
-                  onChange={(e) => setSelectedDentist(e.target.value)}
-                  style={{
-                    appearance: "none",
-                    backgroundColor: "#e8ebf5",
-                    border: "none",
-                    padding: "12px 36px 12px 16px",
-                    borderRadius: "10px",
-                    color: "#001166",
-                    fontWeight: "600",
-                    cursor: "pointer",
-                    fontSize: "13px",
-                    width: "100%",
-                    fontFamily: "'Poppins', sans-serif",
-                  }}
-                >
-                  <option value="">All Dentists</option>
-                  {dentistsList.map((d) => (
-                    <option key={d} value={d}>
-                      {d}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown
-                  size={16}
-                  style={{
-                    position: "absolute",
-                    right: "12px",
-                    top: "14px",
-                    pointerEvents: "none",
-                    color: "#001166",
-                  }}
-                />
-              </div>
-              <button
-                style={{
-                  padding: "12px 24px",
-                  borderRadius: "10px",
-                  border: "none",
-                  backgroundColor: "#001166",
-                  color: "white",
-                  fontWeight: "700",
-                  cursor: "pointer",
-                  fontFamily: "'Poppins', sans-serif",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                Apply
-              </button>
-            </div>
           </div>
 
           {/* Analytics & Risk Tables */}
@@ -746,7 +635,7 @@ function RecordsPage() {
           >
             <h2
               style={{
-                color: "#001166",
+                color: "#087F8C",
                 fontSize: isMobile ? "18px" : "22px",
                 fontWeight: "800",
                 marginBottom: "20px",
@@ -756,6 +645,7 @@ function RecordsPage() {
               Analytics & Health Risk Score
             </h2>
 
+            {dataError && <div className="ov-inline-error" role="alert">{dataError} <button type="button" className="ov-ui-button ov-text-link" onClick={() => fetchData(userData.id)}>Retry</button></div>}
             {isDataLoading ? (
               <p
                 style={{
@@ -778,7 +668,7 @@ function RecordsPage() {
                 <div>
                   <h3
                     style={{
-                      color: "#001166",
+                      color: "#087F8C",
                       fontSize: isMobile ? "15px" : "17px",
                       marginBottom: "12px",
                       marginTop: 0,
@@ -797,8 +687,8 @@ function RecordsPage() {
                       }}
                     >
                       <thead>
-                        <tr
-                          style={{ backgroundColor: "#001166", color: "white" }}
+                        <tr className="ov-color-surface"
+                          style={{ "--ov-on-color": "var(--ov-ink)", backgroundColor: "var(--ov-primary)", color: "var(--ov-on-color, #fff)" }}
                         >
                           <th style={thStyle}>Indicator</th>
                           <th style={thStyle}>Value</th>
@@ -860,7 +750,7 @@ function RecordsPage() {
                 <div>
                   <h3
                     style={{
-                      color: "#001166",
+                      color: "#087F8C",
                       fontSize: isMobile ? "15px" : "17px",
                       marginBottom: "12px",
                       marginTop: 0,
@@ -879,8 +769,8 @@ function RecordsPage() {
                       }}
                     >
                       <thead>
-                        <tr
-                          style={{ backgroundColor: "#001166", color: "white" }}
+                        <tr className="ov-color-surface"
+                          style={{ "--ov-on-color": "var(--ov-ink)", backgroundColor: "var(--ov-primary)", color: "var(--ov-on-color, #fff)" }}
                         >
                           <th style={thStyle}>Metric</th>
                           <th style={thStyle}>Assessment</th>
@@ -1015,24 +905,31 @@ function RecordsPage() {
 
           {/* Only diagnoses finalized with Save Final Diagnosis are shown here. */}
           <section style={{ backgroundColor: "#f0f2f5", borderRadius: "20px", padding: isMobile ? "20px 16px" : "30px", marginBottom: "24px" }}>
-            <h2 style={{ color: "#001166", fontSize: isMobile ? "18px" : "22px", fontWeight: "800", margin: "0 0 20px" }}>Dentist-Saved Final Diagnoses</h2>
+            <h2 style={{ color: "#087F8C", fontSize: isMobile ? "18px" : "22px", fontWeight: "800", margin: "0 0 20px" }}>Dentist-Saved Final Diagnoses</h2>
+            <label className="ov-field-label" htmlFor="record-search">Search saved diagnoses</label>
+            <div className="ov-search-field">
+              <Search size={18} aria-hidden="true" />
+              <input id="record-search" type="search" value={recordSearch} onChange={event => setRecordSearch(event.target.value)} placeholder="Search findings, notes, date or diagnosis number" />
+            </div>
             {isDiagnosesLoading ? (
               <p role="status" style={{ color: "#666" }}>Loading final diagnoses...</p>
             ) : diagnosesError ? (
               <p role="alert" style={{ color: "#b91c1c" }}>{diagnosesError}</p>
             ) : finalDiagnoses.length === 0 ? (
               <p style={{ color: "#666" }}>No dentist-saved final diagnoses are available yet.</p>
+            ) : visibleDiagnoses.length === 0 ? (
+              <p role="status">No saved diagnoses match your search. Try another keyword.</p>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                {finalDiagnoses.map((record) => (
+                {visibleDiagnoses.map((record) => (
                   <article key={record.id} style={{ backgroundColor: "white", borderRadius: "12px", padding: "20px", overflowWrap: "anywhere" }}>
-                    <h3 style={{ color: "#001166", fontSize: "17px", margin: "0 0 6px" }}>Final Diagnosis #{record.id}</h3>
+                    <h3 style={{ color: "#087F8C", fontSize: "17px", margin: "0 0 6px" }}>Final Diagnosis #{record.id}</h3>
                     <p style={{ color: "#666", fontSize: "13px", margin: "0 0 16px" }}>Scan date: {formatDiagnosticDate(record.scan_date)}</p>
-                    <h4 style={{ color: "#001166", margin: "0 0 10px" }}>Final Findings</h4>
+                    <h4 style={{ color: "#087F8C", margin: "0 0 10px" }}>Final Findings</h4>
                     <ul style={{ color: "#333", paddingLeft: "22px", lineHeight: 1.7 }}>
                       {getFinalFindingRows(record).map(([finding], index) => <li key={index} style={{ whiteSpace: "pre-wrap" }}>{finding}</li>)}
                     </ul>
-                    <h4 style={{ color: "#001166", margin: "18px 0 10px" }}>Dentist’s Clinical Notes</h4>
+                    <h4 style={{ color: "#087F8C", margin: "18px 0 10px" }}>Dentist’s Clinical Notes</h4>
                     <p style={{ color: "#333", whiteSpace: "pre-wrap", lineHeight: 1.7, margin: 0 }}>
                       {typeof record.clinical_notes === "string" && record.clinical_notes.trim()
                         ? record.clinical_notes
@@ -1049,20 +946,20 @@ function RecordsPage() {
             <button
               onClick={handleDownloadReport}
               disabled={isDownloadingReport}
-              style={{
+              style={{ "--ov-on-color": "var(--ov-ink)",
                 display: "flex",
                 alignItems: "center",
                 gap: "8px",
                 padding: "12px 24px",
                 borderRadius: "10px",
                 border: "none",
-                backgroundColor: "#001166",
-                color: "white",
+                backgroundColor: "var(--ov-primary)",
+                color: "var(--ov-on-color, #fff)",
                 fontWeight: "700",
                 cursor: isDownloadingReport ? "not-allowed" : "pointer",
                 boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
                 opacity: isDownloadingReport ? 0.7 : 1,
-                fontFamily: "'Poppins', sans-serif",
+                fontFamily: "'Manrope', sans-serif",
                 fontSize: "14px",
                 width: isMobile ? "100%" : "auto",
                 justifyContent: isMobile ? "center" : "flex-start",

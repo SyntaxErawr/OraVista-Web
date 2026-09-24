@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Stethoscope, Smile, SmilePlus } from 'lucide-react';
 import serviceImage from '../../assets/dentimage.jpg'; 
 
 function ServicesPage() {
@@ -10,7 +11,7 @@ function ServicesPage() {
       maxWidth: '1200px',
       margin: '60px auto',
       padding: '0 40px',
-      fontFamily: "'Poppins', sans-serif",
+      fontFamily: "'Manrope', sans-serif",
       textAlign: 'center',
     },
     headerSection: {
@@ -20,15 +21,15 @@ function ServicesPage() {
       gap: '20px',
       marginBottom: '15px'
     },
-    blueLine: {
+    blueLine: { "--ov-on-color": "var(--ov-ink)",
       flex: 1,
       height: '3px',
-      backgroundColor: '#001166',
+      backgroundColor: "var(--ov-primary)",
     },
     title: {
       fontSize: '42px',
       fontWeight: '900',
-      color: '#001166',
+      color: '#087F8C',
       margin: 0,
       whiteSpace: 'nowrap'
     },
@@ -44,17 +45,17 @@ function ServicesPage() {
       gap: '30px',
       marginBottom: '80px'
     },
-    serviceCard: {
-      backgroundColor: '#001166',
+    serviceCard: { "--ov-on-color": "var(--ov-ink)",
+      backgroundColor: "var(--ov-primary)",
       borderRadius: '25px',
       padding: '60px 30px',
-      color: 'white',
+      color: "var(--ov-on-color, #fff)",
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
       minHeight: '400px',
-      boxShadow: '0 10px 25px rgba(0, 17, 102, 0.1)'
+      boxShadow: '0 10px 25px rgba(8, 127, 140, 0.1)'
     },
     cardTitle: {
       fontSize: '32px',
@@ -68,13 +69,13 @@ function ServicesPage() {
       opacity: 0.9,
       maxWidth: '250px'
     },
-    bookingBanner: {
+    bookingBanner: { "--ov-on-color": "var(--ov-ink)",
       display: 'flex',
-      backgroundColor: '#001166',
+      backgroundColor: "var(--ov-primary)",
       borderRadius: '4px',
       overflow: 'hidden',
       textAlign: 'left',
-      color: 'white',
+      color: "var(--ov-on-color, #fff)",
       marginTop: '40px',
       alignItems: 'stretch' // Ensures children (text and image) have equal height
     },
@@ -107,7 +108,7 @@ function ServicesPage() {
     bookBtn: {
       marginTop: '30px',
       backgroundColor: 'white',
-      color: '#001166',
+      color: '#087F8C',
       border: 'none',
       padding: '12px 30px',
       borderRadius: '30px',
@@ -129,7 +130,7 @@ function ServicesPage() {
   };
 
   return (
-    <div style={styles.container}>
+    <div className="ov-public-page" style={styles.container}>
       {/* Our Services Section */}
       <div style={styles.headerSection}>
         <div style={styles.blueLine}></div>
@@ -141,22 +142,25 @@ function ServicesPage() {
         We offer a wide range of dental care to keep your smile healthy and beautiful
       </p>
 
-      <div style={styles.servicesGrid}>
-        <div style={styles.serviceCard}>
+      <div className="services-grid" style={styles.servicesGrid}>
+        <div className="ov-panel ov-service-card" style={styles.serviceCard}>
+          <span className="ov-service-icon"><Stethoscope size={26} aria-hidden="true" /></span>
           <h2 style={styles.cardTitle}>General Dentistry</h2>
           <p style={styles.cardDescription}>
             Routine check-ups, cleanings, and preventive care to maintain your oral health.
           </p>
         </div>
 
-        <div style={styles.serviceCard}>
+        <div className="ov-panel ov-service-card" style={styles.serviceCard}>
+          <span className="ov-service-icon"><Smile size={26} aria-hidden="true" /></span>
           <h2 style={styles.cardTitle}>Orthodontics</h2>
           <p style={styles.cardDescription}>
             Braces, veneers, and other treatments to straighten and enhance your smile.
           </p>
         </div>
 
-        <div style={styles.serviceCard}>
+        <div className="ov-panel ov-service-card" style={styles.serviceCard}>
+          <span className="ov-service-icon"><SmilePlus size={26} aria-hidden="true" /></span>
           <h2 style={styles.cardTitle}>Restorative Treatments</h2>
           <p style={styles.cardDescription}>
             Implants, crowns, and bridges to restore function and appearance.
@@ -165,8 +169,8 @@ function ServicesPage() {
       </div>
 
       {/* Book an Appointment Banner */}
-      <div style={styles.bookingBanner}>
-        <div style={styles.bookingText}>
+      <div className="ov-feature booking-banner" style={styles.bookingBanner}>
+        <div className="booking-text" style={styles.bookingText}>
           <h3 style={styles.bookingTitle}>Book an Appointment</h3>
           <p style={styles.bookingPara}>
             Scheduling your dental visit is quick and easy. At King Epres Dental Clinic, we offer flexible appointment times to fit your schedule. Whether it's a routine check-up, orthodontic consultation, or restorative treatment, you can book online or call us directly. Our friendly staff will guide you through the process and ensure your visit is smooth, efficient, and comfortable.
@@ -185,7 +189,7 @@ function ServicesPage() {
             Book Now →
           </button>
         </div>
-        <div style={styles.imageSection}></div>
+        <div className="booking-img" style={styles.imageSection}></div>
       </div>
     </div>
   );

@@ -1,8 +1,9 @@
+import StorePlaceholders from "../../components/StorePlaceholders";
+import BranchContactLinks from "../../components/BranchContactLinks";
+import BrandWordmark from "../../components/BrandWordmark";
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom"; 
-import { Phone, Mail, MapPin, Facebook, Instagram, Twitter, ShieldCheck, Menu, X } from "lucide-react";
-import landingBg from "../../assets/BG_IMG.png";
-import playIcon from "../../assets/gpslogo.png";
+import { MapPin, ShieldCheck, Menu, X, Stethoscope, Smile, SmilePlus } from "lucide-react";
 import serviceImage from '../../assets/dentimage.jpg'; 
 
 function LandingPage() {
@@ -35,9 +36,7 @@ function LandingPage() {
     setSelectedBranch(branch);
     setIsOpen(false);
     localStorage.setItem("tempBranch", branch);
-    setTimeout(() => {
-      navigate("/login");
-    }, 300);
+    navigate("/login");
   };
 
   // --- Management Portal Navigation Handler ---
@@ -49,10 +48,10 @@ function LandingPage() {
   // ==========================================
   // STYLES: HERO / NAVBAR 
   // ==========================================
-  const brandBlue = "#001166";
+  const brandBlue = "#087F8C";
 
   const heroSectionStyle = {
-    backgroundImage: `url(${landingBg})`,
+    backgroundColor: "#F1FBFC",
     backgroundSize: "cover",
     backgroundPosition: "center",
     minHeight: "100vh",
@@ -74,12 +73,12 @@ function LandingPage() {
     transition: "color 0.2s"
   };
 
-  const portalBtnStyle = {
+  const portalBtnStyle = { "--ov-on-color": "var(--ov-ink)",
     display: "flex",
     alignItems: "center",
     gap: "8px",
-    backgroundColor: brandBlue,
-    color: "white",
+    backgroundColor: "var(--ov-primary)",
+    color: "var(--ov-on-color, #fff)",
     border: "none",
     padding: "8px 18px",
     borderRadius: "20px",
@@ -87,25 +86,25 @@ function LandingPage() {
     fontWeight: "700",
     cursor: "pointer",
     transition: "transform 0.2s, background-color 0.2s",
-    fontFamily: "'Poppins', sans-serif"
+    fontFamily: "'Manrope', sans-serif"
   };
 
   // ==========================================
   // STYLES: ABOUT US
   // ==========================================
   const aboutStyles = {
-    container: { maxWidth: '1200px', margin: '0 auto', padding: '0 40px', fontFamily: "'Poppins', sans-serif", color: '#001166', boxSizing: 'border-box' },
+    container: { maxWidth: '1200px', margin: '0 auto', padding: '0 40px', fontFamily: "'Manrope', sans-serif", color: '#087F8C', boxSizing: 'border-box' },
     topSection: { display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: '50px', marginBottom: '40px' },
     textContent: { flex: 1 },
-    header: { fontSize: '42px', fontWeight: '900', marginBottom: '25px', marginTop: 0, color: '#001166' },
+    header: { fontSize: '42px', fontWeight: '900', marginBottom: '25px', marginTop: 0, color: '#087F8C' },
     paragraph: { fontSize: '16px', lineHeight: '1.7', color: '#333', marginBottom: '20px', maxWidth: '550px' },
     imageContainer: { flex: 1.2, width: '100%' },
     image: { width: '100%', height: '500px', borderRadius: '8px', objectFit: 'cover', marginTop: '25px', display: 'block', marginLeft: 'auto' },
     whyChooseSection: { marginTop: '40px', marginBottom: '60px' },
     whyChooseHeaderContainer: { display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '30px' },
-    blueLine: { flex: 1, height: '3px', backgroundColor: '#001166', marginTop: '10px' },
+    blueLine: { "--ov-on-color": "var(--ov-ink)", flex: 1, height: '3px', backgroundColor: "var(--ov-primary)", marginTop: '10px' },
     bottomGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', marginTop: '50px', alignItems: 'center' },
-    ratingsCard: { backgroundColor: '#001166', color: 'white', padding: '45px', borderRadius: '4px', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: '30px' },
+    ratingsCard: { "--ov-on-color": "var(--ov-ink)", backgroundColor: "var(--ov-primary)", color: "var(--ov-on-color, #fff)", padding: '45px', borderRadius: '4px', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: '30px' },
     ratingsLabel: { fontSize: '48px', fontWeight: '900', margin: 0 },
     starsContainer: { textAlign: 'left' },
     stars: { color: '#FFD700', fontSize: '20px', marginBottom: '5px' },
@@ -118,22 +117,22 @@ function LandingPage() {
   // STYLES: SERVICES
   // ==========================================
   const servicesStyles = {
-    container: { maxWidth: '1200px', margin: '0 auto', padding: '0 40px', fontFamily: "'Poppins', sans-serif", textAlign: 'center', boxSizing: 'border-box' },
+    container: { maxWidth: '1200px', margin: '0 auto', padding: '0 40px', fontFamily: "'Manrope', sans-serif", textAlign: 'center', boxSizing: 'border-box' },
     headerSection: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', marginBottom: '15px' },
-    blueLine: { flex: 1, height: '3px', backgroundColor: '#001166' },
-    title: { fontSize: '42px', fontWeight: '900', color: '#001166', margin: 0, whiteSpace: 'nowrap' },
+    blueLine: { "--ov-on-color": "var(--ov-ink)", flex: 1, height: '3px', backgroundColor: "var(--ov-primary)" },
+    title: { fontSize: '42px', fontWeight: '900', color: '#087F8C', margin: 0, whiteSpace: 'nowrap' },
     subtitle: { fontSize: '18px', color: '#333', marginBottom: '60px', fontWeight: '500' },
     servicesGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '30px', marginBottom: '80px' },
-    serviceCard: { backgroundColor: '#001166', borderRadius: '25px', padding: '60px 30px', color: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', boxShadow: '0 10px 25px rgba(0, 17, 102, 0.1)' },
+    serviceCard: { "--ov-on-color": "var(--ov-ink)", backgroundColor: "var(--ov-primary)", borderRadius: '25px', padding: '60px 30px', color: "var(--ov-on-color, #fff)", display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', boxShadow: '0 10px 25px rgba(8, 127, 140, 0.1)' },
     cardTitle: { fontSize: '32px', fontWeight: '800', marginBottom: '40px', lineHeight: '1.2' },
     cardDescription: { fontSize: '16px', lineHeight: '1.6', opacity: 0.9, maxWidth: '250px' },
-    bookingBanner: { display: 'flex', backgroundColor: '#001166', borderRadius: '4px', overflow: 'hidden', textAlign: 'left', color: 'white', marginTop: '40px', alignItems: 'stretch' },
+    bookingBanner: { "--ov-on-color": "var(--ov-ink)", display: 'flex', backgroundColor: "var(--ov-primary)", borderRadius: '4px', overflow: 'hidden', textAlign: 'left', color: "var(--ov-on-color, #fff)", marginTop: '40px', alignItems: 'stretch' },
     bookingText: { flex: 1, padding: '50px' },
     bookingTitle: { fontSize: '22px', fontWeight: '800', marginBottom: '20px' },
     bookingPara: { fontSize: '14px', lineHeight: '1.6', marginBottom: '30px', opacity: 0.9 },
     stepsTitle: { fontSize: '16px', fontWeight: '800', marginBottom: '15px' },
     stepsList: { listStyleType: 'decimal', paddingLeft: '20px', fontSize: '14px', lineHeight: '1.8' },
-    bookBtn: { marginTop: '30px', backgroundColor: 'white', color: '#001166', border: 'none', padding: '12px 30px', borderRadius: '30px', fontWeight: '800', cursor: 'pointer', fontSize: '14px', display: 'inline-flex', alignItems: 'center', gap: '10px' },
+    bookBtn: { marginTop: '30px', backgroundColor: 'white', color: '#087F8C', border: 'none', padding: '12px 30px', borderRadius: '30px', fontWeight: '800', cursor: 'pointer', fontSize: '14px', display: 'inline-flex', alignItems: 'center', gap: '10px' },
     imageSection: { flex: 1, background: `url(${serviceImage})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', minHeight: '100%' }
   };
 
@@ -141,23 +140,23 @@ function LandingPage() {
   // STYLES: CONTACT
   // ==========================================
   const contactStyles = {
-    container: { maxWidth: '1200px', margin: '0 auto', padding: '0 40px', fontFamily: "'Poppins', sans-serif", color: '#001166', textAlign: 'left', boxSizing: 'border-box' },
+    container: { maxWidth: '1200px', margin: '0 auto', padding: '0 40px', fontFamily: "'Manrope', sans-serif", color: '#087F8C', textAlign: 'left', boxSizing: 'border-box' },
     header: { fontSize: '42px', fontWeight: '800', marginBottom: '40px' },
     grid: { display: 'grid', gridTemplateColumns: '1.2fr 1fr 2fr', gap: '50px', marginBottom: '60px' },
     sectionTitle: { fontSize: '22px', fontWeight: '800', marginBottom: '25px' },
     description: { fontSize: '15px', lineHeight: '1.6', color: '#333', marginBottom: '30px' },
     socialLinks: { display: 'flex', gap: '15px', marginTop: '20px' },
     linkList: { listStyle: 'none', padding: 0, margin: 0 },
-    linkItem: { fontSize: '16px', marginBottom: '15px', cursor: 'pointer', color: '#001166', fontWeight: '500' },
+    linkItem: { fontSize: '16px', marginBottom: '15px', cursor: 'pointer', color: '#087F8C', fontWeight: '500' },
     contactInfo: { display: 'flex', flexDirection: 'column', gap: '30px' },
     locationGroup: { display: 'flex', flexDirection: 'column', gap: '8px' },
     locationTitle: { fontSize: '18px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' },
     infoItem: { fontSize: '14px', display: 'flex', alignItems: 'center', gap: '10px', color: '#333' },
-    footerLine: { borderTop: '3px solid #001166', paddingTop: '20px', marginTop: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', color: '#333' }
+    footerLine: { borderTop: '3px solid #087F8C', paddingTop: '20px', marginTop: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', color: '#333' }
   };
 
   return (
-    <div style={{ width: "100%", overflowX: "hidden", backgroundColor: "#fafafa" }}>
+    <div className="ov-home" style={{ width: "100%", overflowX: "hidden", backgroundColor: "#fafafa" }}>
       
       {/* --- RESPONSIVE CSS INJECTION --- */}
       <style>
@@ -169,7 +168,7 @@ function LandingPage() {
             .mobile-nav-toggle { 
               display: block; 
               cursor: pointer; 
-              color: #001166; 
+              color: #087F8C;
               background: none; 
               border: none; 
               z-index: 1001; 
@@ -237,25 +236,23 @@ function LandingPage() {
         backgroundColor: "rgba(255, 255, 255, 0.95)", backdropFilter: "blur(10px)",
         display: "flex", justifyContent: "space-between", alignItems: "center", 
         padding: "0 10%", boxShadow: "0 2px 15px rgba(0,0,0,0.05)", zIndex: 1000,
-        boxSizing: "border-box", fontFamily: "'Poppins', sans-serif"
+        boxSizing: "border-box", fontFamily: "'Manrope', sans-serif"
       }}>
-        <h1 style={{ color: brandBlue, fontWeight: "800", fontSize: "28px", margin: 0, cursor: "pointer", zIndex: 1001 }} onClick={() => scrollToSection(homeRef)}>
-          OraVista
-        </h1>
+        <button className="ov-ui-button" style={{ color: brandBlue, fontWeight: "800", fontSize: "28px", margin: 0, cursor: "pointer", zIndex: 1001 }} onClick={() => scrollToSection(homeRef)} type="button" aria-label="OraVista home"><BrandWordmark /></button>
         
-        <button className="mobile-nav-toggle" onClick={() => setIsNavOpen(!isNavOpen)}>
+        <button aria-label={isNavOpen ? "Close navigation" : "Open navigation"} aria-expanded={isNavOpen} className="mobile-nav-toggle" onClick={() => setIsNavOpen(!isNavOpen)}>
           {isNavOpen ? <X size={30} /> : <Menu size={30} />}
         </button>
 
         <div className={`nav-links-container ${isNavOpen ? "open" : ""}`} style={{ display: "flex", gap: "30px", alignItems: "center" }}>
-          <span style={navLinkStyle} onClick={() => scrollToSection(homeRef)}>Home</span>
-          <span style={navLinkStyle} onClick={() => scrollToSection(aboutRef)}>About Us</span>
-          <span style={navLinkStyle} onClick={() => scrollToSection(servicesRef)}>Services</span>
-          <span style={navLinkStyle} onClick={() => scrollToSection(contactRef)}>Contact</span>
+          <button className="ov-ui-button" style={navLinkStyle} onClick={() => scrollToSection(homeRef)} type="button">Home</button>
+          <button className="ov-ui-button" style={navLinkStyle} onClick={() => scrollToSection(aboutRef)} type="button">About Us</button>
+          <button className="ov-ui-button" style={navLinkStyle} onClick={() => scrollToSection(servicesRef)} type="button">Services</button>
+          <button className="ov-ui-button" style={navLinkStyle} onClick={() => scrollToSection(contactRef)} type="button">Contact</button>
           <button 
             style={portalBtnStyle} 
             onClick={handlePortalClick}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#0022cc")}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#25BED0")}
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = brandBlue)}
           >
             <ShieldCheck size={18} />
@@ -266,58 +263,61 @@ function LandingPage() {
 
       {/* ----------------- HOME / HERO SECTION ----------------- */}
       <div ref={homeRef} className="hero-section" style={heroSectionStyle}>
-        <h1 className="hero-title" style={{ fontSize: "64px", fontWeight: "800", color: "#001166", marginBottom: "0px", lineHeight: "1.0", fontFamily: "'Poppins', sans-serif" }}>
-          Welcome to King Epres Dental Clinic
+        <span className="ov-hero-eyebrow">King Epres Dental Clinic</span>
+        <h1 className="hero-title" style={{ fontSize: "64px", fontWeight: "800", color: "#087F8C", marginBottom: "0px", lineHeight: "1.0", fontFamily: "'Manrope', sans-serif" }}>
+          Your smile,<br />in good hands.
         </h1>
-        <p className="hero-subtitle" style={{ fontSize: "26px", color: "#001166", marginTop: "10px", marginBottom: "30px", whiteSpace: "nowrap", maxWidth: "none", fontFamily: "'Poppins', sans-serif" }}>
-          Caring for your smile with professional and compassionate dental services.
+        <p className="hero-subtitle" style={{ fontSize: "26px", color: "#087F8C", marginTop: "10px", marginBottom: "30px", whiteSpace: "nowrap", maxWidth: "none", fontFamily: "'Manrope', sans-serif" }}>
+          Feel at home with dental care made personal. Let's take the next step toward a healthier, happier smile.
         </p>
 
-        <div style={{ position: "relative", display: "inline-block", fontFamily: "'Poppins', sans-serif", zIndex: 10 }}>
+        <div style={{ position: "relative", display: "inline-block", fontFamily: "'Manrope', sans-serif", zIndex: 10 }}>
           <button 
-            style={{ padding: "12px 24px", backgroundColor: "#001166", color: "white", border: "none", borderRadius: "8px", fontSize: "18px", cursor: "pointer", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", minWidth: "220px", justifyContent: "space-between" }} 
+            style={{ "--ov-on-color": "var(--ov-ink)", padding: "12px 24px", backgroundColor: "var(--ov-primary)", color: "var(--ov-on-color, #fff)", border: "none", borderRadius: "8px", fontSize: "18px", cursor: "pointer", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", minWidth: "220px", justifyContent: "space-between" }}
             onClick={() => setIsOpen(!isOpen)}
           >
             {selectedBranch} <span>{isOpen ? "▲" : "▼"}</span>
           </button>
 
           {isOpen && (
-            <div style={{ position: "absolute", top: "100%", left: 0, backgroundColor: "#001166", borderRadius: "8px", marginTop: "5px", width: "100%", overflow: "hidden", boxShadow: "0 8px 16px rgba(0,0,0,0.2)" }}>
+            <div className="ov-color-surface" style={{ "--ov-on-color": "var(--ov-ink)", position: "absolute", top: "100%", left: 0, backgroundColor: "var(--ov-primary)", borderRadius: "8px", marginTop: "5px", width: "100%", overflow: "hidden", boxShadow: "0 8px 16px rgba(0,0,0,0.2)" }}>
               {branches.map((branch) => (
-                <div
+                <button type="button" className="ov-ui-button"
                   key={branch}
-                  style={{ padding: "12px 20px", color: "white", cursor: "pointer", fontSize: "16px", fontFamily: "'Poppins', sans-serif", borderBottom: "1px solid rgba(255,255,255,0.1)", transition: "background 0.2s" }}
+                  style={{ display: "block", width: "100%", padding: "12px 20px", color: "var(--ov-on-color, #fff)", cursor: "pointer", fontSize: "16px", fontFamily: "'Manrope', sans-serif", borderBottom: "1px solid var(--ov-on-line, rgba(255,255,255,0.1))", transition: "background 0.2s" }}
                   onClick={() => handleSelect(branch)}
-                  onMouseEnter={(e) => (e.target.style.backgroundColor = "#0022cc")}
+                  onMouseEnter={(e) => (e.target.style.backgroundColor = "#25BED0")}
                   onMouseLeave={(e) => (e.target.style.backgroundColor = "transparent")}
                 >
                   {branch}
-                </div>
+                </button>
               ))}
             </div>
           )}
         </div>
 
+        <p className="ov-branch-hint">Choose your preferred clinic to book a visit.</p>
+        <div className="ov-hero-visual">
+          <img src={serviceImage} alt="A welcoming aqua dental treatment room" />
+          <div className="ov-hero-caption">
+            <ShieldCheck size={30} />
+            <div><strong>Care that feels personal.</strong><span>Three locations. One commitment to your smile.</span></div>
+          </div>
+        </div>
+
         {/* MOBILE PROMO */}
-        <div className="hero-promo" style={{ marginTop: "60px", display: "flex", flexDirection: "row", alignItems: "flex-start", gap: "30px", fontFamily: "'Poppins', sans-serif", maxWidth: "800px" }}>
+        <div className="hero-promo" style={{ marginTop: "60px", display: "flex", flexDirection: "row", alignItems: "flex-start", gap: "30px", fontFamily: "'Manrope', sans-serif", maxWidth: "800px" }}>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "15px", flex: 1 }}>
-            <p style={{ fontSize: "19px", color: "#001166", margin: 0, fontWeight: "600", lineHeight: "1.4" }}>
-              Experience seamless dental care right at your fingertips. Download the OraVista mobile app to book appointments on the go, manage your personalized dental profile, and receive real-time updates on your clinic records.
+            <p style={{ fontSize: "19px", color: "#087F8C", margin: 0, fontWeight: "600", lineHeight: "1.4" }}>
+              Your care, wherever you are. Manage appointments and dental records from your phone using this website.
             </p>
-            <button 
-              style={{ padding: "10px 20px", backgroundColor: "#001166", color: "white", border: "none", borderRadius: "8px", fontSize: "16px", cursor: "pointer", fontWeight: "700", transition: "all 0.3s ease", width: "180px", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", boxSizing: "border-box" }}
-              onMouseEnter={(e) => { e.target.style.backgroundColor = "#0022cc"; }}
-              onMouseLeave={(e) => { e.target.style.backgroundColor = "#001166"; }}
-            >
-              <img src={playIcon} alt="Google Play Icon" style={{ width: "20px", height: "20px", objectFit: "contain" }} />
-              Google Play
-            </button>
+            <StorePlaceholders />
           </div>
         </div>
       </div>
 
       {/* ----------------- ABOUT US SECTION ----------------- */}
-      <section ref={aboutRef} style={{ width: '100%', paddingTop: '100px', paddingBottom: '60px', backgroundColor: 'white' }}>
+      <section className="ov-home-section" ref={aboutRef} style={{ width: '100%', paddingTop: '100px', paddingBottom: '60px', backgroundColor: 'white' }}>
         <div className="responsive-container" style={aboutStyles.container}>
           <div className="about-top" style={aboutStyles.topSection}>
             <div style={aboutStyles.textContent}>
@@ -353,10 +353,10 @@ function LandingPage() {
           </div>
 
           <div className="about-bottom-grid" style={aboutStyles.bottomGrid}>
-            <div className="ratings-card" style={aboutStyles.ratingsCard}>
+            <div className="ratings-card ov-feature" style={aboutStyles.ratingsCard}>
               <h2 style={aboutStyles.ratingsLabel}>Ratings</h2>
               <div style={aboutStyles.starsContainer}>
-                <div style={aboutStyles.stars}>★★★★★ <span style={{ color: 'white', fontSize: '18px', marginLeft: '5px' }}>4.9/5</span></div>
+                <div style={aboutStyles.stars}>★★★★★ <span style={{ color: "var(--ov-on-color, #fff)", fontSize: '18px', marginLeft: '5px' }}>4.9/5</span></div>
                 <p style={{ margin: 0, opacity: 0.9, fontSize: '14px' }}>(Based on 250+ reviews)</p>
               </div>
             </div>
@@ -374,7 +374,7 @@ function LandingPage() {
       </section>
 
       {/* ----------------- SERVICES SECTION ----------------- */}
-      <section ref={servicesRef} style={{ width: '100%', paddingTop: '100px', paddingBottom: '60px', backgroundColor: '#f9fafe' }}>
+      <section className="ov-home-section" ref={servicesRef} style={{ width: '100%', paddingTop: '100px', paddingBottom: '60px', backgroundColor: '#F3FAFB' }}>
         <div className="responsive-container" style={servicesStyles.container}>
           <div style={servicesStyles.headerSection}>
             <div style={servicesStyles.blueLine}></div>
@@ -387,21 +387,24 @@ function LandingPage() {
           </p>
 
           <div className="services-grid" style={servicesStyles.servicesGrid}>
-            <div style={servicesStyles.serviceCard}>
+            <div className="ov-panel ov-service-card" style={servicesStyles.serviceCard}>
+              <span className="ov-service-icon"><Stethoscope size={26} aria-hidden="true" /></span>
               <h2 style={servicesStyles.cardTitle}>General Dentistry</h2>
               <p style={servicesStyles.cardDescription}>
                 Routine check-ups, cleanings, and preventive care to maintain your oral health.
               </p>
             </div>
 
-            <div style={servicesStyles.serviceCard}>
+            <div className="ov-panel ov-service-card" style={servicesStyles.serviceCard}>
+              <span className="ov-service-icon"><Smile size={26} aria-hidden="true" /></span>
               <h2 style={servicesStyles.cardTitle}>Orthodontics</h2>
               <p style={servicesStyles.cardDescription}>
                 Braces, veneers, and other treatments to straighten and enhance your smile.
               </p>
             </div>
 
-            <div style={servicesStyles.serviceCard}>
+            <div className="ov-panel ov-service-card" style={servicesStyles.serviceCard}>
+              <span className="ov-service-icon"><SmilePlus size={26} aria-hidden="true" /></span>
               <h2 style={servicesStyles.cardTitle}>Restorative Treatments</h2>
               <p style={servicesStyles.cardDescription}>
                 Implants, crowns, and bridges to restore function and appearance.
@@ -409,7 +412,7 @@ function LandingPage() {
             </div>
           </div>
 
-          <div className="booking-banner" style={servicesStyles.bookingBanner}>
+          <div className="booking-banner ov-feature" style={servicesStyles.bookingBanner}>
             <div className="booking-text" style={servicesStyles.bookingText}>
               <h3 style={servicesStyles.bookingTitle}>Book an Appointment</h3>
               <p style={servicesStyles.bookingPara}>
@@ -432,7 +435,7 @@ function LandingPage() {
       </section>
 
       {/* ----------------- CONTACT / FOOTER SECTION ----------------- */}
-      <section ref={contactRef} style={{ width: '100%', paddingTop: '100px', paddingBottom: '40px', backgroundColor: 'white' }}>
+      <section className="ov-home-section" ref={contactRef} style={{ width: '100%', paddingTop: '100px', paddingBottom: '40px', backgroundColor: 'white' }}>
         <div className="responsive-container" style={contactStyles.container}>
           <h1 style={contactStyles.header}>Contact Us</h1>
 
@@ -442,21 +445,16 @@ function LandingPage() {
               <p style={contactStyles.description}>
                 At King Epres Dental Clinic, every smile matters. We provide modern, compassionate dental care across all our branches to keep you healthy, confident, and smiling.
               </p>
-              <h3 style={contactStyles.sectionTitle}>Follow Us</h3>
-              <div style={contactStyles.socialLinks}>
-                <Facebook size={24} style={{ cursor: 'pointer' }} />
-                <Instagram size={24} style={{ cursor: 'pointer' }} />
-                <Twitter size={24} style={{ cursor: 'pointer' }} />
-              </div>
+
             </div>
 
             <div>
               <h2 style={contactStyles.sectionTitle}>Quick Links</h2>
               <ul style={contactStyles.linkList}>
-                <li style={contactStyles.linkItem} onClick={() => scrollToSection(homeRef)}>Home</li>
-                <li style={contactStyles.linkItem} onClick={() => scrollToSection(aboutRef)}>About Us</li>
-                <li style={contactStyles.linkItem} onClick={() => scrollToSection(servicesRef)}>Services</li>
-                <li style={contactStyles.linkItem} onClick={() => navigate('/login')}>Appointment</li>
+                <li><button className="ov-ui-button" style={contactStyles.linkItem} onClick={() => scrollToSection(homeRef)} type="button">Home</button></li>
+                <li><button className="ov-ui-button" style={contactStyles.linkItem} onClick={() => scrollToSection(aboutRef)} type="button">About Us</button></li>
+                <li><button className="ov-ui-button" style={contactStyles.linkItem} onClick={() => scrollToSection(servicesRef)} type="button">Services</button></li>
+                <li><button className="ov-ui-button" style={contactStyles.linkItem} onClick={() => navigate(localStorage.getItem('user') ? '/appointments' : '/login')} type="button">Appointment</button></li>
               </ul>
             </div>
 
@@ -464,21 +462,18 @@ function LandingPage() {
               <div className="contact-locations-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px' }}>
                 <div style={contactStyles.locationGroup}>
                   <div style={contactStyles.locationTitle}><MapPin size={18} color="#ff4d4d" /> Gil Puyat, Pasay</div>
-                  <div style={contactStyles.infoItem}><Phone size={14} /> Phone: +63 9XX XXX XXXX</div>
-                  <div style={contactStyles.infoItem}><Mail size={14} /> Email: info@yourwebsite.com</div>
+                  <BranchContactLinks branch="pasay" />
                 </div>
 
                 <div style={contactStyles.locationGroup}>
-                  <div style={contactStyles.locationTitle}><MapPin size={18} color="#ff4d4d" /> Angeles, Pampanga</div>
-                  <div style={contactStyles.infoItem}><Phone size={14} /> Phone: +63 9XX XXX XXXX</div>
-                  <div style={contactStyles.infoItem}><Mail size={14} /> Email: info@yourwebsite.com</div>
+                  <div style={contactStyles.locationTitle}><MapPin size={18} color="#ff4d4d" /> Balibago, Angeles, Pampanga</div>
+                  <BranchContactLinks branch="balibago" />
                 </div>
               </div>
 
               <div style={contactStyles.locationGroup}>
                 <div style={contactStyles.locationTitle}><MapPin size={18} color="#ff4d4d" /> Sta. Ana, Manila</div>
-                <div style={contactStyles.infoItem}><Phone size={14} /> Phone: +63 9XX XXX XXXX</div>
-                <div style={contactStyles.infoItem}><Mail size={14} /> Email: info@yourwebsite.com</div>
+                <BranchContactLinks branch="manila" />
               </div>
             </div>
           </div>
@@ -486,9 +481,7 @@ function LandingPage() {
           <div className="contact-footer" style={contactStyles.footerLine}>
             <div>© 2026 King Epres Dental Clinic. All rights reserved.</div>
             <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
-              <span style={{ cursor: 'pointer' }}>Terms Of Service</span>
-              <span style={{ cursor: 'pointer' }}>Privacy Policy</span>
-              <span style={{ cursor: 'pointer' }}>Cookie Policy</span>
+              <span>Policy information is not yet available online.</span>
             </div>
           </div>
         </div>

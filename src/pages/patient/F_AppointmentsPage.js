@@ -1,3 +1,5 @@
+import PatientDialog from "../../components/PatientDialog";
+import BrandWordmark from "../../components/BrandWordmark";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -56,6 +58,8 @@ function AppointmentsPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [appointments, setAppointments] = useState([]);
+  const [appointmentsError, setAppointmentsError] = useState("");
+  const [appointmentsLoading, setAppointmentsLoading] = useState(true);
   const [userData, setUserData] = useState({ id: null, firstName: "User" });
 
   const [isEditing, setIsEditing] = useState(false);
@@ -119,16 +123,23 @@ function AppointmentsPage() {
       );
       if (response.ok) {
         const data = await response.json();
+        if (!Array.isArray(data)) throw new Error("Invalid appointments response");
         const mappedData = data.map((appt) => ({
           ...appt,
           status: appt.status || "Pending",
         }));
         if (!editingRef.current && version === appointmentFetchVersion.current) {
           setAppointments(mappedData);
+          setAppointmentsError("");
         }
+      } else {
+        throw new Error("Appointments request failed");
       }
     } catch (error) {
       console.error("Error fetching appointments:", error);
+      if (version === appointmentFetchVersion.current) setAppointmentsError("We could not load your appointments. Please retry.");
+    } finally {
+      if (version === appointmentFetchVersion.current) setAppointmentsLoading(false);
     }
   }, []);
 
@@ -227,7 +238,7 @@ function AppointmentsPage() {
     setShowSaveChanges(false);
   };
 
-  const handleStatusClick = (appt) => {
+  const handleCancelClick = (appt) => {
     if (!isEditing) return;
     if (appt.status === "Pending") {
       setAppointmentToCancel(appt);
@@ -274,24 +285,12 @@ function AppointmentsPage() {
       borderRadius: "20px",
       fontSize: "12px",
       fontWeight: "700",
-      color: "white",
+      color: "var(--ov-on-color, #fff)",
       display: "inline-block",
       textAlign: "center",
-      cursor:
-        isEditing &&
-        (status === "Pending" ||
-          status === "Approved" ||
-          status === "Confirmed")
-          ? "pointer"
-          : "not-allowed",
-      transition: "all 0.3s",
+      cursor: "default",
       whiteSpace: "nowrap",
-      border: canCancelStatus(status)
-        ? "2px solid rgba(255,255,255,0.9)"
-        : "2px solid transparent",
-      boxShadow: canCancelStatus(status)
-        ? "0 0 0 3px rgba(255,255,255,0.18)"
-        : "none",
+      border: "2px solid transparent",
     };
     switch (status) {
       case "Approved":
@@ -302,13 +301,32 @@ function AppointmentsPage() {
       case "Reschedule Requested":
         return { ...base, backgroundColor: "#007bff" };
       case "Completed":
-        return { ...base, backgroundColor: "#cc33cc" };
+        return { ...base, backgroundColor: "var(--ov-completed, #2864c5)", color: "#fff" };
       case "Cancelled":
         return { ...base, backgroundColor: "#ff4444" };
       default:
         return { ...base, backgroundColor: "#ffc107" };
     }
   };
+
+  const renderAppointmentStatus = (appt) => (
+    <div className="appointment-status-actions">
+      <span style={getStatusStyle(appt.status)} aria-label={`Appointment status: ${appt.status}`}>
+        {appt.status}
+      </span>
+      {canCancelStatus(appt.status) && (
+        <button
+          type="button"
+          className="appointment-cancel-button"
+          onClick={() => handleCancelClick(appt)}
+          disabled={isSavingChanges}
+          aria-label={`Cancel ${appt.service_type || "appointment"} on ${new Date(appt.appointment_date).toLocaleDateString("en-PH")}`}
+        >
+          <XCircle size={14} aria-hidden="true" /> Cancel
+        </button>
+      )}
+    </div>
+  );
 
   const filteredAppointments = appointments.filter((appt) => {
     const service = (appt.service_type || "").toLowerCase();
@@ -343,9 +361,9 @@ function AppointmentsPage() {
     borderRadius: "8px",
     border: "none",
     backgroundColor: "#C2E6E6",
-    color: "#001166",
+    color: "#087F8C",
     fontWeight: "700",
-    fontFamily: "'Poppins', sans-serif",
+    fontFamily: "'Manrope', sans-serif",
     cursor: disabled ? "not-allowed" : "pointer",
     opacity: disabled ? 0.5 : 1,
   });
@@ -356,7 +374,7 @@ function AppointmentsPage() {
     display: "flex",
     alignItems: "center",
     gap: "15px",
-    color: "white",
+    color: "var(--ov-on-color, #fff)",
     textDecoration: "none",
     padding: "12px 15px",
     margin: "5px 0",
@@ -367,10 +385,10 @@ function AppointmentsPage() {
     whiteSpace: "nowrap",
     overflow: "hidden",
     backgroundColor:
-      location.pathname === path ? "rgba(255, 255, 255, 0.2)" : "transparent",
+      location.pathname === path ? "var(--ov-on-wash, rgba(255, 255, 255, 0.2))" : "transparent",
     fontWeight: location.pathname === path ? "700" : "400",
     borderLeft:
-      location.pathname === path ? "4px solid white" : "4px solid transparent",
+      location.pathname === path ? "4px solid #21B9C8" : "4px solid transparent",
   });
 
   const modalOverlay = {
@@ -408,24 +426,22 @@ function AppointmentsPage() {
         }}
       >
         {(!isCollapsed || isMobile) && (
-          <h2 style={{ fontSize: "28px", fontWeight: "800", margin: 0 }}>
-            OraVista
-          </h2>
+          <h2 style={{ fontSize: "28px", fontWeight: "800", margin: 0 }}><BrandWordmark /></h2>
         )}
         {isMobile ? (
-          <div
+          <button className="ov-ui-button"
             onClick={() => setIsMobileOpen(false)}
             style={{ cursor: "pointer" }}
-          >
+           type="button" aria-label="Close navigation">
             <X size={24} />
-          </div>
+          </button>
         ) : (
-          <div
+          <button className="ov-ui-button"
             onClick={() => setIsCollapsed(!isCollapsed)}
             style={{ cursor: "pointer" }}
-          >
+           type="button" aria-label="Toggle sidebar">
             {isCollapsed ? <Menu size={24} /> : <X size={24} />}
-          </div>
+          </button>
         )}
       </div>
 
@@ -462,7 +478,7 @@ function AppointmentsPage() {
             label: "Billings",
           },
         ].map(({ path, icon, label }) => (
-          <div
+          <button aria-label={label} aria-current={location.pathname === path ? 'page' : undefined} type="button" className="ov-nav-item"
             key={path}
             style={getNavItemStyle(path)}
             onClick={() => {
@@ -476,17 +492,17 @@ function AppointmentsPage() {
                 {label}
               </span>
             )}
-          </div>
+          </button>
         ))}
       </nav>
 
       <div
         style={{
-          borderTop: "1px solid rgba(255,255,255,0.2)",
+          borderTop: "1px solid var(--ov-on-line, rgba(255,255,255,0.2))",
           paddingTop: "10px",
         }}
       >
-        <div
+        <button aria-label="Settings" aria-current={location.pathname === "/settings" ? 'page' : undefined} type="button" className="ov-nav-item"
           style={getNavItemStyle("/settings")}
           onClick={() => {
             navigate("/settings");
@@ -495,14 +511,14 @@ function AppointmentsPage() {
         >
           <Settings size={20} style={{ flexShrink: 0 }} />
           {(!isCollapsed || isMobile) && "Settings"}
-        </div>
-        <div
+        </button>
+        <button aria-label="Logout" aria-current={location.pathname === "/logout" ? 'page' : undefined} data-ov-action="logout" type="button" className="ov-nav-item"
           style={{ ...getNavItemStyle("/logout"), color: "#ff4d4d" }}
           onClick={handleLogout}
         >
           <LogOut size={20} style={{ flexShrink: 0 }} />
           {(!isCollapsed || isMobile) && "Logout"}
-        </div>
+        </button>
       </div>
     </>
   );
@@ -514,13 +530,12 @@ function AppointmentsPage() {
         minHeight: "100vh",
         width: "100%",
         backgroundColor: "white",
-        fontFamily: "'Poppins', sans-serif",
+        fontFamily: "'Manrope', sans-serif",
       }}
     >
-      <style>{".appointment-cancelable-status { transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease; } .appointment-cancelable-status:hover { transform: translateY(-2px) scale(1.04); filter: brightness(1.08); box-shadow: 0 5px 12px rgba(0, 0, 0, 0.24), 0 0 0 3px rgba(255, 255, 255, 0.35) !important; } .appointment-cancelable-status:active { transform: translateY(0) scale(0.98); }"}</style>
       {/* Modals */}
       {feedbackModal.show && (
-        <div style={{ ...modalOverlay, zIndex: 4000 }}>
+        <PatientDialog onClose={() => setFeedbackModal(current => ({ ...current, show: false }))} busy={isSavingChanges} style={{ ...modalOverlay, zIndex: 4000 }}>
           <div style={modalBox}>
             {feedbackModal.type === "success" ? (
               <CheckCircle2
@@ -537,7 +552,7 @@ function AppointmentsPage() {
             )}
             <h3
               style={{
-                color: "#001166",
+                color: "#087F8C",
                 fontWeight: "800",
                 marginBottom: "10px",
               }}
@@ -553,29 +568,29 @@ function AppointmentsPage() {
               onClick={() =>
                 setFeedbackModal({ ...feedbackModal, show: false })
               }
-              style={{
+              style={{ "--ov-on-color": "var(--ov-ink)",
                 width: "100%",
                 padding: "12px",
                 borderRadius: "10px",
                 border: "none",
-                backgroundColor: "#001166",
-                color: "white",
+                backgroundColor: "var(--ov-primary)",
+                color: "var(--ov-on-color, #fff)",
                 fontWeight: "700",
                 cursor: "pointer",
-                fontFamily: "'Poppins', sans-serif",
+                fontFamily: "'Manrope', sans-serif",
               }}
             >
               Okay
             </button>
           </div>
-        </div>
+        </PatientDialog>
       )}
 
       {showSaveChanges && (
-        <div style={{ ...modalOverlay, zIndex: 3500 }}>
+        <PatientDialog onClose={() => setShowSaveChanges(false)} busy={isSavingChanges} style={{ ...modalOverlay, zIndex: 3500 }}>
           <div style={modalBox}>
-            <Save size={50} color="#001166" style={{ margin: "0 auto 15px" }} />
-            <h3 style={{ color: "#001166", fontWeight: "800" }}>
+            <Save size={50} color="#087F8C" style={{ margin: "0 auto 15px" }} />
+            <h3 style={{ color: "#087F8C", fontWeight: "800" }}>
               Save Changes?
             </h3>
             <p
@@ -594,7 +609,7 @@ function AppointmentsPage() {
                   border: "1px solid #ccc",
                   backgroundColor: "white",
                   cursor: "pointer",
-                  fontFamily: "'Poppins', sans-serif",
+                  fontFamily: "'Manrope', sans-serif",
                 }}
               >
                 No
@@ -602,33 +617,33 @@ function AppointmentsPage() {
               <button
                 onClick={handleConfirmSaveChanges}
                 disabled={isSavingChanges}
-                style={{
+                style={{ "--ov-on-color": "var(--ov-ink)",
                   flex: 1,
                   padding: "12px",
                   borderRadius: "10px",
                   border: "none",
-                  backgroundColor: "#001166",
-                  color: "white",
+                  backgroundColor: "var(--ov-primary)",
+                  color: "var(--ov-on-color, #fff)",
                   cursor: "pointer",
-                  fontFamily: "'Poppins', sans-serif",
+                  fontFamily: "'Manrope', sans-serif",
                 }}
               >
                 {isSavingChanges ? "Saving..." : "Yes"}
               </button>
             </div>
           </div>
-        </div>
+        </PatientDialog>
       )}
 
       {showCancelWarning && (
-        <div style={{ ...modalOverlay, zIndex: 3000 }}>
+        <PatientDialog onClose={() => setShowCancelWarning(false)} busy={isSavingChanges} style={{ ...modalOverlay, zIndex: 3000 }}>
           <div style={modalBox}>
             <AlertTriangle
               size={50}
               color="#ff9800"
               style={{ margin: "0 auto 15px" }}
             />
-            <h3 style={{ color: "#001166", fontWeight: "800" }}>
+            <h3 style={{ color: "#087F8C", fontWeight: "800" }}>
               Cancel Policy Warning
             </h3>
             <p
@@ -648,7 +663,7 @@ function AppointmentsPage() {
                   border: "1px solid #ccc",
                   backgroundColor: "white",
                   cursor: "pointer",
-                  fontFamily: "'Poppins', sans-serif",
+                  fontFamily: "'Manrope', sans-serif",
                 }}
               >
                 Go Back
@@ -661,27 +676,27 @@ function AppointmentsPage() {
                   borderRadius: "10px",
                   border: "none",
                   backgroundColor: "#ff4d4d",
-                  color: "white",
+                  color: "var(--ov-on-color, #fff)",
                   cursor: "pointer",
-                  fontFamily: "'Poppins', sans-serif",
+                  fontFamily: "'Manrope', sans-serif",
                 }}
               >
                 Proceed
               </button>
             </div>
           </div>
-        </div>
+        </PatientDialog>
       )}
 
       {showConfirmCancel && (
-        <div style={{ ...modalOverlay, zIndex: 3000 }}>
+        <PatientDialog onClose={() => setShowConfirmCancel(false)} busy={isSavingChanges} style={{ ...modalOverlay, zIndex: 3000 }}>
           <div style={modalBox}>
             <XCircle
               size={50}
               color="#ff4d4d"
               style={{ margin: "0 auto 15px" }}
             />
-            <h3 style={{ color: "#001166", fontWeight: "800" }}>
+            <h3 style={{ color: "#087F8C", fontWeight: "800" }}>
               Mark for Cancellation?
             </h3>
             <p
@@ -701,10 +716,10 @@ function AppointmentsPage() {
                   border: "1px solid #ccc",
                   backgroundColor: "white",
                   cursor: "pointer",
-                  fontFamily: "'Poppins', sans-serif",
+                  fontFamily: "'Manrope', sans-serif",
                 }}
               >
-                Cancel
+                Keep appointment
               </button>
               <button
                 onClick={confirmCancellation}
@@ -714,16 +729,16 @@ function AppointmentsPage() {
                   borderRadius: "10px",
                   border: "none",
                   backgroundColor: "#ff4d4d",
-                  color: "white",
+                  color: "var(--ov-on-color, #fff)",
                   cursor: "pointer",
-                  fontFamily: "'Poppins', sans-serif",
+                  fontFamily: "'Manrope', sans-serif",
                 }}
               >
-                Confirm
+                Yes, cancel
               </button>
             </div>
           </div>
-        </div>
+        </PatientDialog>
       )}
 
       {/* Mobile backdrop */}
@@ -741,12 +756,12 @@ function AppointmentsPage() {
 
       {/* Desktop Sidebar */}
       {!isMobile && (
-        <div
-          style={{
+        <div className="ov-sidebar"
+          style={{ "--ov-on-color": "var(--ov-ink)",
             width: sidebarWidth,
-            backgroundColor: "#001166",
+            backgroundColor: "var(--ov-primary)",
             height: "100vh",
-            color: "white",
+            color: "var(--ov-on-color, #fff)",
             padding: "20px 15px",
             position: "fixed",
             transition: "width 0.3s ease",
@@ -763,12 +778,12 @@ function AppointmentsPage() {
 
       {/* Mobile Sidebar Drawer */}
       {isMobile && (
-        <div
-          style={{
+        <div inert={!isMobileOpen} aria-hidden={!isMobileOpen} className="ov-sidebar"
+          style={{ "--ov-on-color": "var(--ov-ink)",
             width: "260px",
-            backgroundColor: "#001166",
+            backgroundColor: "var(--ov-primary)",
             height: "100vh",
-            color: "white",
+            color: "var(--ov-on-color, #fff)",
             padding: "20px 15px",
             position: "fixed",
             left: isMobileOpen ? 0 : "-260px",
@@ -786,7 +801,7 @@ function AppointmentsPage() {
       )}
 
       {/* Main Content */}
-      <div
+      <div className="ov-workspace"
         style={{
           marginLeft: isMobile ? 0 : sidebarWidth,
           width: isMobile ? "100%" : `calc(100% - ${sidebarWidth})`,
@@ -796,34 +811,32 @@ function AppointmentsPage() {
       >
         {/* Mobile Top Bar */}
         {isMobile && (
-          <div
-            style={{
+          <div className="ov-color-surface"
+            style={{ "--ov-on-color": "var(--ov-ink)",
               display: "flex",
               alignItems: "center",
               padding: "15px 20px",
-              backgroundColor: "#001166",
-              color: "white",
+              backgroundColor: "var(--ov-primary)",
+              color: "var(--ov-on-color, #fff)",
               position: "sticky",
               top: 0,
               zIndex: 100,
             }}
           >
-            <div
+            <button className="ov-ui-button"
               onClick={() => setIsMobileOpen(true)}
               style={{ cursor: "pointer", marginRight: "15px" }}
-            >
+             type="button" aria-label="Open navigation">
               <Menu size={24} />
-            </div>
-            <h2 style={{ fontSize: "22px", fontWeight: "800", margin: 0 }}>
-              OraVista
-            </h2>
+            </button>
+            <h2 style={{ fontSize: "22px", fontWeight: "800", margin: 0 }}><BrandWordmark /></h2>
           </div>
         )}
 
         <div style={{ padding: isMobile ? "20px 16px" : "60px 80px" }}>
           <h1
             style={{
-              color: "#001166",
+              color: "#087F8C",
               fontSize: isMobile ? "28px" : "48px",
               fontWeight: "800",
               marginBottom: "6px",
@@ -833,7 +846,7 @@ function AppointmentsPage() {
           </h1>
           <p
             style={{
-              color: "#001166",
+              color: "#087F8C",
               fontWeight: "600",
               marginBottom: isMobile ? "20px" : "40px",
             }}
@@ -868,7 +881,7 @@ function AppointmentsPage() {
                   color: "#666",
                 }}
               />
-              <input
+              <input aria-label="Search..."
                 type="text"
                 placeholder="Search..."
                 value={searchTerm}
@@ -878,11 +891,11 @@ function AppointmentsPage() {
                   padding: "12px 15px 12px 42px",
                   borderRadius: "30px",
                   border: "none",
-                  backgroundColor: "#e8ebf5",
+                  backgroundColor: "#EAF5F6",
                   fontSize: "14px",
                   outline: "none",
                   boxSizing: "border-box",
-                  fontFamily: "'Poppins', sans-serif",
+                  fontFamily: "'Manrope', sans-serif",
                 }}
               />
             </div>
@@ -894,21 +907,21 @@ function AppointmentsPage() {
                 flex: isMobile ? "1 1 calc(50% - 6px)" : "0 0 auto",
               }}
             >
-              <select
+              <select aria-label="All Dentists"
                 value={selectedDentist}
                 onChange={(e) => setSelectedDentist(e.target.value)}
                 style={{
                   appearance: "none",
-                  backgroundColor: "#e8ebf5",
+                  backgroundColor: "#EAF5F6",
                   border: "none",
                   padding: "12px 36px 12px 16px",
                   borderRadius: "10px",
-                  color: "#001166",
+                  color: "#087F8C",
                   fontWeight: "600",
                   cursor: "pointer",
                   fontSize: "13px",
                   width: "100%",
-                  fontFamily: "'Poppins', sans-serif",
+                  fontFamily: "'Manrope', sans-serif",
                 }}
               >
                 <option value="">All Dentists</option>
@@ -925,7 +938,7 @@ function AppointmentsPage() {
                   right: "12px",
                   top: "14px",
                   pointerEvents: "none",
-                  color: "#001166",
+                  color: "#087F8C",
                 }}
               />
             </div>
@@ -937,21 +950,21 @@ function AppointmentsPage() {
                 flex: isMobile ? "1 1 calc(50% - 6px)" : "0 0 auto",
               }}
             >
-              <select
+              <select aria-label="All Statuses"
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
                 style={{
                   appearance: "none",
-                  backgroundColor: "#e8ebf5",
+                  backgroundColor: "#EAF5F6",
                   border: "none",
                   padding: "12px 36px 12px 16px",
                   borderRadius: "10px",
-                  color: "#001166",
+                  color: "#087F8C",
                   fontWeight: "600",
                   cursor: "pointer",
                   fontSize: "13px",
                   width: "100%",
-                  fontFamily: "'Poppins', sans-serif",
+                  fontFamily: "'Manrope', sans-serif",
                 }}
               >
                 <option value="">All Statuses</option>
@@ -968,7 +981,7 @@ function AppointmentsPage() {
                   right: "12px",
                   top: "14px",
                   pointerEvents: "none",
-                  color: "#001166",
+                  color: "#087F8C",
                 }}
               />
             </div>
@@ -982,13 +995,13 @@ function AppointmentsPage() {
                   border: "none",
                   padding: "12px 28px",
                   borderRadius: "10px",
-                  color: "white",
+                  color: "var(--ov-on-color, #fff)",
                   fontWeight: "700",
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
                   gap: "8px",
-                  fontFamily: "'Poppins', sans-serif",
+                  fontFamily: "'Manrope', sans-serif",
                   marginLeft: isMobile ? 0 : "auto",
                   width: isMobile ? "100%" : "auto",
                   justifyContent: "center",
@@ -999,32 +1012,39 @@ function AppointmentsPage() {
             ) : (
               <button
                 onClick={handleEditClick}
-                style={{
-                  backgroundColor: "#001166",
+                style={{ "--ov-on-color": "var(--ov-ink)",
+                  backgroundColor: "var(--ov-primary)",
                   border: "none",
                   padding: "12px 28px",
                   borderRadius: "10px",
-                  color: "white",
+                  color: "var(--ov-on-color, #fff)",
                   fontWeight: "700",
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
                   gap: "8px",
-                  fontFamily: "'Poppins', sans-serif",
+                  fontFamily: "'Manrope', sans-serif",
                   marginLeft: isMobile ? 0 : "auto",
                   width: isMobile ? "100%" : "auto",
                   justifyContent: "center",
                 }}
               >
-                <Pencil size={16} /> Edit
+                <Pencil size={16} /> Edit Appointments
               </button>
             )}
           </div>
 
+          {isEditing && (
+            <p className="appointment-edit-hint" role="status">
+              Choose Cancel beside an appointment, then Apply to save your changes.
+            </p>
+          )}
+
+          {appointmentsError && <div className="ov-inline-error" role="alert">{appointmentsError} <button type="button" className="ov-ui-button ov-text-link" onClick={() => fetchAppointments(userData.id)}>Retry</button></div>}
           {/* Appointments Table */}
           <div
-            style={{
-              backgroundColor: isMobile ? "#e8ebf5" : "#001166",
+            style={{ "--ov-on-color": "var(--ov-ink)",
+              backgroundColor: isMobile ? "#EAF5F6" : "var(--ov-primary)",
               borderRadius: "24px",
               padding: isMobile ? "16px 12px" : "40px",
             }}
@@ -1035,12 +1055,12 @@ function AppointmentsPage() {
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "minmax(170px, 1.4fr) minmax(180px, 1.4fr) minmax(180px, 1.5fr) minmax(180px, 1.5fr) minmax(110px, 1fr) minmax(130px, 1fr)",
+                  gridTemplateColumns: "minmax(170px, 1.4fr) minmax(180px, 1.4fr) minmax(180px, 1.5fr) minmax(180px, 1.5fr) minmax(110px, 1fr) minmax(210px, 1.4fr)",
                   columnGap: "24px",
                   minWidth: "1100px",
                   boxSizing: "border-box",
                   padding: "0 28px 20px 28px",
-                  color: "white",
+                  color: "var(--ov-on-color, #fff)",
                   fontWeight: "800",
                   borderBottom: "2px dashed white",
                   marginBottom: "20px",
@@ -1081,12 +1101,14 @@ function AppointmentsPage() {
                           justifyContent: "space-between",
                           alignItems: "flex-start",
                           marginBottom: "10px",
+                          flexDirection: isEditing ? "column" : "row",
+                          gap: "12px",
                         }}
                       >
                         <div>
                           <div
                             style={{
-                              color: "#001166",
+                              color: "#087F8C",
                               fontWeight: "700",
                               fontSize: "14px",
                             }}
@@ -1100,11 +1122,11 @@ function AppointmentsPage() {
                               },
                             )}
                           </div>
-                          <div style={{ color: "#001166", fontSize: "13px", marginTop: "4px" }}>
+                          <div style={{ color: "#087F8C", fontSize: "13px", marginTop: "4px" }}>
                             {formatAppointmentTime(appt.appointment_time)}
                           </div>
                           {appt.status === "Reschedule Requested" && (
-                          <div style={{ marginTop: "8px", color: "#0056b3", fontSize: "12px", lineHeight: 1.5 }}>
+                          <div style={{ marginTop: "8px", color: "#066875", fontSize: "12px", lineHeight: 1.5 }}>
                             <strong>Requested:</strong>{" "}
                             {appt.reschedule_requested_date
                               ? new Date(String(appt.reschedule_requested_date).slice(0, 10) + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
@@ -1129,30 +1151,10 @@ function AppointmentsPage() {
                           style={{
                             display: "flex",
                             flexDirection: "column",
-                            alignItems: "flex-end",
+                            alignItems: isEditing ? "flex-start" : "flex-end",
                           }}
                         >
-                        <span
-                          className={
-                            canCancelStatus(appt.status)
-                              ? "appointment-cancelable-status"
-                              : ""
-                          }
-                          onClick={() => handleStatusClick(appt)}
-                          style={getStatusStyle(appt.status)}
-                          title={
-                            canCancelStatus(appt.status)
-                              ? "Click to cancel this appointment"
-                              : undefined
-                          }
-                          aria-label={
-                            canCancelStatus(appt.status)
-                              ? "Click to cancel this appointment"
-                              : `Appointment status: ${appt.status}`
-                          }
-                        >
-                          {appt.status}
-                        </span>
+                        {renderAppointmentStatus(appt)}
                         {appt.status === "Confirmed" && (
                           <button
                             type="button"
@@ -1161,13 +1163,13 @@ function AppointmentsPage() {
                               marginTop: "8px",
                               padding: "5px 10px",
                               borderRadius: "8px",
-                              border: "1px solid #001166",
+                              border: "1px solid #087F8C",
                               backgroundColor: "#C2E6E6",
-                              color: "#001166",
+                              color: "#087F8C",
                               fontSize: "11px",
                               fontWeight: "700",
                               cursor: "pointer",
-                              fontFamily: "'Poppins', sans-serif",
+                              fontFamily: "'Manrope', sans-serif",
                             }}
                           >
                             Reschedule
@@ -1205,7 +1207,7 @@ function AppointmentsPage() {
                       key={appt.id}
                       style={{
                         display: "grid",
-                        gridTemplateColumns: "minmax(170px, 1.4fr) minmax(180px, 1.4fr) minmax(180px, 1.5fr) minmax(180px, 1.5fr) minmax(110px, 1fr) minmax(130px, 1fr)",
+                        gridTemplateColumns: "minmax(170px, 1.4fr) minmax(180px, 1.4fr) minmax(180px, 1.5fr) minmax(180px, 1.5fr) minmax(110px, 1fr) minmax(210px, 1.4fr)",
                         backgroundColor: "white",
                         padding: "26px 28px",
                         borderRadius: "15px",
@@ -1217,7 +1219,7 @@ function AppointmentsPage() {
                         overflowWrap: "anywhere",
                       }}
                     >
-                      <div style={{ color: "#001166", fontWeight: "600" }}>
+                      <div style={{ color: "#087F8C", fontWeight: "600" }}>
                         {new Date(appt.appointment_date).toLocaleDateString(
                           "en-US",
                           { month: "long", day: "numeric", year: "numeric" },
@@ -1232,7 +1234,7 @@ function AppointmentsPage() {
                           {formatAppointmentTime(appt.appointment_time)}
                         </div>
                         {appt.status === "Reschedule Requested" && (
-                          <div style={{ marginTop: "8px", color: "#0056b3", fontSize: "12px", lineHeight: 1.5 }}>
+                          <div style={{ marginTop: "8px", color: "#066875", fontSize: "12px", lineHeight: 1.5 }}>
                             <strong>Requested:</strong>{" "}
                             {appt.reschedule_requested_date
                               ? new Date(String(appt.reschedule_requested_date).slice(0, 10) + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
@@ -1241,13 +1243,13 @@ function AppointmentsPage() {
                           </div>
                         )}
                       </div>
-                      <div style={{ color: "#001166", fontSize: "13px", lineHeight: 1.6 }}>
+                      <div style={{ color: "#087F8C", fontSize: "13px", lineHeight: 1.6 }}>
                         {formatBookedDateTime(appt.created_at)}
                       </div>
-                      <div style={{ color: "#001166" }}>
+                      <div style={{ color: "#087F8C" }}>
                         {appt.service_type}
                       </div>
-                      <div style={{ color: "#001166" }}>
+                      <div style={{ color: "#087F8C" }}>
                         {appt.dentist_name}
                       </div>
                       <div style={{ color: "#28a745", fontWeight: "700" }}>
@@ -1264,27 +1266,7 @@ function AppointmentsPage() {
                           alignItems: "center",
                         }}
                       >
-                        <span
-                          className={
-                            canCancelStatus(appt.status)
-                              ? "appointment-cancelable-status"
-                              : ""
-                          }
-                          onClick={() => handleStatusClick(appt)}
-                          style={getStatusStyle(appt.status)}
-                          title={
-                            canCancelStatus(appt.status)
-                              ? "Click to cancel this appointment"
-                              : undefined
-                          }
-                          aria-label={
-                            canCancelStatus(appt.status)
-                              ? "Click to cancel this appointment"
-                              : `Appointment status: ${appt.status}`
-                          }
-                        >
-                          {appt.status}
-                        </span>
+                        {renderAppointmentStatus(appt)}
                         {appt.status === "Confirmed" && (
                           <button
                             type="button"
@@ -1293,13 +1275,13 @@ function AppointmentsPage() {
                               marginTop: "8px",
                               padding: "5px 10px",
                               borderRadius: "8px",
-                              border: "1px solid #001166",
+                              border: "1px solid #087F8C",
                               backgroundColor: "#C2E6E6",
-                              color: "#001166",
+                              color: "#087F8C",
                               fontSize: "11px",
                               fontWeight: "700",
                               cursor: "pointer",
-                              fontFamily: "'Poppins', sans-serif",
+                              fontFamily: "'Manrope', sans-serif",
                             }}
                           >
                             Reschedule
@@ -1314,7 +1296,7 @@ function AppointmentsPage() {
                   style={{
                     textAlign: "center",
                     padding: "60px 0",
-                    color: isMobile ? "#001166" : "white",
+                    color: isMobile ? "#087F8C" : "#fff",
                   }}
                 >
                   <Calendar
@@ -1322,7 +1304,7 @@ function AppointmentsPage() {
                     style={{ opacity: 0.2, marginBottom: "15px" }}
                   />
                   <p style={{ fontSize: "16px", fontWeight: "600" }}>
-                    No appointments found.
+                    {appointmentsLoading ? "Loading appointments..." : appointmentsError ? "Appointments are currently unavailable." : "No appointments found."}
                   </p>
                 </div>
               )}
@@ -1339,7 +1321,7 @@ function AppointmentsPage() {
                   flexWrap: "wrap",
                   gap: "12px",
                   marginTop: "24px",
-                  color: "white",
+                  color: "var(--ov-on-color, #fff)",
                   fontSize: "13px",
                 }}
               >

@@ -1,3 +1,4 @@
+import AuthIntro from "../../components/AuthIntro";
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, CheckCircle2, Square, CheckSquare } from "lucide-react";
@@ -5,7 +6,9 @@ import signupBg from "../../assets/BG_LOGINPAGE.jpg";
 
 function SignupPage() {
   const navigate = useNavigate();
-  const brandBlue = "#001166";
+  const [submitError, setSubmitError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const brandBlue = "#087F8C";
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -80,6 +83,8 @@ function SignupPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setSubmitError("");
 
     const newErrors = {};
 
@@ -121,6 +126,7 @@ function SignupPage() {
       role: "patient" // Standard role for signup
     };
 
+    setIsSubmitting(true);
     try {
       const response = await fetch("https://oravista-server-474976105474.asia-southeast1.run.app/api/signup", {
         method: "POST",
@@ -131,12 +137,15 @@ function SignupPage() {
         setShowSuccessModal(true);
       } else {
         const data = await response.json();
+        setSubmitError(data.message || "Your account could not be created. Please try again.");
         if (data.message && data.message.includes("Email")) {
           setErrors((prev) => ({ ...prev, email: data.message }));
         }
       }
     } catch (err) {
-      console.error("Backend server error");
+      setSubmitError("We could not connect. Please try again in a moment.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -148,7 +157,7 @@ function SignupPage() {
     fontSize: "14px",
     boxSizing: "border-box",
     outline: "none",
-    fontFamily: "'Poppins', sans-serif",
+    fontFamily: "'Manrope', sans-serif",
   });
 
   const labelStyle = {
@@ -179,7 +188,7 @@ function SignupPage() {
   };
 
   return (
-    <div
+    <div className="ov-auth-page"
       style={{
         backgroundImage: `url(${signupBg})`,
         backgroundSize: "cover",
@@ -190,6 +199,7 @@ function SignupPage() {
         position: "relative",
       }}
     >
+      <AuthIntro />
       {showSuccessModal && (
         <div
           style={{
@@ -237,11 +247,11 @@ function SignupPage() {
             </p>
             <button
               onClick={() => navigate("/login")}
-              style={{
+              style={{ "--ov-on-color": "var(--ov-ink)",
                 width: "100%",
                 padding: "14px",
-                backgroundColor: brandBlue,
-                color: "white",
+                backgroundColor: "var(--ov-primary)",
+                color: "var(--ov-on-color, #fff)",
                 border: "none",
                 borderRadius: "10px",
                 fontWeight: "700",
@@ -254,7 +264,7 @@ function SignupPage() {
         </div>
       )}
 
-      <div
+      <div className="ov-auth-card"
         style={{
           backgroundColor: "rgba(255, 255, 255, 0.96)",
           padding: "35px 45px",
@@ -292,7 +302,7 @@ function SignupPage() {
           <div style={{ display: "flex", gap: "15px", marginBottom: "15px" }}>
             <div style={{ flex: 1 }}>
               <label style={labelStyle}>First Name</label>
-              <input
+              <input aria-label="First Name"
                 name="firstName"
                 value={formData.firstName}
                 onChange={handleChange}
@@ -305,7 +315,7 @@ function SignupPage() {
             </div>
             <div style={{ flex: 1 }}>
               <label style={labelStyle}>Last Name</label>
-              <input
+              <input aria-label="Last Name"
                 name="lastName"
                 value={formData.lastName}
                 onChange={handleChange}
@@ -320,7 +330,7 @@ function SignupPage() {
 
           <div style={{ marginBottom: "15px" }}>
             <label style={labelStyle}>Email Address</label>
-            <input
+            <input aria-label="example@gmail.com"
               name="email"
               value={formData.email}
               onChange={handleChange}
@@ -332,7 +342,7 @@ function SignupPage() {
 
           <div style={{ marginBottom: "15px", position: "relative" }}>
             <label style={labelStyle}>Password</label>
-            <input
+            <input aria-label="Password"
               name="password"
               type={showPassword ? "text" : "password"}
               value={formData.password}
@@ -340,12 +350,12 @@ function SignupPage() {
               style={inputStyle(errors.password)}
               placeholder="Password"
             />
-            <span
+            <button className="ov-ui-button"
               onClick={() => setShowPassword(!showPassword)}
               style={eyeIconContainerStyle}
-            >
+             type="button" aria-label="Show or hide password">
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-            </span>
+            </button>
             {errors.password && (
               <span style={errorTextStyle}>{errors.password}</span>
             )}
@@ -381,7 +391,7 @@ function SignupPage() {
 
           <div style={{ marginBottom: "25px", position: "relative" }}>
             <label style={labelStyle}>Confirm Password</label>
-            <input
+            <input aria-label="Confirm Password"
               name="confirmPassword"
               type={showConfirmPassword ? "text" : "password"}
               value={formData.confirmPassword}
@@ -389,24 +399,26 @@ function SignupPage() {
               style={inputStyle(errors.confirmPassword)}
               placeholder="Confirm Password"
             />
-            <span
+            <button className="ov-ui-button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               style={eyeIconContainerStyle}
-            >
+             type="button" aria-label="Show or hide password">
               {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-            </span>
+            </button>
             {errors.confirmPassword && (
               <span style={errorTextStyle}>{errors.confirmPassword}</span>
             )}
           </div>
 
+          {submitError && <p className="ov-inline-error" role="alert">{submitError}</p>}
           <button
+            disabled={isSubmitting}
             type="submit"
-            style={{
+            style={{ "--ov-on-color": "var(--ov-ink)",
               width: "100%",
               padding: "14px",
-              backgroundColor: brandBlue,
-              color: "#fff",
+              backgroundColor: "var(--ov-primary)",
+              color: "var(--ov-on-color, #fff)",
               border: "none",
               borderRadius: "10px",
               fontWeight: "700",
@@ -414,7 +426,7 @@ function SignupPage() {
               fontSize: "16px",
             }}
           >
-            CREATE ACCOUNT
+            {isSubmitting ? "Creating account..." : "CREATE ACCOUNT"}
           </button>
         </form>
       </div>

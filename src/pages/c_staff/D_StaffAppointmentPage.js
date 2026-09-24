@@ -276,20 +276,20 @@ function StaffAppointments() {
           <div style={modalOverlay}>
             <div style={modalBox}>
               <XCircle size={48} color="#dc2626" style={{ marginBottom: "12px" }} />
-              <h3 style={{ margin: "0 0 10px", color: "#001166" }}>Mark Late / No Show?</h3>
+              <h3 style={{ margin: "0 0 10px", color: "#087F8C" }}>Mark Late / No Show?</h3>
               <p style={{ margin: "0 0 22px", color: "#555", fontSize: "14px", lineHeight: 1.5 }}>
                 Marking {lateNoShowAppointment.patient}'s appointment as Late / No Show will notify the patient by email and in their dashboard. They will be able to cancel or request rescheduling.
               </p>
               <div style={{ display: "flex", gap: "10px" }}>
                 <button
                   onClick={() => setLateNoShowAppointment(null)}
-                  style={{ ...styles.modalButton, backgroundColor: "white", color: "#001166", border: "1px solid #cbd5e1" }}
+                  style={{ ...styles.modalButton, backgroundColor: "white", color: "#087F8C", border: "1px solid #cbd5e1" }}
                 >
                   Go Back
                 </button>
                 <button
                   onClick={handleLateNoShow}
-                  style={{ ...styles.modalButton, backgroundColor: "#dc2626", color: "white", border: "none" }}
+                  style={{ ...styles.modalButton, backgroundColor: "#dc2626", color: "var(--ov-on-color, #fff)", border: "none" }}
                 >
                   Confirm
                 </button>
@@ -306,7 +306,7 @@ function StaffAppointments() {
               ) : (
                 <XCircle size={48} color="#dc2626" style={{ marginBottom: "12px" }} />
               )}
-              <h3 style={{ margin: "0 0 10px", color: "#001166" }}>
+              <h3 style={{ margin: "0 0 10px", color: "#087F8C" }}>
                 {feedbackModal.type === "success" ? "Appointment Updated" : "Unable to Update Appointment"}
               </h3>
               <p style={{ margin: "0 0 22px", color: "#555", fontSize: "14px", lineHeight: 1.5 }}>
@@ -314,7 +314,7 @@ function StaffAppointments() {
               </p>
               <button
                 onClick={() => setFeedbackModal((current) => ({ ...current, show: false }))}
-                style={{ ...styles.modalButton, width: "100%", backgroundColor: "#001166", color: "white", border: "none" }}
+                style={{ "--ov-on-color": "var(--ov-ink)", ...styles.modalButton, width: "100%", backgroundColor: "var(--ov-primary)", color: "var(--ov-on-color, #fff)", border: "none" }}
               >
                 Okay
               </button>
@@ -323,10 +323,10 @@ function StaffAppointments() {
         )}
 
         {/* HEADER */}
-        <header style={styles.header} className="dashboard-page-header">
+        <header style={styles.header} className="dashboard-page-header ov-header">
           <div style={styles.headerActions} className="header-actions">
             <div style={styles.searchBox} className="header-search-box">
-              <Search size={18} color="rgba(255,255,255,0.6)" />
+              <Search size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
               <input
                 type="text"
                 placeholder="Search appointments..."
@@ -346,15 +346,15 @@ function StaffAppointments() {
               )}
             </button>
 
-            <Bell size={20} color="white" />
-            <MessageSquare size={20} color="white" />
+            <Bell size={20} color="var(--ov-on-color, #fff)" />
+            <MessageSquare size={20} color="var(--ov-on-color, #fff)" />
             <div style={styles.profile} className="header-profile">
               <div style={styles.profileText} className="header-profile-text">
                 <p style={styles.userName}>Staff User</p>
                 <p style={styles.userRole}>Receptionist</p>
               </div>
               <div style={styles.avatar}>
-                <User size={20} color="#001166" />
+                <User size={20} color="#087F8C" />
               </div>
             </div>
           </div>
@@ -364,7 +364,7 @@ function StaffAppointments() {
         {isSearchOpen && (
           <div className="mobile-search-collapsible">
             <div style={{ ...styles.searchBox, width: "100%" }}>
-              <Search size={18} color="rgba(255,255,255,0.6)" />
+              <Search size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
               <input
                 type="text"
                 placeholder="Search appointments..."
@@ -375,7 +375,7 @@ function StaffAppointments() {
         )}
 
         {/* CONTENT */}
-        <div style={styles.content} className="settings-content">
+        <div style={styles.content} className="settings-content ov-workspace-content">
           <div style={styles.titleSection}>
             <h1 style={styles.pageTitle}>Master Schedule</h1>
             <p style={styles.pageSubtitle}>
@@ -386,7 +386,7 @@ function StaffAppointments() {
           <div style={styles.mainGrid} className="appointment-main-grid">
             {/* LEFT COLUMN: Calendar & Summary */}
             <div style={styles.leftCol}>
-              <div style={styles.calendarCard}>
+              <div className="ov-panel" style={styles.calendarCard}>
                 <div style={styles.calHeader}>
                   <p style={styles.calMonth}>
                     {currentMonthName} {currentYear}
@@ -436,7 +436,7 @@ function StaffAppointments() {
                         style={{
                           ...styles.calDay,
                           backgroundColor: isSelected ? "white" : "transparent",
-                          color: isSelected ? "#001166" : "white",
+                          color: isSelected ? "#087F8C" : "#fff",
                           fontWeight: isSelected ? "bold" : "normal",
                         }}
                       >
@@ -447,7 +447,7 @@ function StaffAppointments() {
                 </div>
               </div>
 
-              <div style={styles.summaryCard}>
+              <div className="ov-panel" style={styles.summaryCard}>
                 <p style={styles.sectionTitle}>Today's Summary</p>
                 <div style={styles.sumRow}>
                   <span>Total</span> <span>{summary.total}</span>
@@ -501,6 +501,7 @@ function StaffAppointments() {
                       badgeColor = "#10b981";
                       badgeText = "white";
                     }
+                    if (app.status === "Completed") { badgeColor = "var(--ov-completed, #2864c5)"; badgeText = "white"; }
                     if (isCanceled) {
                       badgeColor = "#ef4444";
                       badgeText = "white";
@@ -511,7 +512,7 @@ function StaffAppointments() {
                     }
 
                     return (
-                      <div
+                      <div className="ov-panel"
                         key={app.id}
                         style={{
                           ...styles.appCard,
@@ -543,7 +544,7 @@ function StaffAppointments() {
                           </div>
 
                           {app.status === "Reschedule Requested" && (
-                            <div style={{ margin: "0 0 14px", padding: "10px 12px", borderRadius: "8px", backgroundColor: "#eff6ff", color: "#1e40af", fontSize: "13px", lineHeight: 1.6 }}>
+                            <div style={{ margin: "0 0 14px", padding: "10px 12px", borderRadius: "8px", backgroundColor: "#E6F8FA", color: "#076C79", fontSize: "13px", lineHeight: 1.6 }}>
                               <strong>Requested schedule:</strong>{" "}
                               {formatDisplayDate(app.requestedDate)} at {formatAppointmentTime(app.requestedTime)}
                             </div>
@@ -594,7 +595,7 @@ function StaffAppointments() {
                                 border: app.approved
                                   ? "none"
                                   : "1px solid #10b981",
-                                color: app.approved ? "white" : "#10b981",
+                                color: app.approved ? "#fff" : "#10b981",
                                 cursor: app.approved ? "default" : "pointer",
                               }}
                             >
@@ -697,9 +698,9 @@ function StaffAppointments() {
 
 const styles = {
   container: { display: "flex", flexDirection: "column", width: "100%" },
-  header: {
+  header: { "--ov-on-color": "var(--ov-ink)",
     height: "80px",
-    background: "#001166",
+    background: "var(--ov-primary)",
     display: "flex",
     alignItems: "center",
     justifyContent: "flex-end",
@@ -711,7 +712,7 @@ const styles = {
   searchBox: {
     display: "flex",
     alignItems: "center",
-    background: "rgba(255,255,255,0.1)",
+    background: "var(--ov-on-wash, rgba(255,255,255,0.1))",
     padding: "10px 20px",
     borderRadius: "12px",
     width: "350px",
@@ -722,19 +723,19 @@ const styles = {
     marginLeft: "10px",
     outline: "none",
     width: "100%",
-    color: "white",
+    color: "var(--ov-on-color, #fff)",
   },
   headerActions: { display: "flex", alignItems: "center", gap: "25px" },
   profile: {
     display: "flex",
     alignItems: "center",
     gap: "15px",
-    borderLeft: "1px solid rgba(255,255,255,0.2)",
+    borderLeft: "1px solid var(--ov-on-line, rgba(255,255,255,0.2))",
     paddingLeft: "20px",
   },
   profileText: { textAlign: "right" },
-  userName: { margin: 0, fontWeight: "bold", fontSize: "14px", color: "white" },
-  userRole: { margin: 0, fontSize: "12px", color: "rgba(255,255,255,0.6)" },
+  userName: { margin: 0, fontWeight: "bold", fontSize: "14px", color: "var(--ov-on-color, #fff)" },
+  userRole: { margin: 0, fontSize: "12px", color: "var(--ov-on-muted, rgba(255,255,255,0.75))" },
   avatar: {
     width: "40px",
     height: "40px",
@@ -746,14 +747,14 @@ const styles = {
   },
   content: {
     padding: "40px",
-    backgroundColor: "#F4F7FE",
+    backgroundColor: "#F3F9FA",
     minHeight: "calc(100vh - 80px)",
   },
   titleSection: { marginBottom: "30px" },
   pageTitle: {
     fontSize: "28px",
     fontWeight: "700",
-    color: "#001166",
+    color: "#087F8C",
     margin: 0,
   },
   pageSubtitle: { fontSize: "14px", color: "#666", marginTop: "5px" },
@@ -764,11 +765,11 @@ const styles = {
     alignItems: "start",
   },
   leftCol: { display: "flex", flexDirection: "column", gap: "20px" },
-  calendarCard: {
-    background: "#001166",
+  calendarCard: { "--ov-on-color": "var(--ov-ink)",
+    background: "var(--ov-primary)",
     padding: "20px",
     borderRadius: "15px",
-    color: "white",
+    color: "var(--ov-on-color, #fff)",
   },
   calHeader: {
     display: "flex",
@@ -792,11 +793,11 @@ const styles = {
     cursor: "pointer",
     transition: "0.2s",
   },
-  summaryCard: {
-    background: "#001166",
+  summaryCard: { "--ov-on-color": "var(--ov-ink)",
+    background: "var(--ov-primary)",
     padding: "25px",
     borderRadius: "15px",
-    color: "white",
+    color: "var(--ov-on-color, #fff)",
   },
   sectionTitle: { fontSize: "14px", fontWeight: "bold", marginBottom: "15px" },
   sumRow: {
@@ -805,7 +806,7 @@ const styles = {
     fontSize: "13px",
     marginBottom: "12px",
     paddingBottom: "8px",
-    borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+    borderBottom: "1px solid var(--ov-on-line, rgba(255, 255, 255, 0.08))",
     opacity: 0.95,
   },
   rightCol: { display: "flex", flexDirection: "column", gap: "15px", minWidth: 0 },
@@ -816,9 +817,9 @@ const styles = {
     marginBottom: "10px",
   },
   listTitle: { fontSize: "16px", fontWeight: "bold", color: "#333" },
-  newAppBtn: {
-    background: "#001166",
-    color: "white",
+  newAppBtn: { "--ov-on-color": "var(--ov-ink)",
+    background: "var(--ov-primary)",
+    color: "var(--ov-on-color, #fff)",
     border: "none",
     padding: "10px 20px",
     borderRadius: "8px",
@@ -828,17 +829,17 @@ const styles = {
     alignItems: "center",
     gap: "8px",
   },
-  appCard: {
-    background: "#001166",
+  appCard: { "--ov-on-color": "var(--ov-ink)",
+    background: "var(--ov-primary)",
     borderRadius: "16px",
     padding: "20px 24px",
-    color: "white",
+    color: "var(--ov-on-color, #fff)",
     display: "flex",
     flexDirection: "column",
     alignItems: "stretch",
     marginBottom: "16px",
-    border: "1px solid rgba(255, 255, 255, 0.1)",
-    boxShadow: "0 8px 24px rgba(0, 17, 102, 0.12)",
+    border: "1px solid var(--ov-on-line, rgba(255, 255, 255, 0.1))",
+    boxShadow: "0 8px 24px rgba(8, 127, 140, 0.12)",
     boxSizing: "border-box",
     width: "100%",
   },
@@ -862,7 +863,7 @@ const styles = {
     fontWeight: "600",
     display: "inline-flex",
     alignItems: "center",
-    background: "rgba(255, 255, 255, 0.12)",
+    background: "var(--ov-on-wash, rgba(255, 255, 255, 0.12))",
     padding: "6px 12px",
     borderRadius: "8px",
     letterSpacing: "0.2px",
@@ -870,10 +871,10 @@ const styles = {
   appDate: {
     fontSize: "13px",
     fontWeight: "600",
-    color: "rgba(255, 255, 255, 0.95)",
+    color: "var(--ov-on-color, #fff)",
     display: "inline-flex",
     alignItems: "center",
-    background: "rgba(255, 255, 255, 0.08)",
+    background: "var(--ov-on-wash, rgba(255, 255, 255, 0.08))",
     padding: "6px 12px",
     borderRadius: "8px",
   },
@@ -895,8 +896,8 @@ const styles = {
     minWidth: 0,
     padding: "12px 14px",
     borderRadius: "10px",
-    background: "rgba(255, 255, 255, 0.06)",
-    border: "1px solid rgba(255, 255, 255, 0.08)",
+    background: "var(--ov-on-wash, rgba(255, 255, 255, 0.06))",
+    border: "1px solid var(--ov-on-line, rgba(255, 255, 255, 0.08))",
     display: "flex",
     flexDirection: "column",
     justifyContent: "center",
@@ -905,7 +906,7 @@ const styles = {
   infoLabel: {
     fontSize: "11px",
     fontWeight: "600",
-    color: "rgba(255, 255, 255, 0.65)",
+    color: "var(--ov-on-muted, rgba(255,255,255,0.75))",
     textTransform: "uppercase",
     letterSpacing: "0.5px",
     margin: "0 0 5px",
@@ -914,7 +915,7 @@ const styles = {
   infoVal: {
     fontSize: "14px",
     fontWeight: "600",
-    color: "#ffffff",
+    color: "var(--ov-on-color, #fff)",
     margin: 0,
     lineHeight: 1.4,
     wordBreak: "break-word",
@@ -928,7 +929,7 @@ const styles = {
     justifyContent: "flex-end",
     marginTop: "16px",
     paddingTop: "14px",
-    borderTop: "1px solid rgba(255, 255, 255, 0.1)",
+    borderTop: "1px solid var(--ov-on-line, rgba(255, 255, 255, 0.1))",
     boxSizing: "border-box",
   },
   actionBtn: {
@@ -940,10 +941,10 @@ const styles = {
     transition: "0.2s",
     whiteSpace: "nowrap",
   },
-  actionBtnOutline: {
-    background: "rgba(255, 255, 255, 0.05)",
-    color: "white",
-    border: "1px solid rgba(255, 255, 255, 0.3)",
+  actionBtnOutline: { "--ov-on-color": "#087F8C",
+    background: "var(--ov-on-wash, rgba(255, 255, 255, 0.05))",
+    color: "var(--ov-on-color, #fff)",
+    border: "1px solid var(--ov-on-line, rgba(255, 255, 255, 0.3))",
     minHeight: "36px",
     padding: "8px 18px",
     borderRadius: "8px",
@@ -959,7 +960,7 @@ const styles = {
     borderRadius: "8px",
     fontWeight: "700",
     cursor: "pointer",
-    fontFamily: "'Poppins', sans-serif",
+    fontFamily: "'Manrope', sans-serif",
   },
   paginationContainer: {
     display: "flex",
@@ -978,14 +979,14 @@ const styles = {
     borderRadius: "8px",
     border: "1px solid #dbe3f0",
     background: "white",
-    color: "#001166",
+    color: "#087F8C",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     cursor: "pointer",
     fontWeight: "700",
   },
-  paginationButtonActive: { background: "#001166", color: "white", borderColor: "#001166" },
+  paginationButtonActive: { "--ov-on-color": "var(--ov-ink)", background: "var(--ov-primary)", color: "var(--ov-on-color, #fff)", borderColor: "#087F8C" },
   paginationButtonDisabled: { opacity: 0.4, cursor: "not-allowed" },
 };
 

@@ -6,8 +6,8 @@ function AboutPage() {
       maxWidth: '1200px',
       margin: '60px auto',
       padding: '0 40px',
-      fontFamily: "'Poppins', sans-serif",
-      color: '#001166',
+      fontFamily: "'Manrope', sans-serif",
+      color: '#087F8C',
     },
     topSection: {
       display: 'flex',
@@ -25,7 +25,7 @@ function AboutPage() {
       fontWeight: '900',
       marginBottom: '25px',
       marginTop: 0,
-      color: '#001166'
+      color: '#087F8C'
     },
     paragraph: {
       fontSize: '16px',
@@ -56,10 +56,10 @@ function AboutPage() {
       gap: '20px',
       marginBottom: '30px'
     },
-    blueLine: {
+    blueLine: { "--ov-on-color": "var(--ov-ink)",
       flex: 1,
       height: '3px',
-      backgroundColor: '#001166',
+      backgroundColor: "var(--ov-primary)",
       marginTop: '10px'
     },
     bottomGrid: {
@@ -69,9 +69,9 @@ function AboutPage() {
       marginTop: '50px',
       alignItems: 'center'
     },
-    ratingsCard: {
-      backgroundColor: '#001166',
-      color: 'white',
+    ratingsCard: { "--ov-on-color": "var(--ov-ink)",
+      backgroundColor: "var(--ov-primary)",
+      color: "var(--ov-on-color, #fff)",
       padding: '45px',
       borderRadius: '4px',
       display: 'flex',
@@ -115,9 +115,9 @@ function AboutPage() {
   };
 
   return (
-    <div style={styles.container}>
+    <div className="ov-public-page" style={styles.container}>
       {/* Top Section: About Us */}
-      <div style={styles.topSection}>
+      <div className="about-top" style={styles.topSection}>
         <div style={styles.textContent}>
           <h1 style={styles.header}>About Us</h1>
           <p style={styles.paragraph}>
@@ -128,7 +128,7 @@ function AboutPage() {
           </p>
         </div>
         <div style={styles.imageContainer}>
-          <img 
+          <img className="about-img"
             src="https://images.unsplash.com/photo-1606811841689-23dfddce3e95?q=80&w=2070&auto=format&fit=crop" 
             alt="Dental Team" 
             style={styles.image} 
@@ -151,16 +151,16 @@ function AboutPage() {
       </div>
 
       {/* Bottom Grid: Ratings and Reviews */}
-      <div style={styles.bottomGrid}>
-        <div style={styles.ratingsCard}>
+      <div className="about-bottom-grid" style={styles.bottomGrid}>
+        <div className="ov-feature ratings-card" style={styles.ratingsCard}>
           <h2 style={styles.ratingsLabel}>Ratings</h2>
           <div style={styles.starsContainer}>
-            <div style={styles.stars}>★★★★★ <span style={{ color: 'white', fontSize: '18px', marginLeft: '5px' }}>4.9/5</span></div>
+            <div style={styles.stars}>★★★★★ <span style={{ color: "var(--ov-on-color, #fff)", fontSize: '18px', marginLeft: '5px' }}>4.9/5</span></div>
             <p style={{ margin: 0, opacity: 0.9, fontSize: '14px' }}>(Based on 250+ reviews)</p>
           </div>
         </div>
 
-        <div style={styles.reviewsSection}>
+        <div className="reviews-section" style={styles.reviewsSection}>
           <h3 style={styles.reviewTitle}>Recent Reviews:</h3>
           <p style={styles.quote}>
             "The staff made me feel at ease, and my treatment was quick and painless!" – Maria S.

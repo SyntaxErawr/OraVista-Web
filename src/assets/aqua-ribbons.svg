@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1100" viewBox="0 0 1440 1100" fill="none">
+  <!-- Original static artwork: translucent ribbons, orbital lines, and dot clusters. -->
+  <path d="M790-100c-110 225 40 250 340 295s235 215 410 330V-100Z" fill="#3EBFD8" fill-opacity=".14"/>
+  <path d="M-100 680c195-145 330-15 415 130s180 185 345 230v120H-100Z" fill="#A4A1DB" fill-opacity=".2"/>
+  <path d="M1440 620c-240-25-410 235-375 480h375Z" fill="#78C6D5" fill-opacity=".16"/>
+  <g stroke="#399BB7" stroke-opacity=".23" stroke-width="1.4">
+    <path d="M940-80c-160 175-35 270 150 310s255 100 350 260"/>
+    <path d="M965-90c-140 165-10 245 165 285s245 115 340 275"/>
+    <path d="M990-100c-120 155 15 220 180 260s235 130 330 290"/>
+    <path d="M1015-110c-100 145 40 195 195 235s225 145 320 305"/>
+    <path d="M1040-120c-80 135 65 170 210 210s215 160 310 320"/>
+    <circle cx="1350" cy="990" r="170"/>
+    <circle cx="1350" cy="990" r="195"/>
+    <circle cx="1350" cy="990" r="220"/>
+  </g>
+  <g stroke="#9F92CC" stroke-opacity=".22" stroke-width="1.4">
+    <path d="M-100 750c200-120 345 20 395 145s180 180 340 160"/>
+    <path d="M-100 775c195-110 320 25 370 150s180 180 340 160"/>
+    <path d="M-100 800c190-100 295 30 345 155s180 180 340 160"/>
+  </g>
+  <g fill="#387F9A" fill-opacity=".2">
+    <circle cx="1120" cy="530" r="2"/><circle cx="1140" cy="530" r="2"/><circle cx="1160" cy="530" r="2"/><circle cx="1180" cy="530" r="2"/>
+    <circle cx="1120" cy="550" r="2"/><circle cx="1140" cy="550" r="2"/><circle cx="1160" cy="550" r="2"/><circle cx="1180" cy="550" r="2"/>
+    <circle cx="1120" cy="570" r="2"/><circle cx="1140" cy="570" r="2"/><circle cx="1160" cy="570" r="2"/><circle cx="1180" cy="570" r="2"/>
+    <circle cx="1120" cy="590" r="2"/><circle cx="1140" cy="590" r="2"/><circle cx="1160" cy="590" r="2"/><circle cx="1180" cy="590" r="2"/>
+  </g>
+</svg>

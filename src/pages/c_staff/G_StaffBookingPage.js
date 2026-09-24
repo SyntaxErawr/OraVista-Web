@@ -255,36 +255,36 @@ function StaffBookingPage() {
     <AdminLayout>
       <div style={styles.container}>
         {/* HEADER */}
-        <header style={styles.header}>
+        <header className="ov-header" style={styles.header}>
           <div style={styles.searchBox}>
-            <Search size={18} color="rgba(255,255,255,0.6)" />
+            <Search size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
             <input type="text" placeholder="Search patients, appointments..." style={styles.searchInput} />
           </div>
           <div style={styles.headerActions}>
-            <Bell size={20} color="white" />
-            <MessageSquare size={20} color="white" />
+            <Bell size={20} color="var(--ov-on-color, #fff)" />
+            <MessageSquare size={20} color="var(--ov-on-color, #fff)" />
             <div style={styles.profile}>
               <div style={styles.profileText}>
                 <p style={styles.userName}>Staff User</p>
                 <p style={styles.userRole}>Receptionist</p>
               </div>
-              <div style={styles.avatar}><User size={20} color="#001166" /></div>
+              <div style={styles.avatar}><User size={20} color="#087F8C" /></div>
             </div>
           </div>
         </header>
 
         {/* CONTENT */}
-        <div style={styles.content}>
+        <div className="ov-workspace-content" style={styles.content}>
           <div style={styles.titleSection}>
             <h1 style={styles.pageTitle}>Book Appointment</h1>
             <p style={styles.pageSubtitle}>Schedule a new visit on behalf of a patient</p>
           </div>
 
-          <div style={{ backgroundColor: "#e8ebf5", borderRadius: "20px", padding: "40px" }}>
+          <div style={{ backgroundColor: "#EAF5F6", borderRadius: "20px", padding: "40px" }}>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: "20px", marginBottom: "40px" }}>
               <div>
-                <label style={{ color: "#001166", fontWeight: "700", marginBottom: "10px", display: "block" }}>Patient ID</label>
+                <label style={{ color: "#087F8C", fontWeight: "700", marginBottom: "10px", display: "block" }}>Patient ID</label>
                 <input
                   type="text"
                   style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #ccc", boxSizing: "border-box" }}
@@ -295,7 +295,7 @@ function StaffBookingPage() {
               </div>
 
               <div>
-                <label style={{ color: "#001166", fontWeight: "700", marginBottom: "10px", display: "block" }}>Select Branch</label>
+                <label style={{ color: "#087F8C", fontWeight: "700", marginBottom: "10px", display: "block" }}>Select Branch</label>
                 <select style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #ccc" }} value={selectedBranch} onChange={(e) => { setSelectedBranch(e.target.value); setBookingData({ ...bookingData, dentist: "", date: "", time: "" }); }}>
                   <option value="">Choose Branch</option>
                   {branches.map((b, index) => <option key={index} value={b}>{b}</option>)}
@@ -303,7 +303,7 @@ function StaffBookingPage() {
               </div>
 
               <div>
-                <label style={{ color: "#001166", fontWeight: "700", marginBottom: "10px", display: "block" }}>Services</label>
+                <label style={{ color: "#087F8C", fontWeight: "700", marginBottom: "10px", display: "block" }}>Services</label>
                 <select style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #ccc" }} value={bookingData.mainService} onChange={(e) => setBookingData({ ...bookingData, mainService: e.target.value, specificService: "" })}>
                   <option value="">Select Service</option>
                   {Object.keys(servicesData).map(s => <option key={s} value={s}>{s}</option>)}
@@ -311,7 +311,7 @@ function StaffBookingPage() {
               </div>
 
               <div>
-                <label style={{ color: "#001166", fontWeight: "700", marginBottom: "10px", display: "block" }}>Dentist</label>
+                <label style={{ color: "#087F8C", fontWeight: "700", marginBottom: "10px", display: "block" }}>Dentist</label>
                 <select style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #ccc" }} value={bookingData.dentist} onChange={(e) => setBookingData({ ...bookingData, dentist: e.target.value, date: "", time: "" })} disabled={!selectedBranch}>
                   <option value="">Select Dentist</option>
                   {filteredDentists.length > 0 ? (
@@ -323,7 +323,7 @@ function StaffBookingPage() {
               </div>
 
               <div>
-                <label style={{ color: "#001166", fontWeight: "700", marginBottom: "10px", display: "block" }}>Slot Date</label>
+                <label style={{ color: "#087F8C", fontWeight: "700", marginBottom: "10px", display: "block" }}>Slot Date</label>
                 <select style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #ccc" }} value={bookingData.date} onChange={(e) => setBookingData({ ...bookingData, date: e.target.value, time: "" })} disabled={!bookingData.dentist}>
                   <option value="">Select Date</option>
                   {currentDentist?.schedule.map(date => <option key={date} value={date}>{date}</option>)}
@@ -333,14 +333,14 @@ function StaffBookingPage() {
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "30px" }}>
               <div>
-                <label style={{ color: "#001166", fontWeight: "700", marginBottom: "10px", display: "block" }}>Choose Type</label>
+                <label style={{ color: "#087F8C", fontWeight: "700", marginBottom: "10px", display: "block" }}>Choose Type</label>
                 <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                   {bookingData.mainService && servicesData[bookingData.mainService].map(type => (
                     <button key={type.name} onClick={() => setBookingData({ ...bookingData, specificService: type.name })}
-                      style={{
+                      style={{ "--ov-on-color": "var(--ov-ink)",
                         padding: "15px", borderRadius: "12px", border: "none", textAlign: "left", cursor: "pointer", fontWeight: "600",
-                        backgroundColor: bookingData.specificService === type.name ? "#001166" : "#f0f2f8",
-                        color: bookingData.specificService === type.name ? "white" : "#001166",
+                        backgroundColor: bookingData.specificService === type.name ? "var(--ov-primary)" : "#EEF7F8",
+                        color: bookingData.specificService === type.name ? "var(--ov-ink)" : "#087F8C",
                         display: "flex", justifyContent: "space-between"
                       }}>
                       <span>{type.name} {type.duration}</span>
@@ -351,12 +351,12 @@ function StaffBookingPage() {
               </div>
 
               <div>
-                <label style={{ color: "#001166", fontWeight: "700", marginBottom: "10px", display: "block" }}>Dentist Schedule</label>
+                <label style={{ color: "#087F8C", fontWeight: "700", marginBottom: "10px", display: "block" }}>Dentist Schedule</label>
                 <div style={{ backgroundColor: "white", borderRadius: "15px", padding: "15px", border: "1px solid #ddd", width: "100%", boxSizing: "border-box" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                    <button onClick={() => setViewDate(new Date(currentYear, currentMonth - 1, 1))} style={{ background: "none", border: "none", cursor: "pointer", color: "#001166" }}><ChevronLeft size={18} /></button>
+                    <button onClick={() => setViewDate(new Date(currentYear, currentMonth - 1, 1))} style={{ background: "none", border: "none", cursor: "pointer", color: "#087F8C" }}><ChevronLeft size={18} /></button>
                     <p style={{ fontWeight: "800", textAlign: "center", margin: 0, fontSize: "14px" }}>{currentMonthName} {currentYear}</p>
-                    <button onClick={() => setViewDate(new Date(currentYear, currentMonth + 1, 1))} style={{ background: "none", border: "none", cursor: "pointer", color: "#001166" }}><ChevronRight size={18} /></button>
+                    <button onClick={() => setViewDate(new Date(currentYear, currentMonth + 1, 1))} style={{ background: "none", border: "none", cursor: "pointer", color: "#087F8C" }}><ChevronRight size={18} /></button>
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "2px", textAlign: "center" }}>
                     {["S", "M", "T", "W", "T", "F", "S"].map((d, index) => <div key={index} style={{ fontWeight: "700", fontSize: "11px", paddingBottom: "5px" }}>{d}</div>)}
@@ -368,10 +368,10 @@ function StaffBookingPage() {
                       const isSelected = bookingData.date === dayStr;
                       return (
                         <div key={i} onClick={() => isAvailable && setBookingData({ ...bookingData, date: dayStr, time: "" })}
-                          style={{
+                          style={{ "--ov-on-color": "var(--ov-ink)",
                             padding: "8px 0", borderRadius: "6px", fontSize: "12px", cursor: isAvailable ? "pointer" : "default",
-                            backgroundColor: isSelected ? "#001166" : (isAvailable ? "#e8ebf5" : "transparent"),
-                            color: isSelected ? "white" : (isAvailable ? "#001166" : "#ccc")
+                            backgroundColor: isSelected ? "var(--ov-primary)" : (isAvailable ? "#EAF5F6" : "transparent"),
+                            color: isSelected ? "var(--ov-ink)" : (isAvailable ? "#087F8C" : "#ccc")
                           }}>
                           {i + 1}
                         </div>
@@ -383,11 +383,11 @@ function StaffBookingPage() {
 
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                  <label style={{ color: "#001166", fontWeight: "700", margin: 0 }}>Choose Time</label>
+                  <label style={{ color: "#087F8C", fontWeight: "700", margin: 0 }}>Choose Time</label>
                   <button
                     onClick={fetchBookedSlots}
                     disabled={!bookingData.date || !bookingData.dentist || isRefreshing}
-                    style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "5px", color: "#001166", fontSize: "12px", fontWeight: "600" }}
+                    style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "5px", color: "#087F8C", fontSize: "12px", fontWeight: "600" }}
                   >
                     <RotateCw size={14} className={isRefreshing ? "animate-spin" : ""} />
                     Refresh
@@ -401,11 +401,11 @@ function StaffBookingPage() {
                       <button key={t}
                         onClick={() => !isTaken && setBookingData({ ...bookingData, time: t })}
                         disabled={isTaken}
-                        style={{
+                        style={{ "--ov-on-color": "var(--ov-ink)",
                           padding: "12px", borderRadius: "10px", border: "none", fontWeight: "600",
                           cursor: isTaken ? "not-allowed" : "pointer",
-                          backgroundColor: isTaken ? "#ccc" : (bookingData.time === t ? "#001166" : "white"),
-                          color: isTaken ? "#888" : (bookingData.time === t ? "white" : "#001166"),
+                          backgroundColor: isTaken ? "#ccc" : (bookingData.time === t ? "var(--ov-primary)" : "white"),
+                          color: isTaken ? "#888" : (bookingData.time === t ? "var(--ov-ink)" : "#087F8C"),
                           opacity: isTaken ? 0.6 : 1
                         }}>
                         {t} {isTaken && "(Occupied)"}
@@ -417,9 +417,9 @@ function StaffBookingPage() {
             </div>
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "20px", marginTop: "40px" }}>
-              <button onClick={handleDiscard} style={{ padding: "12px 30px", borderRadius: "10px", border: "none", backgroundColor: "#ff4d4d", color: "white", fontWeight: "700", cursor: "pointer" }}>Clear Fields</button>
+              <button onClick={handleDiscard} style={{ padding: "12px 30px", borderRadius: "10px", border: "none", backgroundColor: "#ff4d4d", color: "var(--ov-on-color, #fff)", fontWeight: "700", cursor: "pointer" }}>Clear Fields</button>
               <button onClick={() => setShowConfirmModal(true)} disabled={!bookingData.time}
-                style={{ padding: "12px 30px", borderRadius: "10px", border: "none", backgroundColor: "#28a745", color: "white", fontWeight: "700", cursor: "pointer", opacity: !bookingData.time ? 0.6 : 1 }}>
+                style={{ padding: "12px 30px", borderRadius: "10px", border: "none", backgroundColor: "#28a745", color: "var(--ov-on-color, #fff)", fontWeight: "700", cursor: "pointer", opacity: !bookingData.time ? 0.6 : 1 }}>
                 Confirm Booking
               </button>
             </div>
@@ -431,8 +431,8 @@ function StaffBookingPage() {
       {showConfirmModal && (
         <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 2000 }}>
           <div style={{ backgroundColor: "white", padding: "30px", borderRadius: "20px", textAlign: "center", width: "400px" }}>
-            <AlertTriangle size={50} color="#001166" style={{ marginBottom: "15px", margin: "0 auto" }} />
-            <h3 style={{ color: "#001166", fontWeight: "800", marginBottom: "5px" }}>Confirm Appointment?</h3>
+            <AlertTriangle size={50} color="#087F8C" style={{ marginBottom: "15px", margin: "0 auto" }} />
+            <h3 style={{ color: "#087F8C", fontWeight: "800", marginBottom: "5px" }}>Confirm Appointment?</h3>
             <div style={{ borderTop: "1px solid #eee", borderBottom: "1px solid #eee", padding: "15px 0", margin: "15px 0", textAlign: "left" }}>
               <p style={{ fontSize: "14px", margin: "5px 0" }}><strong>Patient ID:</strong> {bookingData.patientId || userData.id}</p>
               <p style={{ fontSize: "14px", margin: "5px 0" }}><strong>Branch:</strong> {selectedBranch}</p>
@@ -444,7 +444,7 @@ function StaffBookingPage() {
             </div>
             <div style={{ display: "flex", gap: "10px" }}>
               <button onClick={() => setShowConfirmModal(false)} style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "1px solid #ccc", cursor: "pointer", background: "white" }}>Cancel</button>
-              <button onClick={handleFinalSubmit} style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "none", backgroundColor: "#001166", color: "white", cursor: "pointer" }}>Confirm</button>
+              <button onClick={handleFinalSubmit} style={{ "--ov-on-color": "var(--ov-ink)", flex: 1, padding: "12px", borderRadius: "10px", border: "none", backgroundColor: "var(--ov-primary)", color: "var(--ov-on-color, #fff)", cursor: "pointer" }}>Confirm</button>
             </div>
           </div>
         </div>
@@ -454,13 +454,13 @@ function StaffBookingPage() {
         <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 2100 }}>
           <div style={{ backgroundColor: "white", padding: "30px", borderRadius: "20px", textAlign: "center", width: "400px" }}>
             <CheckCircle2 size={50} color="#28a745" style={{ marginBottom: "15px", margin: "0 auto" }} />
-            <h3 style={{ color: "#001166", fontWeight: "800" }}>Appointment Booked!</h3>
+            <h3 style={{ color: "#087F8C", fontWeight: "800" }}>Appointment Booked!</h3>
             <button
               onClick={() => {
                 setShowSuccessModal(false);
                 navigate('/staff/appointments');
               }}
-              style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "none", backgroundColor: "#001166", color: "white", cursor: "pointer", marginTop: "15px" }}
+              style={{ "--ov-on-color": "var(--ov-ink)", width: "100%", padding: "12px", borderRadius: "10px", border: "none", backgroundColor: "var(--ov-primary)", color: "var(--ov-on-color, #fff)", cursor: "pointer", marginTop: "15px" }}
             >
               Return to Schedule
             </button>
@@ -483,18 +483,18 @@ function StaffBookingPage() {
 
 const styles = {
   container: { display: 'flex', flexDirection: 'column', width: '100%' },
-  header: { height: '80px', background: '#001166', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px', position: 'sticky', top: 0, zIndex: 10 },
-  searchBox: { display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.1)', padding: '10px 20px', borderRadius: '12px', width: '350px' },
-  searchInput: { border: 'none', background: 'transparent', marginLeft: '10px', outline: 'none', width: '100%', color: 'white' },
+  header: { "--ov-on-color": "var(--ov-ink)", height: '80px', background: "var(--ov-primary)", display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px', position: 'sticky', top: 0, zIndex: 10 },
+  searchBox: { display: 'flex', alignItems: 'center', background: "var(--ov-on-wash, rgba(255,255,255,0.1))", padding: '10px 20px', borderRadius: '12px', width: '350px' },
+  searchInput: { border: 'none', background: 'transparent', marginLeft: '10px', outline: 'none', width: '100%', color: "var(--ov-on-color, #fff)" },
   headerActions: { display: 'flex', alignItems: 'center', gap: '25px' },
-  profile: { display: 'flex', alignItems: 'center', gap: '15px', borderLeft: '1px solid rgba(255,255,255,0.2)', paddingLeft: '20px' },
+  profile: { display: 'flex', alignItems: 'center', gap: '15px', borderLeft: "1px solid var(--ov-on-line, rgba(255,255,255,0.2))", paddingLeft: '20px' },
   profileText: { textAlign: 'right' },
-  userName: { margin: 0, fontWeight: 'bold', fontSize: '14px', color: 'white' },
-  userRole: { margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.6)' },
+  userName: { margin: 0, fontWeight: 'bold', fontSize: '14px', color: "var(--ov-on-color, #fff)" },
+  userRole: { margin: 0, fontSize: '12px', color: "var(--ov-on-muted, rgba(255,255,255,0.75))" },
   avatar: { width: '40px', height: '40px', background: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  content: { padding: '40px', backgroundColor: '#F4F7FE', minHeight: 'calc(100vh - 80px)' },
+  content: { padding: '40px', backgroundColor: '#F3F9FA', minHeight: 'calc(100vh - 80px)' },
   titleSection: { marginBottom: '30px' },
-  pageTitle: { fontSize: '28px', fontWeight: '700', color: '#001166', margin: 0 },
+  pageTitle: { fontSize: '28px', fontWeight: '700', color: '#087F8C', margin: 0 },
   pageSubtitle: { fontSize: '14px', color: '#666', marginTop: '5px' }
 };
 

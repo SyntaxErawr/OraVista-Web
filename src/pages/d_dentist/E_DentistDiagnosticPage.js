@@ -956,15 +956,15 @@ function DentistDiagnostics() {
 
         /* HEADER */
 
-        .dd-header { height: 80px; background: #001166; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; position: sticky; top: 0; z-index: 10; }
+        .dd-header { height: 80px; background: #087F8C; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; position: sticky; top: 0; z-index: 10; }
 
         .dd-search-wrapper { display: flex; align-items: center; }
 
         .dd-search-box { display: flex; align-items: center; background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 12px; width: 350px; transition: all 0.3s ease; box-sizing: border-box; }
 
-        .dd-search-input { border: none; background: transparent; margin-left: 10px; outline: none; width: 100%; color: white; }
+        .dd-search-input { border: none; background: transparent; margin-left: 10px; outline: none; width: 100%; color: var(--ov-on-color, #fff); }
 
-        .dd-search-input::placeholder { color: rgba(255,255,255,0.6); }
+        .dd-search-input::placeholder { color: var(--ov-on-muted, rgba(255,255,255,0.75)); }
 
         .dd-mobile-toggle { display: none; }
 
@@ -974,9 +974,9 @@ function DentistDiagnostics() {
 
         .dd-profile-text { text-align: right; }
 
-        .dd-user-name { margin: 0; font-weight: bold; font-size: 14px; color: white; }
+        .dd-user-name { margin: 0; font-weight: bold; font-size: 14px; color: var(--ov-on-color, #fff); }
 
-        .dd-user-role { margin: 0; font-size: 12px; color: rgba(255,255,255,0.6); }
+        .dd-user-role { margin: 0; font-size: 12px; color: var(--ov-on-muted, rgba(255,255,255,0.75)); }
 
         .dd-avatar { width: 40px; height: 40px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
@@ -984,11 +984,11 @@ function DentistDiagnostics() {
 
         /* CONTENT */
 
-        .dd-content { padding: 40px; background-color: #F4F7FE; min-height: calc(100vh - 80px); }
+        .dd-content { padding: 40px; background-color: #F3F9FA; min-height: calc(100vh - 80px); }
 
         .dd-main-grid { display: grid; grid-template-columns: 1.8fr 1fr; gap: 25px; }
 
-        .dd-info-bar { display: grid; background: #001166; border-radius: 15px; padding: 20px; margin-bottom: 25px; color: white; }
+        .dd-info-bar { display: grid; background: #087F8C; border-radius: 15px; padding: 20px; margin-bottom: 25px; color: var(--ov-on-color, #fff); }
 
         .dd-info-col { border-right: 1px solid rgba(255,255,255,0.1); padding: 0 20px; text-align: center; }
 
@@ -1006,7 +1006,7 @@ function DentistDiagnostics() {
 
           .dd-search-box { width: 44px; height: 44px; padding: 0; justify-content: center; cursor: pointer; border-radius: 50%; }
 
-          .dd-search-box.expanded { width: calc(100vw - 30px); background: #002288; border: 1px solid rgba(255,255,255,0.2); padding: 0 15px; justify-content: space-between; border-radius: 12px; }
+          .dd-search-box.expanded { width: calc(100vw - 30px); background: #066875; border: 1px solid rgba(255,255,255,0.2); padding: 0 15px; justify-content: space-between; border-radius: 12px; }
 
           .dd-search-input { display: none; }
 
@@ -1014,7 +1014,7 @@ function DentistDiagnostics() {
 
           .dd-search-box:not(.expanded) .dd-search-icon { display: none; }
 
-          .dd-mobile-toggle { display: flex; align-items: center; justify-content: center; background: transparent; border: none; color: white; padding: 0; cursor: pointer; flex-shrink: 0; }
+          .dd-mobile-toggle { display: flex; align-items: center; justify-content: center; background: transparent; border: none; color: var(--ov-on-color, #fff); padding: 0; cursor: pointer; flex-shrink: 0; }
 
           .dd-search-box:not(.expanded) .dd-mobile-toggle { display: flex; }
 
@@ -1060,7 +1060,7 @@ function DentistDiagnostics() {
 
             <div className={`dd-search-box ${isSearchExpanded ? 'expanded' : ''}`}>
 
-              <Search className="dd-search-icon" size={18} color="rgba(255,255,255,0.6)" />
+              <Search className="dd-search-icon" size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
 
               <input type="text" placeholder="Search diagnostics..." className="dd-search-input" />
 
@@ -1076,9 +1076,9 @@ function DentistDiagnostics() {
 
           <div className={`dd-header-actions ${isSearchExpanded ? 'hidden' : ''}`}>
 
-            <Bell size={20} color="white" />
+            <Bell size={20} color="var(--ov-on-color, #fff)" />
 
-            <MessageSquare size={20} color="white" />
+            <MessageSquare size={20} color="var(--ov-on-color, #fff)" />
 
             <div className="dd-profile">
 
@@ -1090,7 +1090,7 @@ function DentistDiagnostics() {
 
               </div>
 
-              <div className="dd-avatar"><User size={20} color="#001166" /></div>
+              <div className="dd-avatar"><User size={20} color="#087F8C" /></div>
 
             </div>
 
@@ -1120,7 +1120,7 @@ function DentistDiagnostics() {
 
             <div style={styles.patientSearchBox}>
 
-              <Search size={18} color="#001166" style={{ opacity: 0.6, flexShrink: 0 }} />
+              <Search size={18} color="#087F8C" style={{ opacity: 0.6, flexShrink: 0 }} />
 
               <input
 
@@ -1138,7 +1138,7 @@ function DentistDiagnostics() {
 
                 <button onClick={() => { setSearchQuery(""); setSearchResults([]); setShowDropdown(false); }} style={styles.clearSearchBtn}>
 
-                  <X size={16} color="#001166" />
+                  <X size={16} color="#087F8C" />
 
                 </button>
 
@@ -1168,7 +1168,7 @@ function DentistDiagnostics() {
 
                       onMouseLeave={() => setHoveredItemId(null)}
 
-                      style={{ ...styles.dropdownItem, backgroundColor: hoveredItemId === patient.id ? 'rgba(0,17,102,0.05)' : 'white' }}>
+                      style={{ ...styles.dropdownItem, backgroundColor: hoveredItemId === patient.id ? 'rgba(8, 127, 140,0.05)' : 'white' }}>
 
                       <div style={styles.patientAvatar}>
 
@@ -1176,7 +1176,7 @@ function DentistDiagnostics() {
 
                           <img src={`https://oravista-server-474976105474.asia-southeast1.run.app/${patient.profile_picture}`} alt="" style={styles.avatarImg} />
 
-                        ) : <User size={16} color="#001166" />}
+                        ) : <User size={16} color="#087F8C" />}
 
                       </div>
 
@@ -1236,7 +1236,7 @@ function DentistDiagnostics() {
 
             </div>
 
-            <div className="dd-info-col" style={{ border: selectedPatient ? '1px solid rgba(255,255,255,0.1)' : 'none', borderLeft: 'none', borderTop: 'none', borderBottom: 'none' }}>
+            <div className="dd-info-col" style={{ border: selectedPatient ? "1px solid var(--ov-on-line, rgba(255,255,255,0.1))" : 'none', borderLeft: 'none', borderTop: 'none', borderBottom: 'none' }}>
 
               <p style={styles.infoLabel}>Scan Date</p>
 
@@ -1272,7 +1272,7 @@ function DentistDiagnostics() {
 
             <div style={styles.leftPanel}>
 
-              <div style={styles.viewerCard}>
+              <div className="ov-panel" style={styles.viewerCard}>
 
                 <div style={styles.viewerHeader}>
 
@@ -1290,9 +1290,9 @@ function DentistDiagnostics() {
 
                       ...styles.uploadArea,
 
-                      backgroundColor: isUploadDisabled ? 'rgba(255,255,255,0.02)' : (isDragging ? 'rgba(255,255,255,0.1)' : 'transparent'),
+                      backgroundColor: isUploadDisabled ? "var(--ov-on-wash, rgba(255,255,255,0.02))" : (isDragging ? "var(--ov-on-wash, rgba(255,255,255,0.1))" : 'transparent'),
 
-                      borderColor: isUploadDisabled ? 'rgba(255,255,255,0.1)' : (isDragging ? '#10b981' : 'rgba(255,255,255,0.2)'),
+                      borderColor: isUploadDisabled ? "var(--ov-on-line, rgba(255,255,255,0.1))" : (isDragging ? '#10b981' : "var(--ov-on-line, rgba(255,255,255,0.2))"),
 
                       opacity: isUploadDisabled ? 0.5 : 1,
 
@@ -1312,13 +1312,13 @@ function DentistDiagnostics() {
 
                       <UploadCloud size={48} color={isUploadDisabled ? "rgba(255,255,255,0.2)" : (isDragging ? '#10b981' : "rgba(255,255,255,0.4)")} style={{ marginBottom: '15px' }} />
 
-                      <p style={{ color: isUploadDisabled ? 'rgba(255,255,255,0.4)' : 'white', fontWeight: 'bold', fontSize: '16px', textAlign: 'center' }}>
+                      <p style={{ color: isUploadDisabled ? "var(--ov-on-muted, rgba(255,255,255,0.75))" : "#fff", fontWeight: 'bold', fontSize: '16px', textAlign: 'center' }}>
 
                         {isUploadDisabled ? "Upload Disabled" : "Upload X-Ray or Intraoral Scan"}
 
                       </p>
 
-                      <p style={{ color: isUploadDisabled ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.5)', fontSize: '13px', marginTop: '5px', textAlign: 'center', padding: '0 10px' }}>
+                      <p style={{ color: isUploadDisabled ? "var(--ov-on-muted, rgba(255,255,255,0.75))" : "var(--ov-on-muted, rgba(255,255,255,0.75))", fontSize: '13px', marginTop: '5px', textAlign: 'center', padding: '0 10px' }}>
 
                         {isUploadDisabled ? "Select a patient from search or via URL parameters to enable upload" : "Drag & Drop or Click to browse (JPG, JPEG, PNG)"}
 
@@ -1348,7 +1348,7 @@ function DentistDiagnostics() {
 
                         }} style={styles.closePreviewBtn} title="Remove image and upload another">
 
-                          <X size={16} color="white" />
+                          <X size={16} color="var(--ov-on-color, #fff)" />
 
                         </button>
 
@@ -1368,7 +1368,7 @@ function DentistDiagnostics() {
 
               {/* AI Insights Card */}
 
-              <div style={styles.insightsCard}>
+              <div className="ov-panel" style={styles.insightsCard}>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
 
@@ -1390,7 +1390,7 @@ function DentistDiagnostics() {
 
                 {!imageUploaded ? (
 
-                  <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', marginTop: '20px' }}>Upload an image to begin the CNN analysis.</p>
+                  <p style={{ color: "var(--ov-on-muted, rgba(255,255,255,0.75))", fontSize: '14px', marginTop: '20px' }}>Upload an image to begin the CNN analysis.</p>
 
                 ) : isAnalyzing ? (
 
@@ -1498,13 +1498,13 @@ function DentistDiagnostics() {
 
                         {pendingAnnotation && (
 
-                          <div style={{
+                          <div className="ov-color-surface" style={{ "--ov-on-color": "var(--ov-ink)",
 
                             position: 'absolute',
 
                             top: `${pendingAnnotation.y_min * 100}%`, left: `${pendingAnnotation.x_min * 100}%`,
 
-                            transform: 'translateY(-105%)', zIndex: 20, background: '#001166',
+                            transform: 'translateY(-105%)', zIndex: 20, background: "var(--ov-primary)",
 
                             border: '1px solid #10b981', borderRadius: '6px', padding: '4px 8px',
 
@@ -1520,15 +1520,15 @@ function DentistDiagnostics() {
 
                               autoFocus
 
-                              style={{ background: 'transparent', border: 'none', outline: 'none', color: 'white', fontSize: '12px', width: '120px' }} />
+                              style={{ background: 'transparent', border: 'none', outline: 'none', color: "var(--ov-on-color, #fff)", fontSize: '12px', width: '120px' }} />
 
                             <button onClick={handleSaveAnnotation}
 
-                              style={{ background: '#10b981', border: 'none', borderRadius: '3px', color: 'white', fontSize: '11px', fontWeight: 'bold', padding: '2px 6px', cursor: 'pointer' }}>OK</button>
+                              style={{ background: '#10b981', border: 'none', borderRadius: '3px', color: "var(--ov-on-color, #fff)", fontSize: '11px', fontWeight: 'bold', padding: '2px 6px', cursor: 'pointer' }}>OK</button>
 
                             <button onClick={handleCancelAnnotation}
 
-                              style={{ background: '#ef4444', border: 'none', borderRadius: '3px', color: 'white', fontSize: '11px', fontWeight: 'bold', padding: '2px 6px', cursor: 'pointer' }}>Cancel</button>
+                              style={{ background: '#ef4444', border: 'none', borderRadius: '3px', color: "var(--ov-on-color, #fff)", fontSize: '11px', fontWeight: 'bold', padding: '2px 6px', cursor: 'pointer' }}>Cancel</button>
 
                           </div>
 
@@ -1540,7 +1540,7 @@ function DentistDiagnostics() {
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', alignItems: 'center' }}>
 
-                      <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>{findings.length} findings detected</span>
+                      <span style={{ fontSize: '12px', color: "var(--ov-on-muted, rgba(255,255,255,0.75))" }}>{findings.length} findings detected</span>
 
                       <button style={styles.toggleBtn} onClick={() => setShowAI(!showAI)}>
 
@@ -1610,7 +1610,7 @@ function DentistDiagnostics() {
 
             <div style={styles.sidePanel}>
 
-              <div style={styles.notesCard}>
+              <div className="ov-panel" style={styles.notesCard}>
 
                 <h3 style={styles.sectionTitle}>Clinical Notes</h3>
 
@@ -1644,7 +1644,7 @@ function DentistDiagnostics() {
 
                   <button
 
-                    style={{ ...styles.saveBtn, background: '#10b981', color: 'white', cursor: 'pointer' }}
+                    style={{ ...styles.saveBtn, background: '#10b981', color: "var(--ov-on-color, #fff)", cursor: 'pointer' }}
 
                     onClick={() => setIsEditingDiagnosis(true)}>
 
@@ -1700,7 +1700,7 @@ function DentistDiagnostics() {
 
             </div>
 
-            <h2 style={{ color: '#001166', margin: '0 0 12px', fontSize: '22px' }}>{diagnosisModal.title}</h2>
+            <h2 style={{ color: '#087F8C', margin: '0 0 12px', fontSize: '22px' }}>{diagnosisModal.title}</h2>
 
             <p style={{ color: '#666', fontSize: '14px', lineHeight: 1.6, margin: '0 0 22px' }}>{diagnosisModal.message}</p>
 
@@ -1708,7 +1708,7 @@ function DentistDiagnostics() {
 
               onClick={() => setDiagnosisModal(current => ({ ...current, show: false }))}
 
-              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: 'none', backgroundColor: '#001166', color: 'white', cursor: 'pointer', fontWeight: '700' }}>
+              style={{ "--ov-on-color": "var(--ov-ink)", width: '100%', padding: '12px', borderRadius: '8px', border: 'none', backgroundColor: "var(--ov-primary)", color: "var(--ov-on-color, #fff)", cursor: 'pointer', fontWeight: '700' }}>
 
               Okay
 
@@ -1736,7 +1736,7 @@ function DentistDiagnostics() {
 
                 <div style={styles.loadingSpinner}></div>
 
-                <p style={{ color: '#001166', fontWeight: 'bold', fontSize: '16px', marginTop: '20px' }}>Analyzing Oral Health Risk...</p>
+                <p style={{ color: '#087F8C', fontWeight: 'bold', fontSize: '16px', marginTop: '20px' }}>Analyzing Oral Health Risk...</p>
 
                 <p style={{ color: '#666', fontSize: '13px', marginTop: '5px' }}>Processing lifestyle metrics and clinical history via AI model</p>
 
@@ -1752,7 +1752,7 @@ function DentistDiagnostics() {
 
                 </div>
 
-                <h2 style={{ color: "#001166", marginBottom: "15px", marginTop: 0 }}>Assessment Complete!</h2>
+                <h2 style={{ color: "#087F8C", marginBottom: "15px", marginTop: 0 }}>Assessment Complete!</h2>
 
                 <p style={{ color: "#666", marginBottom: "20px" }}>The check-up data has been successfully processed by the AI.</p>
 
@@ -1762,7 +1762,7 @@ function DentistDiagnostics() {
 
                     <span style={{ fontWeight: "600", color: "#333" }}>Risk Score:</span>
 
-                    <span style={{ fontWeight: "700", color: "#001166" }}>{checkUpResponseData.risk_score}/100</span>
+                    <span style={{ fontWeight: "700", color: "#087F8C" }}>{checkUpResponseData.risk_score}/100</span>
 
                   </div>
 
@@ -1802,7 +1802,7 @@ function DentistDiagnostics() {
 
                 <button onClick={() => { setIsCheckUpModalOpen(false); setCheckUpResponseData(null); }}
 
-                  style={{ padding: "12px 30px", borderRadius: "8px", border: "none", backgroundColor: "#001166", color: "white", cursor: "pointer", fontWeight: "700", width: "100%" }}>Close</button>
+                  style={{ "--ov-on-color": "var(--ov-ink)", padding: "12px 30px", borderRadius: "8px", border: "none", backgroundColor: "var(--ov-primary)", color: "var(--ov-on-color, #fff)", cursor: "pointer", fontWeight: "700", width: "100%" }}>Close</button>
 
               </div>
 
@@ -1812,7 +1812,7 @@ function DentistDiagnostics() {
 
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
 
-                  <h2 style={{ color: "#001166", margin: 0 }}>Dental Check Up</h2>
+                  <h2 style={{ color: "#087F8C", margin: 0 }}>Dental Check Up</h2>
 
                   <X size={24} style={{ cursor: "pointer", color: "#666" }} onClick={() => setIsCheckUpModalOpen(false)} />
 
@@ -1902,7 +1902,7 @@ function DentistDiagnostics() {
 
                   <button onClick={() => setIsCheckUpModalOpen(false)} style={{ padding: "10px 20px", borderRadius: "8px", border: "1px solid #ccc", backgroundColor: "white", cursor: "pointer", fontWeight: "600", color: "#333" }}>Close</button>
 
-                  <button onClick={handleCheckUpSubmit} disabled={isSubmittingCheckUp} style={{ padding: "10px 20px", borderRadius: "8px", border: "none", backgroundColor: "#001166", color: "white", cursor: isSubmittingCheckUp ? "not-allowed" : "pointer", fontWeight: "600" }}>
+                  <button onClick={handleCheckUpSubmit} disabled={isSubmittingCheckUp} style={{ "--ov-on-color": "var(--ov-ink)", padding: "10px 20px", borderRadius: "8px", border: "none", backgroundColor: "var(--ov-primary)", color: "var(--ov-on-color, #fff)", cursor: isSubmittingCheckUp ? "not-allowed" : "pointer", fontWeight: "600" }}>
 
                     {isSubmittingCheckUp ? "Saving..." : "Save"}
 
@@ -1934,31 +1934,31 @@ const styles = {
 
   searchBarContainer: { position: 'relative', marginBottom: '25px', width: '100%', maxWidth: '500px' },
 
-  patientSearchBox: { display: 'flex', alignItems: 'center', background: 'white', padding: '12px 20px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,17,102,0.05)', border: '1px solid rgba(0,17,102,0.1)' },
+  patientSearchBox: { display: 'flex', alignItems: 'center', background: 'white', padding: '12px 20px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(8, 127, 140,0.05)', border: '1px solid rgba(8, 127, 140,0.1)' },
 
-  patientSearchInput: { border: 'none', background: 'transparent', marginLeft: '12px', outline: 'none', width: '100%', color: '#001166', fontSize: '15px', fontWeight: '500' },
+  patientSearchInput: { border: 'none', background: 'transparent', marginLeft: '12px', outline: 'none', width: '100%', color: '#087F8C', fontSize: '15px', fontWeight: '500' },
 
   clearSearchBtn: { background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%' },
 
-  patientDropdown: { position: 'absolute', top: 'calc(100% + 8px)', left: 0, width: '100%', background: 'white', borderRadius: '12px', boxShadow: '0 8px 30px rgba(0,17,102,0.15)', border: '1px solid rgba(0,17,102,0.08)', zIndex: 100, overflow: 'hidden', maxHeight: '300px', overflowY: 'auto' },
+  patientDropdown: { position: 'absolute', top: 'calc(100% + 8px)', left: 0, width: '100%', background: 'white', borderRadius: '12px', boxShadow: '0 8px 30px rgba(8, 127, 140,0.15)', border: '1px solid rgba(8, 127, 140,0.08)', zIndex: 100, overflow: 'hidden', maxHeight: '300px', overflowY: 'auto' },
 
   dropdownMessage: { padding: '15px 20px', color: '#666', fontSize: '14px', textAlign: 'center' },
 
-  dropdownItem: { display: 'flex', alignItems: 'center', padding: '12px 20px', cursor: 'pointer', borderBottom: '1px solid rgba(0,17,102,0.05)', transition: 'background-color 0.2s' },
+  dropdownItem: { display: 'flex', alignItems: 'center', padding: '12px 20px', cursor: 'pointer', borderBottom: '1px solid rgba(8, 127, 140,0.05)', transition: 'background-color 0.2s' },
 
-  patientAvatar: { width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(0,17,102,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '15px', overflow: 'hidden', flexShrink: 0 },
+  patientAvatar: { width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(8, 127, 140,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '15px', overflow: 'hidden', flexShrink: 0 },
 
   avatarImg: { width: '100%', height: '100%', objectFit: 'cover' },
 
   patientInfo: { display: 'flex', flexDirection: 'column' },
 
-  patientNameText: { margin: 0, fontWeight: '600', fontSize: '14px', color: '#001166' },
+  patientNameText: { margin: 0, fontWeight: '600', fontSize: '14px', color: '#087F8C' },
 
   patientEmailText: { margin: 0, fontSize: '12px', color: '#666', marginTop: '2px' },
 
   titleSection: { marginBottom: '30px' },
 
-  pageTitle: { fontSize: '28px', fontWeight: '700', color: '#001166', margin: 0 },
+  pageTitle: { fontSize: '28px', fontWeight: '700', color: '#087F8C', margin: 0 },
 
   pageSubtitle: { fontSize: '14px', color: '#666', marginTop: '5px' },
 
@@ -1966,69 +1966,69 @@ const styles = {
 
   infoVal: { fontSize: '15px', fontWeight: 'bold', margin: 0 },
 
-  checkUpBtn: { display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "10px 16px", borderRadius: "10px", border: "none", backgroundColor: "#10b981", color: "white", fontWeight: "700", cursor: "pointer", fontSize: "13px", boxShadow: "0 4px 6px rgba(0,0,0,0.1)", outline: "none" },
+  checkUpBtn: { display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "10px 16px", borderRadius: "10px", border: "none", backgroundColor: "#10b981", color: "var(--ov-on-color, #fff)", fontWeight: "700", cursor: "pointer", fontSize: "13px", boxShadow: "0 4px 6px rgba(0,0,0,0.1)", outline: "none" },
 
   leftPanel: { display: 'flex', flexDirection: 'column', gap: '25px' },
 
   sidePanel: { display: 'flex', flexDirection: 'column', gap: '20px', height: '100%' },
 
-  viewerCard: { background: '#001166', borderRadius: '15px', padding: '25px', color: 'white' },
+  viewerCard: { "--ov-on-color": "var(--ov-ink)", background: "var(--ov-primary)", borderRadius: '15px', padding: '25px', color: "var(--ov-on-color, #fff)" },
 
   viewerHeader: { display: 'flex', justifyContent: 'space-between', marginBottom: '20px' },
 
-  sectionTitle: { fontSize: '16px', fontWeight: 'bold', margin: 0, color: 'white' },
+  sectionTitle: { fontSize: '16px', fontWeight: 'bold', margin: 0, color: "var(--ov-on-color, #fff)" },
 
   viewerActions: { display: 'flex', gap: '10px' },
 
-  vBtn: { background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: 'white', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' },
+  vBtn: { "--ov-on-color": "#087F8C", background: "var(--ov-on-wash, rgba(255,255,255,0.1))", border: "1px solid var(--ov-on-line, rgba(255,255,255,0.2))", color: "var(--ov-on-color, #fff)", padding: '6px 12px', borderRadius: '8px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' },
 
-  xrayImageArea: { height: '500px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  xrayImageArea: { height: '500px', background: "var(--ov-on-wash, rgba(255,255,255,0.02))", borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
 
-  uploadArea: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '2px dashed rgba(255,255,255,0.2)', borderRadius: '12px', width: '90%', height: '90%', cursor: 'pointer', transition: 'background 0.2s' },
+  uploadArea: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: "2px dashed var(--ov-on-line, rgba(255,255,255,0.2))", borderRadius: '12px', width: '90%', height: '90%', cursor: 'pointer', transition: 'background 0.2s' },
 
-  simulatedXray: { width: '80%', height: '80%', backgroundColor: '#000833', borderRadius: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', boxShadow: '0 0 50px rgba(0,0,0,0.5)' },
+  simulatedXray: { width: '80%', height: '80%', backgroundColor: '#063E46', borderRadius: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', boxShadow: '0 0 50px rgba(0,0,0,0.5)' },
 
   boundingBox: { position: 'absolute', border: '2px solid', zIndex: 5, borderRadius: '4px' },
 
-  boxLabel: { position: 'absolute', top: '-22px', left: '-2px', color: 'white', fontSize: '10px', fontWeight: '700', padding: '2px 6px', borderRadius: '4px', whiteSpace: 'nowrap' },
+  boxLabel: { position: 'absolute', top: '-22px', left: '-2px', color: "var(--ov-on-color, #fff)", fontSize: '10px', fontWeight: '700', padding: '2px 6px', borderRadius: '4px', whiteSpace: 'nowrap' },
 
   scannerLine: { position: 'absolute', top: 0, left: 0, width: '100%', height: '3px', backgroundColor: '#10b981', boxShadow: '0 0 15px #10b981', animation: 'scan 2s linear infinite' },
 
-  insightsCard: { background: '#001166', borderRadius: '15px', padding: '25px', color: 'white' },
+  insightsCard: { "--ov-on-color": "var(--ov-ink)", background: "var(--ov-primary)", borderRadius: '15px', padding: '25px', color: "var(--ov-on-color, #fff)" },
 
   findingsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '15px' },
 
-  insightBox: { background: 'rgba(255,255,255,0.05)', borderRadius: '10px', padding: '15px', transition: 'all 0.3s' },
+  insightBox: { background: "var(--ov-on-wash, rgba(255,255,255,0.05))", borderRadius: '10px', padding: '15px', transition: 'all 0.3s' },
 
-  insightText: { fontSize: '13px', margin: '0 0 12px 0', lineHeight: '1.4', color: 'white' },
+  insightText: { fontSize: '13px', margin: '0 0 12px 0', lineHeight: '1.4', color: "var(--ov-on-color, #fff)" },
 
-  confBadge: { fontSize: '10px', padding: '3px 8px', borderRadius: '10px', fontWeight: 'bold', color: 'white' },
+  confBadge: { fontSize: '10px', padding: '3px 8px', borderRadius: '10px', fontWeight: 'bold', color: "var(--ov-on-color, #fff)" },
 
-  toggleBtn: { background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', fontSize: '11px', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer' },
+  toggleBtn: { "--ov-on-color": "#087F8C", background: "var(--ov-on-wash, rgba(255,255,255,0.1))", border: 'none', color: "var(--ov-on-color, #fff)", fontSize: '11px', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer' },
 
   actionBtnCheck: { background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '4px', padding: '4px', cursor: 'pointer', display: 'flex' },
 
   actionBtnCross: { background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '4px', padding: '4px', cursor: 'pointer', display: 'flex' },
 
-  notesCard: { background: '#001166', borderRadius: '15px', padding: '25px', color: 'white', display: 'flex', flexDirection: 'column', flex: 1 },
+  notesCard: { "--ov-on-color": "var(--ov-ink)", background: "var(--ov-primary)", borderRadius: '15px', padding: '25px', color: "var(--ov-on-color, #fff)", display: 'flex', flexDirection: 'column', flex: 1 },
 
-  textarea: { width: '100%', flex: 1, minHeight: '300px', background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '10px', padding: '15px', color: 'white', marginTop: '15px', outline: 'none', resize: 'none', boxSizing: 'border-box' },
+  textarea: { width: '100%', flex: 1, minHeight: '300px', background: "var(--ov-on-wash, rgba(255,255,255,0.05))", border: 'none', borderRadius: '10px', padding: '15px', color: "var(--ov-on-color, #fff)", marginTop: '15px', outline: 'none', resize: 'none', boxSizing: 'border-box' },
 
-  saveBtn: { width: '100%', marginTop: '15px', padding: '12px', background: 'white', color: '#001166', border: 'none', borderRadius: '10px', fontWeight: 'bold', transition: 'opacity 0.2s' },
+  saveBtn: { width: '100%', marginTop: '15px', padding: '12px', background: 'white', color: '#087F8C', border: 'none', borderRadius: '10px', fontWeight: 'bold', transition: 'opacity 0.2s' },
 
-  loadingSpinner: { border: '4px solid rgba(255,255,255,0.1)', width: '36px', height: '36px', borderRadius: '50%', borderLeftColor: '#10b981', animation: 'spin 1s linear infinite' },
+  loadingSpinner: { border: "4px solid var(--ov-on-line, rgba(255,255,255,0.1))", width: '36px', height: '36px', borderRadius: '50%', borderLeftColor: '#10b981', animation: 'spin 1s linear infinite' },
 
-  insightImageContainer: { position: 'relative', width: '80%', height: '400px', margin: '0 auto 20px auto', backgroundColor: '#000833', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 0 50px rgba(0,0,0,0.5)' },
+  insightImageContainer: { position: 'relative', width: '80%', height: '400px', margin: '0 auto 20px auto', backgroundColor: '#063E46', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 0 50px rgba(0,0,0,0.5)' },
 
   insightImage: { width: '100%', height: '100%', objectFit: 'fill' },
 
   closePreviewBtn: { position: 'absolute', top: '15px', right: '15px', background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10 },
 
-  aiFindingsCard: { background: 'rgba(255,255,255,0.05)', borderLeft: '4px solid #10b981', borderRadius: '8px', padding: '15px', marginTop: '15px', marginBottom: '15px', maxHeight: '530px', overflowY: 'auto' },
+  aiFindingsCard: { background: "var(--ov-on-wash, rgba(255,255,255,0.05))", borderLeft: '4px solid #10b981', borderRadius: '8px', padding: '15px', marginTop: '15px', marginBottom: '15px', maxHeight: '530px', overflowY: 'auto' },
 
   aiFindingsHeader: { margin: '0 0 8px 0', fontSize: '13px', fontWeight: 'bold', color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.5px' },
 
-  aiFindingsText: { margin: 0, fontSize: '13px', lineHeight: '1.5', color: 'rgba(255,255,255,0.85)' }
+  aiFindingsText: { margin: 0, fontSize: '13px', lineHeight: '1.5', color: "var(--ov-on-color, #fff)" }
 
 };
 

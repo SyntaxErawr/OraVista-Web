@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useCallback } from "react";
+import PatientDialog from "../../components/PatientDialog";
+import BrandWordmark from "../../components/BrandWordmark";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Menu,
@@ -18,6 +20,26 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { API_BASE_URL } from "../../config/api";
+
+const servicesData = {
+  "General Dentistry": [
+    { name: "Oral Prophylaxis", price: 1500, duration: "(30 mins)" },
+    { name: "Restoration", price: 1200, duration: "(1hr)" },
+    { name: "Extraction", price: 1000, duration: "(1hr)" },
+  ],
+  Orthodontics: [
+    { name: "Braces Installation", price: 35000, duration: "(1hr)" },
+    { name: "Braces Adjustment", price: 1000, duration: "(30 mins)" },
+    { name: "Veneers", price: 15000, duration: "(2hrs)" },
+  ],
+  "Restorative Treatment": [
+    { name: "Root Canal (RCT)", price: 8000, duration: "(2hrs)" },
+    { name: "Wisdom Tooth Surgery", price: 10000, duration: "(3hrs)" },
+    { name: "Dentures", price: 5000, duration: "(30 mins)" },
+    { name: "Fixed Bridge", price: 12000, duration: "(2hrs)" },
+    { name: "Teeth Whitening", price: 7000, duration: "(1hr 30mins)" },
+  ],
+};
 
 function BookingPage() {
   const navigate = useNavigate();
@@ -46,6 +68,9 @@ function BookingPage() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [rescheduleError, setRescheduleError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [availabilityError, setAvailabilityError] = useState("");
+  const availabilityVersion = useRef(0);
 
   const today = new Date();
   const [viewDate, setViewDate] = useState(new Date());
@@ -92,25 +117,6 @@ function BookingPage() {
 
   const mockSchedule = generateWeekdaySchedule();
 
-  const servicesData = {
-    "General Dentistry": [
-      { name: "Oral Prophylaxis", price: 1500, duration: "(30 mins)" },
-      { name: "Restoration", price: 1200, duration: "(1hr)" },
-      { name: "Extraction", price: 1000, duration: "(1hr)" },
-    ],
-    Orthodontics: [
-      { name: "Braces Installation", price: 35000, duration: "(1hr)" },
-      { name: "Braces Adjustment", price: 1000, duration: "(30 mins)" },
-      { name: "Veneers", price: 15000, duration: "(2hrs)" },
-    ],
-    "Restorative Treatment": [
-      { name: "Root Canal (RCT)", price: 8000, duration: "(2hrs)" },
-      { name: "Wisdom Tooth Surgery", price: 10000, duration: "(3hrs)" },
-      { name: "Dentures", price: 5000, duration: "(30 mins)" },
-      { name: "Fixed Bridge", price: 12000, duration: "(2hrs)" },
-      { name: "Teeth Whitening", price: 7000, duration: "(1hr 30mins)" },
-    ],
-  };
 
   const branchDentists = {
     "Gil Puyat, Pasay": [
@@ -268,15 +274,25 @@ function BookingPage() {
   };
 
   const selectedServicePrice = getSelectedServicePrice();
+  const canSubmitBooking = Boolean(userData.id && bookingData.date && bookingData.time &&
+    (isReschedule || (bookingData.mainService && bookingData.specificService && bookingData.dentist)));
 
   const fetchBookedSlots = useCallback(async () => {
-    if (!bookingData.date || !bookingData.dentist) return;
+    const version = ++availabilityVersion.current;
+    if (!bookingData.date || !bookingData.dentist) {
+      setBookedSlots([]);
+      setAvailabilityError("");
+      setIsRefreshing(false);
+      return;
+    }
     setIsRefreshing(true);
+    setAvailabilityError("");
     try {
       const response = await fetch(
         `${API_BASE_URL}/api/appointments/check-availability?date=${bookingData.date}&dentist=${encodeURIComponent(bookingData.dentist)}${isReschedule && rescheduleAppointment?.appointmentId ? `&excludeAppointmentId=${rescheduleAppointment.appointmentId}` : ""}`,
       );
       const data = await response.json();
+      if (!response.ok || !Array.isArray(data)) throw new Error("Availability could not be checked.");
       const allOccupiedMinutes = [];
       data.forEach((app) => {
         const start = timeToMinutes(app.time);
@@ -284,11 +300,12 @@ function BookingPage() {
         for (let i = 0; i < duration; i += 30)
           allOccupiedMinutes.push(start + i);
       });
-      setBookedSlots(allOccupiedMinutes);
+      if (version === availabilityVersion.current) setBookedSlots(allOccupiedMinutes);
     } catch (error) {
       console.error("Error fetching booked slots:", error);
+      if (version === availabilityVersion.current) setAvailabilityError("We could not check available times. Please use Refresh before choosing a time.");
     } finally {
-      setTimeout(() => setIsRefreshing(false), 500);
+      if (version === availabilityVersion.current) setIsRefreshing(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookingData.date, bookingData.dentist, isReschedule, rescheduleAppointment?.appointmentId]);
@@ -317,6 +334,12 @@ function BookingPage() {
   };
 
   const handleFinalSubmit = async () => {
+    if (isSubmitting) return;
+    setRescheduleError("");
+    if (!isReschedule && !canSubmitBooking) {
+      setRescheduleError("Choose a service, treatment, dentist, date and time before confirming.");
+      return;
+    }
     if (isReschedule) {
       if (
         !rescheduleAppointment?.appointmentId ||
@@ -330,6 +353,7 @@ function BookingPage() {
         return;
       }
 
+      setIsSubmitting(true);
       try {
         const response = await fetch(
           `${API_BASE_URL}/api/request-reschedule`,
@@ -359,6 +383,8 @@ function BookingPage() {
           error.message ||
             "The reschedule request could not be submitted. Please try again.",
         );
+      } finally {
+        setIsSubmitting(false);
       }
       return;
     }
@@ -372,6 +398,7 @@ function BookingPage() {
       amount: selectedServicePrice,
       branch: selectedBranch,
     };
+    setIsSubmitting(true);
     try {
       const response = await fetch(
         `${API_BASE_URL}/api/book-appointment`,
@@ -386,9 +413,15 @@ function BookingPage() {
         setShowSuccessModal(true);
         handleDiscard();
         fetchBookedSlots();
+      } else {
+        const result = await response.json().catch(() => ({}));
+        setRescheduleError(result.message || "Your appointment could not be booked. Please try again.");
       }
     } catch (error) {
       console.error("Connection Error:", error);
+      setRescheduleError("We could not connect. Your booking has not been confirmed. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -398,7 +431,7 @@ function BookingPage() {
     display: "flex",
     alignItems: "center",
     gap: "15px",
-    color: "white",
+    color: "var(--ov-on-color, #fff)",
     textDecoration: "none",
     padding: "12px 15px",
     margin: "5px 0",
@@ -409,10 +442,10 @@ function BookingPage() {
     whiteSpace: "nowrap",
     overflow: "hidden",
     backgroundColor:
-      location.pathname === path ? "rgba(255, 255, 255, 0.2)" : "transparent",
+      location.pathname === path ? "var(--ov-on-wash, rgba(255, 255, 255, 0.2))" : "transparent",
     fontWeight: location.pathname === path ? "700" : "400",
     borderLeft:
-      location.pathname === path ? "4px solid white" : "4px solid transparent",
+      location.pathname === path ? "4px solid #21B9C8" : "4px solid transparent",
   });
 
   const currentDentist = filteredDentists.find(
@@ -457,13 +490,13 @@ function BookingPage() {
     padding: "12px",
     borderRadius: "10px",
     border: "1px solid #ccc",
-    fontFamily: "'Poppins', sans-serif",
+    fontFamily: "'Manrope', sans-serif",
     fontSize: "14px",
     boxSizing: "border-box",
   };
 
   const labelStyle = {
-    color: isMobile ? "#001166" : "white",
+    color: isMobile ? "#087F8C" : "#fff",
     fontWeight: "700",
     marginBottom: "10px",
     display: "block",
@@ -481,24 +514,22 @@ function BookingPage() {
         }}
       >
         {(!isCollapsed || isMobile) && (
-          <h2 style={{ fontSize: "28px", fontWeight: "800", margin: 0 }}>
-            OraVista
-          </h2>
+          <h2 style={{ fontSize: "28px", fontWeight: "800", margin: 0 }}><BrandWordmark /></h2>
         )}
         {isMobile ? (
-          <div
+          <button className="ov-ui-button"
             onClick={() => setIsMobileOpen(false)}
             style={{ cursor: "pointer" }}
-          >
+           type="button" aria-label="Close navigation">
             <X size={24} />
-          </div>
+          </button>
         ) : (
-          <div
+          <button className="ov-ui-button"
             onClick={() => setIsCollapsed(!isCollapsed)}
             style={{ cursor: "pointer" }}
-          >
+           type="button" aria-label="Toggle sidebar">
             {isCollapsed ? <Menu size={24} /> : <X size={24} />}
-          </div>
+          </button>
         )}
       </div>
       <nav style={{ flexGrow: 1 }}>
@@ -534,7 +565,7 @@ function BookingPage() {
             label: "Billings",
           },
         ].map(({ path, icon, label }) => (
-          <div
+          <button aria-label={label} aria-current={location.pathname === path ? 'page' : undefined} type="button" className="ov-nav-item"
             key={path}
             style={getNavItemStyle(path)}
             onClick={() => {
@@ -548,16 +579,16 @@ function BookingPage() {
                 {label}
               </span>
             )}
-          </div>
+          </button>
         ))}
       </nav>
       <div
         style={{
-          borderTop: "1px solid rgba(255,255,255,0.2)",
+          borderTop: "1px solid var(--ov-on-line, rgba(255,255,255,0.2))",
           paddingTop: "10px",
         }}
       >
-        <div
+        <button aria-label="Settings" aria-current={location.pathname === "/settings" ? 'page' : undefined} type="button" className="ov-nav-item"
           style={getNavItemStyle("/settings")}
           onClick={() => {
             navigate("/settings");
@@ -566,14 +597,14 @@ function BookingPage() {
         >
           <Settings size={20} style={{ flexShrink: 0 }} />
           {(!isCollapsed || isMobile) && "Settings"}
-        </div>
-        <div
+        </button>
+        <button aria-label="Logout" aria-current={location.pathname === "/logout" ? 'page' : undefined} data-ov-action="logout" type="button" className="ov-nav-item"
           style={{ ...getNavItemStyle("/logout"), color: "#ff4d4d" }}
           onClick={handleLogout}
         >
           <LogOut size={20} style={{ flexShrink: 0 }} />
           {(!isCollapsed || isMobile) && "Logout"}
-        </div>
+        </button>
       </div>
     </>
   );
@@ -584,20 +615,20 @@ function BookingPage() {
         display: "flex",
         minHeight: "100vh",
         width: "100%",
-        fontFamily: "'Poppins', sans-serif",
+        fontFamily: "'Manrope', sans-serif",
       }}
     >
       {/* Modals */}
       {showConfirmModal && (
-        <div style={{ ...modalOverlay, zIndex: 2000 }}>
+        <PatientDialog onClose={() => setShowConfirmModal(false)} busy={isSubmitting} style={{ ...modalOverlay, zIndex: 2000 }}>
           <div style={{ ...modalBox, textAlign: "left" }}>
             <div style={{ textAlign: "center", marginBottom: "10px" }}>
               <AlertTriangle
                 size={50}
-                color="#001166"
+                color="#087F8C"
                 style={{ margin: "0 auto 10px" }}
               />
-              <h3 style={{ color: "#001166", fontWeight: "800", margin: 0 }}>
+              <h3 style={{ color: "#087F8C", fontWeight: "800", margin: 0 }}>
                 {isReschedule ? "Submit Reschedule Request?" : "Confirm Appointment?"}
               </h3>
             </div>
@@ -633,8 +664,10 @@ function BookingPage() {
                 {selectedServicePrice.toLocaleString()}
               </p>
             </div>
+            {rescheduleError && <p className="ov-inline-error" role="alert">{rescheduleError}</p>}
             <div style={{ display: "flex", gap: "10px" }}>
               <button
+                disabled={isSubmitting}
                 onClick={() => setShowConfirmModal(false)}
                 style={{
                   flex: 1,
@@ -642,60 +675,61 @@ function BookingPage() {
                   borderRadius: "10px",
                   border: "1px solid #ccc",
                   cursor: "pointer",
-                  fontFamily: "'Poppins', sans-serif",
+                  fontFamily: "'Manrope', sans-serif",
                 }}
               >
                 Cancel
               </button>
               <button
+                disabled={isSubmitting}
                 onClick={handleFinalSubmit}
-                style={{
+                style={{ "--ov-on-color": "var(--ov-ink)",
                   flex: 1,
                   padding: "12px",
                   borderRadius: "10px",
                   border: "none",
-                  backgroundColor: "#001166",
-                  color: "white",
+                  backgroundColor: "var(--ov-primary)",
+                  color: "var(--ov-on-color, #fff)",
                   cursor: "pointer",
-                  fontFamily: "'Poppins', sans-serif",
+                  fontFamily: "'Manrope', sans-serif",
                 }}
               >
-                {isReschedule ? "Submit Request" : "Confirm"}
+                {isSubmitting ? "Submitting..." : isReschedule ? "Submit Request" : "Confirm"}
               </button>
             </div>
           </div>
-        </div>
+        </PatientDialog>
       )}
 
       {showSuccessModal && (
-        <div style={{ ...modalOverlay, zIndex: 2100 }}>
+        <PatientDialog onClose={() => setShowSuccessModal(false)} busy={isSubmitting} style={{ ...modalOverlay, zIndex: 2100 }}>
           <div style={modalBox}>
             <CheckCircle2
               size={50}
               color="#28a745"
               style={{ margin: "0 auto 15px" }}
             />
-            <h3 style={{ color: "#001166", fontWeight: "800" }}>
+            <h3 style={{ color: "#087F8C", fontWeight: "800" }}>
               {isReschedule ? "Reschedule Request Submitted!" : "Appointment Booked!"}
             </h3>
             <button
               onClick={() => setShowSuccessModal(false)}
-              style={{
+              style={{ "--ov-on-color": "var(--ov-ink)",
                 width: "100%",
                 padding: "12px",
                 borderRadius: "10px",
                 border: "none",
-                backgroundColor: "#001166",
-                color: "white",
+                backgroundColor: "var(--ov-primary)",
+                color: "var(--ov-on-color, #fff)",
                 cursor: "pointer",
                 marginTop: "15px",
-                fontFamily: "'Poppins', sans-serif",
+                fontFamily: "'Manrope', sans-serif",
               }}
             >
               Close
             </button>
           </div>
-        </div>
+        </PatientDialog>
       )}
 
       {/* Mobile backdrop */}
@@ -713,12 +747,12 @@ function BookingPage() {
 
       {/* Desktop Sidebar */}
       {!isMobile && (
-        <div
-          style={{
+        <div className="ov-sidebar"
+          style={{ "--ov-on-color": "var(--ov-ink)",
             width: sidebarWidth,
-            backgroundColor: "#001166",
+            backgroundColor: "var(--ov-primary)",
             height: "100vh",
-            color: "white",
+            color: "var(--ov-on-color, #fff)",
             padding: "20px 15px",
             position: "fixed",
             transition: "width 0.3s ease",
@@ -735,12 +769,12 @@ function BookingPage() {
 
       {/* Mobile Sidebar Drawer */}
       {isMobile && (
-        <div
-          style={{
+        <div inert={!isMobileOpen} aria-hidden={!isMobileOpen} className="ov-sidebar"
+          style={{ "--ov-on-color": "var(--ov-ink)",
             width: "260px",
-            backgroundColor: "#001166",
+            backgroundColor: "var(--ov-primary)",
             height: "100vh",
-            color: "white",
+            color: "var(--ov-on-color, #fff)",
             padding: "20px 15px",
             position: "fixed",
             left: isMobileOpen ? 0 : "-260px",
@@ -758,7 +792,7 @@ function BookingPage() {
       )}
 
       {/* Main Content */}
-      <div
+      <div className="ov-workspace"
         style={{
           marginLeft: isMobile ? 0 : sidebarWidth,
           width: isMobile ? "100%" : `calc(100% - ${sidebarWidth})`,
@@ -769,34 +803,32 @@ function BookingPage() {
       >
         {/* Mobile Top Bar */}
         {isMobile && (
-          <div
-            style={{
+          <div className="ov-color-surface"
+            style={{ "--ov-on-color": "var(--ov-ink)",
               display: "flex",
               alignItems: "center",
               padding: "15px 20px",
-              backgroundColor: "#001166",
-              color: "white",
+              backgroundColor: "var(--ov-primary)",
+              color: "var(--ov-on-color, #fff)",
               position: "sticky",
               top: 0,
               zIndex: 100,
             }}
           >
-            <div
+            <button className="ov-ui-button"
               onClick={() => setIsMobileOpen(true)}
               style={{ cursor: "pointer", marginRight: "15px" }}
-            >
+             type="button" aria-label="Open navigation">
               <Menu size={24} />
-            </div>
-            <h2 style={{ fontSize: "22px", fontWeight: "800", margin: 0 }}>
-              OraVista
-            </h2>
+            </button>
+            <h2 style={{ fontSize: "22px", fontWeight: "800", margin: 0 }}><BrandWordmark /></h2>
           </div>
         )}
 
         <div style={{ padding: isMobile ? "20px 16px" : "40px" }}>
           <h1
             style={{
-              color: "#001166",
+              color: "#087F8C",
               fontSize: isMobile ? "28px" : "42px",
               fontWeight: "800",
               margin: 0,
@@ -806,7 +838,7 @@ function BookingPage() {
           </h1>
           <p
             style={{
-              color: "#001166",
+              color: "#087F8C",
               fontWeight: "600",
               marginTop: "8px",
               fontSize: "14px",
@@ -818,8 +850,8 @@ function BookingPage() {
           </p>
 
           <div
-            style={{
-              backgroundColor: isMobile ? "#e8ebf5" : "#001166",
+            style={{ "--ov-on-color": "var(--ov-ink)",
+              backgroundColor: isMobile ? "#EAF5F6" : "var(--ov-primary)",
               borderRadius: isMobile ? "20px" : "40px",
               padding: isMobile ? "20px 16px" : "50px",
               marginTop: "24px",
@@ -836,7 +868,7 @@ function BookingPage() {
             >
               <div>
                 <label style={labelStyle}>Services</label>
-                <select
+                <select aria-label="Select Service"
                   style={selectStyle}
                   value={bookingData.mainService}
                   onChange={(e) =>
@@ -862,7 +894,7 @@ function BookingPage() {
 
               <div>
                 <label style={labelStyle}>Available Dentist</label>
-                <select
+                <select aria-label="Select Dentist"
                   style={{
                     ...selectStyle,
                     cursor: bookingData.mainService ? "pointer" : "not-allowed",
@@ -898,7 +930,7 @@ function BookingPage() {
 
               <div>
                 <label style={labelStyle}>Available Slot</label>
-                <select
+                <select aria-label="Select Date"
                   style={selectStyle}
                   value={bookingData.date}
                   onChange={(e) =>
@@ -946,25 +978,26 @@ function BookingPage() {
                           !isReschedule && setBookingData({
                             ...bookingData,
                             specificService: type.name,
+                            time: "",
                           })
                         }
                         disabled={isReschedule}
-                        style={{
+                        style={{ "--ov-on-color": "var(--ov-ink)",
                           padding: "14px",
                           borderRadius: "12px",
                           border: "none",
                           textAlign: "left",
                           cursor: isReschedule ? "not-allowed" : "pointer",
                           fontWeight: "600",
-                          fontFamily: "'Poppins', sans-serif",
+                          fontFamily: "'Manrope', sans-serif",
                           backgroundColor:
                             bookingData.specificService === type.name
-                              ? (isMobile ? "#001166" : "#C2E6E6")
-                              : "#f0f2f8",
+                              ? (isMobile ? "var(--ov-primary)" : "#C2E6E6")
+                              : "#EEF7F8",
                           color:
                             bookingData.specificService === type.name
-                              ? (isMobile ? "white" : "#001166")
-                              : "#001166",
+                              ? (isMobile ? "var(--ov-ink)" : "#087F8C")
+                              : "#087F8C",
                           display: "flex",
                           justifyContent: "space-between",
                           alignItems: "center",
@@ -1013,7 +1046,7 @@ function BookingPage() {
                       marginBottom: "10px",
                     }}
                   >
-                    <button
+                    <button aria-label="Previous month"
                       onClick={() =>
                         setViewDate(new Date(currentYear, currentMonth - 1, 1))
                       }
@@ -1021,7 +1054,7 @@ function BookingPage() {
                         background: "none",
                         border: "none",
                         cursor: "pointer",
-                        color: "#001166",
+                        color: "#087F8C",
                       }}
                     >
                       <ChevronLeft size={18} />
@@ -1036,7 +1069,7 @@ function BookingPage() {
                     >
                       {currentMonthName} {currentYear}
                     </p>
-                    <button
+                    <button aria-label="Next month"
                       onClick={() =>
                         setViewDate(new Date(currentYear, currentMonth + 1, 1))
                       }
@@ -1044,7 +1077,7 @@ function BookingPage() {
                         background: "none",
                         border: "none",
                         cursor: "pointer",
-                        color: "#001166",
+                        color: "#087F8C",
                       }}
                     >
                       <ChevronRight size={18} />
@@ -1084,7 +1117,7 @@ function BookingPage() {
                         currentDentist?.schedule.includes(dayStr);
                       const isSelected = bookingData.date === dayStr;
                       return (
-                        <div
+                        <button className="ov-ui-button"
                           key={i}
                           onClick={() =>
                             isAvailable &&
@@ -1094,25 +1127,25 @@ function BookingPage() {
                               time: "",
                             })
                           }
-                          style={{
+                          style={{ "--ov-on-color": "var(--ov-ink)",
                             padding: "7px 0",
                             borderRadius: "6px",
                             fontSize: "12px",
                             cursor: isAvailable ? "pointer" : "default",
                             backgroundColor: isSelected
-                              ? "#001166"
+                              ? "var(--ov-primary)"
                               : isAvailable
-                                ? "#e8ebf5"
+                                ? "#EAF5F6"
                                 : "transparent",
                             color: isSelected
-                              ? "white"
+                              ? "var(--ov-ink)"
                               : isAvailable
-                                ? "#001166"
+                                ? "#087F8C"
                                 : "#ccc",
                           }}
-                        >
+                         disabled={!isAvailable} aria-pressed={isSelected} aria-label={currentDayDate.toLocaleDateString("en-PH", { dateStyle: "full" })} type="button">
                           {i + 1}
-                        </div>
+                        </button>
                       );
                     })}
                   </div>
@@ -1120,6 +1153,7 @@ function BookingPage() {
               </div>
 
               {/* Time Slots */}
+              {availabilityError && <p className="ov-inline-error" role="alert">{availabilityError}</p>}
               <div>
                 <div
                   style={{
@@ -1144,10 +1178,10 @@ function BookingPage() {
                       display: "flex",
                       alignItems: "center",
                       gap: "5px",
-                      color: isMobile ? "#001166" : "white",
+                      color: isMobile ? "#087F8C" : "#fff",
                       fontSize: "12px",
                       fontWeight: "600",
-                      fontFamily: "'Poppins', sans-serif",
+                      fontFamily: "'Manrope', sans-serif",
                     }}
                   >
                     <RotateCw
@@ -1175,25 +1209,25 @@ function BookingPage() {
                             !isTaken &&
                             setBookingData({ ...bookingData, time: t })
                           }
-                          disabled={isTaken}
-                          style={{
+                          disabled={isTaken || isRefreshing || Boolean(availabilityError)}
+                          style={{ "--ov-on-color": "var(--ov-ink)",
                             padding: "11px 8px",
                             borderRadius: "10px",
                             border: "none",
                             fontWeight: "600",
                             fontSize: "12px",
                             cursor: isTaken ? "not-allowed" : "pointer",
-                            fontFamily: "'Poppins', sans-serif",
+                            fontFamily: "'Manrope', sans-serif",
                             backgroundColor: isTaken
                               ? "#ccc"
                               : bookingData.time === t
-                                ? (isMobile ? "#001166" : "#C2E6E6")
+                                ? (isMobile ? "var(--ov-primary)" : "#C2E6E6")
                                 : "white",
                             color: isTaken
                               ? "#888"
                               : bookingData.time === t
-                                ? (isMobile ? "white" : "#001166")
-                                : "#001166",
+                                ? (isMobile ? "var(--ov-ink)" : "#087F8C")
+                                : "#087F8C",
                             opacity: isTaken ? 0.6 : 1,
                           }}
                         >
@@ -1228,43 +1262,43 @@ function BookingPage() {
               }}
             >
               <button
-                onClick={handleDiscard}
+                onClick={isReschedule ? () => navigate("/appointments") : handleDiscard}
                 style={{
                   padding: "12px 30px",
                   borderRadius: "10px",
                   border: "none",
                   backgroundColor: "#ff4d4d",
-                  color: "white",
+                  color: "var(--ov-on-color, #fff)",
                   fontWeight: "700",
                   cursor: "pointer",
-                  fontFamily: "'Poppins', sans-serif",
+                  fontFamily: "'Manrope', sans-serif",
                   width: isMobile ? "100%" : "auto",
                 }}
               >
-                Cancel Booking
+                {isReschedule ? "Back to Appointments" : "Clear Selection"}
               </button>
               <button
                 onClick={() => {
                   setRescheduleError("");
                   setShowConfirmModal(true);
                 }}
-                disabled={!bookingData.time}
+                disabled={!canSubmitBooking || isRefreshing || Boolean(availabilityError) || isSubmitting}
                 style={{
                   padding: "12px 30px",
                   borderRadius: "10px",
                   border: "none",
                   backgroundColor: "#28a745",
-                  color: "white",
+                  color: "var(--ov-on-color, #fff)",
                   fontWeight: "700",
                   cursor: "pointer",
-                  opacity: !bookingData.time ? 0.6 : 1,
-                  fontFamily: "'Poppins', sans-serif",
+                  opacity: !canSubmitBooking ? 0.6 : 1,
+                  fontFamily: "'Manrope', sans-serif",
                   width: isMobile ? "100%" : "auto",
                 }}
               >
                 {isReschedule ? "Submit Reschedule Request" : "Confirm Appointment"}
               </button>
-              {isReschedule && rescheduleError && (
+              {!showConfirmModal && rescheduleError && (
                 <p
                   style={{
                     color: "#b42318",

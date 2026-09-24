@@ -72,10 +72,10 @@ function StaffDashboard() {
     <AdminLayout>
       <div style={styles.container}>
         {/* HEADER */}
-        <header style={styles.header} className="dashboard-page-header">
+        <header style={styles.header} className="dashboard-page-header ov-header">
           <div style={styles.headerActions} className="header-actions">
             <div style={styles.searchBox} className="header-search-box">
-              <Search size={18} color="rgba(255,255,255,0.6)" />
+              <Search size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
               <input
                 type="text"
                 placeholder="Search patients, appointments..."
@@ -91,15 +91,15 @@ function StaffDashboard() {
               {isSearchOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
             </button>
 
-            <Bell size={20} color="white" style={styles.actionIcon} />
-            <MessageSquare size={20} color="white" style={styles.actionIcon} />
+            <Bell size={20} color="var(--ov-on-color, #fff)" style={styles.actionIcon} />
+            <MessageSquare size={20} color="var(--ov-on-color, #fff)" style={styles.actionIcon} />
             <div style={styles.profile} className="header-profile">
               <div style={styles.profileText} className="header-profile-text">
                 <p style={styles.userName}>Staff User</p>
                 <p style={styles.userRole}>Receptionist</p>
               </div>
               <div style={styles.avatar}>
-                <User size={20} color="#001166" />
+                <User size={20} color="#087F8C" />
               </div>
             </div>
           </div>
@@ -109,7 +109,7 @@ function StaffDashboard() {
         {isSearchOpen && (
           <div className="mobile-search-collapsible">
             <div style={{ ...styles.searchBox, width: "100%" }}>
-              <Search size={18} color="rgba(255,255,255,0.6)" />
+              <Search size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
               <input
                 type="text"
                 placeholder="Search patients, appointments..."
@@ -120,10 +120,11 @@ function StaffDashboard() {
         )}
 
         {/* DASHBOARD CONTENT */}
-        <div style={styles.content} className="settings-content">
+        <div style={styles.content} className="settings-content ov-workspace-content">
+          <div className="ov-page-intro"><span className="ov-eyebrow">Your workspace</span><h1>Ready for the day</h1><p>Keep appointments and patient visits moving smoothly.</p></div>
           <div style={styles.gridTop} className="dashboard-grid-top">
             {/* CARD 1: TODAY'S APPOINTMENTS */}
-            <div style={styles.card}>
+            <div className="ov-panel" style={styles.card}>
               <p style={styles.cardLabel}>Today's Appointments</p>
               <h2 style={styles.cardValue}>{stats.todayCount}</h2>
               <div style={styles.progressBase}>
@@ -137,7 +138,7 @@ function StaffDashboard() {
             </div>
 
             {/* CARD 2: CURRENT DATE */}
-            <div style={styles.card}>
+            <div className="ov-panel" style={styles.card}>
               <p style={styles.cardLabel}>Current Date</p>
               <h2 style={{ ...styles.cardValue, fontSize: "17px", lineHeight: "1.4" }}>
                 {new Date().toLocaleDateString("en-US", {
@@ -150,7 +151,7 @@ function StaffDashboard() {
             </div>
 
             {/* CARD 3: DENTIST AVAILABILITY */}
-            <div style={styles.card}>
+            <div className="ov-panel" style={styles.card}>
               <p style={styles.cardLabel}>Dentist Availability</p>
               <h2 style={styles.cardValue}>
                 {stats.availableDentists}/{stats.totalDentists}
@@ -159,7 +160,7 @@ function StaffDashboard() {
             </div>
 
             {/* CARD 4: PATIENTS THIS MONTH */}
-            <div style={styles.card}>
+            <div className="ov-panel" style={styles.card}>
               <p style={styles.cardLabel}>Patients This Month</p>
               <h2 style={styles.cardValue}>{stats.monthPatients}</h2>
               <p style={styles.cardSub}>Monthly growth</p>
@@ -168,7 +169,7 @@ function StaffDashboard() {
 
           <div style={styles.billingCard}>
             <div style={styles.billingCardIcon}>
-              <CreditCard size={24} color="#001166" />
+              <CreditCard size={24} color="#087F8C" />
             </div>
             <div style={{ flex: 1 }}>
               <p style={styles.billingCardTitle}>Billing & Receipts</p>
@@ -186,11 +187,11 @@ function StaffDashboard() {
           </div>
 
           <div style={styles.gridMid} className="dashboard-grid-mid">
-            <div style={styles.chartCard}>
+            <div className="ov-panel" style={styles.chartCard}>
               <p style={styles.sectionTitle}>Revenue Overview</p>
               <div style={styles.placeholder}>Revenue Analytics Placeholder</div>
             </div>
-            <div style={styles.chartCard}>
+            <div className="ov-panel" style={styles.chartCard}>
               <p style={styles.sectionTitle}>Patient Growth</p>
               <div style={styles.placeholder}>Growth Analytics Placeholder</div>
             </div>
@@ -198,13 +199,13 @@ function StaffDashboard() {
 
           <div style={styles.gridBottom} className="dashboard-grid-bottom">
             {/* RECENT PATIENT VISITS */}
-            <div style={styles.listCard}>
+            <div className="ov-panel" style={styles.listCard}>
               <p style={styles.sectionTitle}>Recent Patient Visits</p>
               {recentVisits.length > 0 ? (
                 recentVisits.slice(0, 5).map((visit, idx) => (
                   <div key={visit.id || idx} style={styles.patientRow}>
                     <div style={styles.pAvatar}>
-                      <User size={18} color="white" />
+                      <User size={18} color="var(--ov-on-color, #fff)" />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={styles.pName}>{visit.patientName}</p>
@@ -224,7 +225,7 @@ function StaffDashboard() {
             </div>
 
             {/* TODAY'S SCHEDULE LIST */}
-            <div style={styles.listCard}>
+            <div className="ov-panel" style={styles.listCard}>
               <p style={styles.sectionTitle}>Today's Schedule</p>
 
               {stats.loading ? (
@@ -238,8 +239,8 @@ function StaffDashboard() {
                     </div>
                     <span style={{
                       ...styles.scheduleBadge,
-                      background: item.status === 'Confirmed' ? '#e6fffa' : '#fff7ed',
-                      color: item.status === 'Confirmed' ? '#047857' : '#c2410c'
+                      background: item.status === 'Completed' ? 'var(--ov-completed-soft, #e0ecff)' : item.status === 'Confirmed' ? '#e6fffa' : '#fff7ed',
+                      color: item.status === 'Completed' ? 'var(--ov-completed, #2864c5)' : item.status === 'Confirmed' ? '#047857' : '#c2410c'
                     }}>
                       {item.status}
                     </span>
@@ -260,9 +261,9 @@ function StaffDashboard() {
 
 const styles = {
   container: { display: "flex", flexDirection: "column", width: "100%" },
-  header: {
+  header: { "--ov-on-color": "var(--ov-ink)",
     height: "80px",
-    background: "#001166",
+    background: "var(--ov-primary)",
     display: "flex",
     alignItems: "center",
     justifyContent: "flex-end",
@@ -274,7 +275,7 @@ const styles = {
   searchBox: {
     display: "flex",
     alignItems: "center",
-    background: "rgba(255,255,255,0.1)",
+    background: "var(--ov-on-wash, rgba(255,255,255,0.1))",
     padding: "10px 20px",
     borderRadius: "12px",
     width: "350px",
@@ -285,7 +286,7 @@ const styles = {
     marginLeft: "10px",
     outline: "none",
     width: "100%",
-    color: "white",
+    color: "var(--ov-on-color, #fff)",
   },
   headerActions: { display: "flex", alignItems: "center", gap: "25px" },
   actionIcon: { cursor: "pointer", opacity: 0.9 },
@@ -293,12 +294,12 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: "15px",
-    borderLeft: "1px solid rgba(255,255,255,0.2)",
+    borderLeft: "1px solid var(--ov-on-line, rgba(255,255,255,0.2))",
     paddingLeft: "20px",
   },
   profileText: { textAlign: "right" },
-  userName: { margin: 0, fontWeight: "bold", fontSize: "14px", color: "white" },
-  userRole: { margin: 0, fontSize: "12px", color: "rgba(255,255,255,0.6)" },
+  userName: { margin: 0, fontWeight: "bold", fontSize: "14px", color: "var(--ov-on-color, #fff)" },
+  userRole: { margin: 0, fontSize: "12px", color: "var(--ov-on-muted, rgba(255,255,255,0.75))" },
   avatar: {
     width: "40px",
     height: "40px",
@@ -311,7 +312,7 @@ const styles = {
 
   content: {
     padding: "32px 40px",
-    backgroundColor: "#F4F7FE",
+    backgroundColor: "#F3F9FA",
     minHeight: "calc(100vh - 80px)",
     boxSizing: "border-box",
   },
@@ -321,12 +322,12 @@ const styles = {
     gap: "20px",
     marginBottom: "24px",
   },
-  card: {
+  card: { "--ov-on-color": "var(--ov-ink)",
     padding: "22px 24px",
     borderRadius: "16px",
-    color: "white",
-    background: "#001166",
-    boxShadow: "0 6px 20px rgba(0, 17, 102, 0.1)",
+    color: "var(--ov-on-color, #fff)",
+    background: "var(--ov-primary)",
+    boxShadow: "0 6px 20px rgba(8, 127, 140, 0.1)",
     display: "flex",
     flexDirection: "column",
     justifyContent: "space-between",
@@ -334,21 +335,21 @@ const styles = {
   cardLabel: {
     fontSize: "12px",
     fontWeight: "600",
-    color: "rgba(255,255,255,0.7)",
+    color: "var(--ov-on-muted, rgba(255,255,255,0.75))",
     textTransform: "uppercase",
     letterSpacing: "0.5px",
     margin: "0 0 8px 0",
   },
-  cardValue: { margin: "0 0 6px 0", fontSize: "26px", fontWeight: "700", color: "#ffffff" },
+  cardValue: { margin: "0 0 6px 0", fontSize: "26px", fontWeight: "700", color: "var(--ov-on-color, #fff)" },
   progressBase: {
     height: "6px",
-    background: "rgba(255,255,255,0.15)",
+    background: "var(--ov-on-wash, rgba(255,255,255,0.15))",
     borderRadius: "4px",
     overflow: "hidden",
     marginTop: "8px",
   },
-  progressFill: { height: "100%", background: "#00d4ff", borderRadius: "4px" },
-  cardSub: { fontSize: "12px", margin: 0, color: "rgba(255,255,255,0.7)" },
+  progressFill: { height: "100%", background: "#2CCAD5", borderRadius: "4px" },
+  cardSub: { fontSize: "12px", margin: 0, color: "var(--ov-on-muted, rgba(255,255,255,0.75))" },
 
   billingCard: {
     display: "flex",
@@ -357,22 +358,22 @@ const styles = {
     padding: "18px 24px",
     borderRadius: "16px",
     background: "white",
-    border: "1px solid rgba(0, 17, 102, 0.08)",
-    boxShadow: "0 4px 16px rgba(0, 17, 102, 0.06)",
+    border: "1px solid rgba(8, 127, 140, 0.08)",
+    boxShadow: "0 4px 16px rgba(8, 127, 140, 0.06)",
     marginBottom: "24px",
   },
   billingCardIcon: {
     display: "flex",
     padding: "12px",
-    background: "#e8ebf5",
+    background: "#EAF5F6",
     borderRadius: "12px",
   },
-  billingCardTitle: { margin: 0, color: "#001166", fontSize: "16px", fontWeight: "700" },
+  billingCardTitle: { margin: 0, color: "#087F8C", fontSize: "16px", fontWeight: "700" },
   billingCardText: { margin: "4px 0 0", color: "#64748b", fontSize: "13px" },
-  billingButton: {
+  billingButton: { "--ov-on-color": "var(--ov-ink)",
     border: "none",
-    background: "#001166",
-    color: "white",
+    background: "var(--ov-primary)",
+    color: "var(--ov-on-color, #fff)",
     padding: "10px 18px",
     borderRadius: "8px",
     fontWeight: "700",
@@ -388,30 +389,30 @@ const styles = {
     gap: "20px",
     marginBottom: "24px",
   },
-  chartCard: {
-    background: "#001166",
+  chartCard: { "--ov-on-color": "var(--ov-ink)",
+    background: "var(--ov-primary)",
     borderRadius: "16px",
     padding: "24px",
-    color: "white",
-    boxShadow: "0 6px 20px rgba(0, 17, 102, 0.1)",
+    color: "var(--ov-on-color, #fff)",
+    boxShadow: "0 6px 20px rgba(8, 127, 140, 0.1)",
   },
   placeholder: {
     height: "200px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    border: "1px dashed rgba(255,255,255,0.2)",
+    border: "1px dashed var(--ov-on-line, rgba(255,255,255,0.2))",
     marginTop: "14px",
     borderRadius: "12px",
-    color: "rgba(255,255,255,0.45)",
+    color: "var(--ov-on-muted, rgba(255,255,255,0.75))",
     fontSize: "13px",
-    background: "rgba(255,255,255,0.02)",
+    background: "var(--ov-on-wash, rgba(255,255,255,0.02))",
   },
   sectionTitle: {
     margin: "0 0 16px 0",
     fontWeight: "700",
     fontSize: "16px",
-    color: "white",
+    color: "var(--ov-on-color, #fff)",
     letterSpacing: "0.2px",
   },
 
@@ -420,12 +421,12 @@ const styles = {
     gridTemplateColumns: "1.6fr 1fr",
     gap: "20px",
   },
-  listCard: {
+  listCard: { "--ov-on-color": "var(--ov-ink)",
     borderRadius: "16px",
     padding: "24px",
-    background: "#001166",
-    color: "white",
-    boxShadow: "0 6px 20px rgba(0, 17, 102, 0.1)",
+    background: "var(--ov-primary)",
+    color: "var(--ov-on-color, #fff)",
+    boxShadow: "0 6px 20px rgba(8, 127, 140, 0.1)",
     display: "flex",
     flexDirection: "column",
   },
@@ -434,25 +435,25 @@ const styles = {
     alignItems: "center",
     gap: "14px",
     padding: "12px 0",
-    borderBottom: "1px solid rgba(255,255,255,0.08)",
+    borderBottom: "1px solid var(--ov-on-line, rgba(255,255,255,0.08))",
   },
   pAvatar: {
     width: "38px",
     height: "38px",
-    background: "rgba(255,255,255,0.12)",
+    background: "var(--ov-on-wash, rgba(255,255,255,0.12))",
     borderRadius: "50%",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
   },
-  pName: { margin: 0, fontWeight: "600", fontSize: "14px", color: "white" },
-  pId: { margin: "2px 0 0", fontSize: "11px", color: "rgba(255,255,255,0.55)" },
-  pType: { margin: 0, fontSize: "13px", fontWeight: "600", color: "white" },
-  pTime: { margin: "2px 0 0", fontSize: "11px", color: "rgba(255,255,255,0.5)" },
+  pName: { margin: 0, fontWeight: "600", fontSize: "14px", color: "var(--ov-on-color, #fff)" },
+  pId: { margin: "2px 0 0", fontSize: "11px", color: "var(--ov-on-muted, rgba(255,255,255,0.75))" },
+  pType: { margin: 0, fontSize: "13px", fontWeight: "600", color: "var(--ov-on-color, #fff)" },
+  pTime: { margin: "2px 0 0", fontSize: "11px", color: "var(--ov-on-muted, rgba(255,255,255,0.75))" },
 
   scheduleRow: {
     background: "white",
-    color: "#001166",
+    color: "#087F8C",
     padding: "12px 16px",
     borderRadius: "12px",
     marginBottom: "10px",
@@ -497,7 +498,7 @@ const styles = {
   emptyText: {
     margin: 0,
     fontSize: "13px",
-    color: "rgba(255,255,255,0.6)",
+    color: "var(--ov-on-muted, rgba(255,255,255,0.75))",
     fontStyle: "italic",
   },
 };

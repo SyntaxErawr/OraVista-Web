@@ -1,3 +1,4 @@
+import BrandWordmark from "./BrandWordmark";
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, User } from 'lucide-react';
@@ -29,10 +30,10 @@ function Navbar() {
     return {
       textDecoration: 'none',
       fontSize: '18px',
-      fontFamily: "'Poppins', sans-serif",
-      color: '#001166',
+      fontFamily: "'Manrope', sans-serif",
+      color: '#087F8C',
       fontWeight: isActive ? '700' : '500',
-      borderBottom: isActive ? '3px solid #001166' : '3px solid transparent',
+      borderBottom: isActive ? '3px solid #087F8C' : '3px solid transparent',
       transition: 'all 0.3s ease',
       paddingBottom: '5px',
       width: 'max-content'
@@ -60,9 +61,9 @@ function Navbar() {
           .clean-nav-brand {
             font-size: 32px;
             font-weight: 700;
-            color: #001166;
+            color: #087F8C;
             text-decoration: none;
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Manrope', sans-serif;
             z-index: 2100;
           }
 
@@ -71,7 +72,7 @@ function Navbar() {
             background: none;
             border: none;
             cursor: pointer;
-            color: #001166;
+            color: #087F8C;
             z-index: 2100;
           }
 
@@ -92,20 +93,20 @@ function Navbar() {
             display: flex;
             align-items: center;
             gap: 15px;
-            border-left: 2px solid rgba(0, 17, 102, 0.2);
+            border-left: 2px solid rgba(8, 127, 140, 0.2);
             padding-left: 20px;
           }
 
           .clean-nav-user-text {
             text-align: right;
-            color: #001166;
-            font-family: 'Poppins', sans-serif;
+            color: #087F8C;
+            font-family: 'Manrope', sans-serif;
           }
 
           .clean-nav-avatar {
             width: 40px;
             height: 40px;
-            background: #001166;
+            background: #087F8C;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -164,7 +165,7 @@ function Navbar() {
 
             .clean-nav-profile {
               border-left: none;
-              border-top: 1px solid rgba(0, 17, 102, 0.1);
+              border-top: 1px solid rgba(8, 127, 140, 0.1);
               padding-left: 0;
               padding-top: 20px;
               width: 100%;
@@ -188,7 +189,7 @@ function Navbar() {
           {isOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
 
-        <Link to="/" className="clean-nav-brand">OraVista</Link>
+        <Link to="/" className="clean-nav-brand"><BrandWordmark /></Link>
 
         <div className={`clean-nav-menu ${isOpen ? 'open' : ''}`}>
           <div className="clean-nav-links-wrapper">
@@ -204,7 +205,7 @@ function Navbar() {
               <p style={{ margin: 0, fontSize: '12px', opacity: 0.8 }}>Clinic Owner</p>
             </div>
             <div className="clean-nav-avatar">
-              <User color="white" size={20} />
+              <User color="var(--ov-on-color, #fff)" size={20} />
             </div>
           </div>
         </div>

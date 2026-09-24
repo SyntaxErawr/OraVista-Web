@@ -1,3 +1,4 @@
+import BrandWordmark from "./BrandWordmark";
 import React, { useState } from 'react';
 import Sidebar from './Sidebar';
 import { Menu } from 'lucide-react';
@@ -7,7 +8,7 @@ const AdminLayout = ({ children }) => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F4F7FE', flexDirection: 'column' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F3F9FA', flexDirection: 'column' }}>
       {/* Mobile Top Bar */}
       <header className="mobile-top-bar">
         <button 
@@ -17,7 +18,7 @@ const AdminLayout = ({ children }) => {
         >
           <Menu size={24} />
         </button>
-        <span style={{ fontWeight: 'bold', fontSize: '18px' }}>OraVista</span>
+        <span style={{ fontWeight: 'bold', fontSize: '18px' }}><BrandWordmark /></span>
         <div style={{ width: '24px' }}></div> {/* Spacer to center name */}
       </header>
 

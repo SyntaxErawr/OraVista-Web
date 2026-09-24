@@ -333,12 +333,12 @@ styleSheet.innerText = `
   }
   .clinical-notes-scrollbar::-webkit-scrollbar-thumb,
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(0, 17, 102, 0.15);
+    background: rgba(8, 127, 140, 0.15);
     border-radius: 3px;
   }
   .clinical-notes-scrollbar::-webkit-scrollbar-thumb:hover,
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 17, 102, 0.3);
+    background: rgba(8, 127, 140, 0.3);
   }
 `;
 document.head.appendChild(styleSheet);
@@ -347,7 +347,7 @@ document.head.appendChild(styleSheet);
       <div style={styles.container}>
         {/* ... HEADER CODE REMAINS SAME ... */}
 
-        <div style={styles.content}>
+        <div className="ov-workspace-content" style={styles.content}>
  <div className="dashboard-header-row" style={styles.topRow}>
             <div>
               <h1 className="responsive-title" style={styles.pageTitle}>Preventative & Predictive Analytics</h1>
@@ -398,7 +398,7 @@ document.head.appendChild(styleSheet);
                         <div style={styles.queueItem}>
                           <div style={styles.queueTop}>
                             <div style={styles.queueInfo}>
-                              <div style={styles.queueAvatar}><User size={16} color="#001166" /></div>
+                              <div style={styles.queueAvatar}><User size={16} color="#087F8C" /></div>
                               <div>
                                 <p style={styles.queueName}>{patient.name} <span style={styles.queueId}>({patient.patient_id})</span></p>
                                 <p style={styles.queueIssue}>Current Path: <strong>{patient.issue}</strong></p>
@@ -419,7 +419,7 @@ document.head.appendChild(styleSheet);
 
                           <div style={styles.queueBottom}>
                             <div style={styles.aiActionBox}>
-                              <BrainCircuit size={14} color="#4f46e5" style={{ marginTop: '2px' }} />
+                              <BrainCircuit size={14} color="#078493" style={{ marginTop: '2px' }} />
                               <div>
                                 <span style={styles.actionLabel}>Preventive Action:</span>
                                 <span style={styles.actionText}>{patient.action}</span>
@@ -443,7 +443,7 @@ document.head.appendChild(styleSheet);
 
               {/* 2. Treatment Outcome Predictions (DYNAMIC) */}
               <div
-                className="card-treatment-outcome"
+                className="card-treatment-outcome ov-panel"
                 style={{ ...styles.insightsCard, display: 'flex', flexDirection: 'column', cursor: 'pointer', transition: 'transform 0.2s', width: '100%' }}
                 onClick={() => {
                   if (treatmentOutcomes && treatmentOutcomes.length > 0) {
@@ -453,13 +453,13 @@ document.head.appendChild(styleSheet);
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <ActivitySquare size={20} color="#60a5fa" />
+                    <ActivitySquare size={20} color="#27B8C7" />
                     <h3 style={styles.cardTitleWhite}>2. Treatment Outcome Predictions</h3>
                   </div>
                 </div>
 
                 {isOutcomesLoading ? (
-                  <p style={{ color: 'white', textAlign: 'center', margin: 'auto' }}>Loading predictions...</p>
+                  <p style={{ color: "var(--ov-on-color, #fff)", textAlign: 'center', margin: 'auto' }}>Loading predictions...</p>
                 ) : treatmentOutcomes && treatmentOutcomes.length > 0 ? (
                   (() => {
                     const outcome = treatmentOutcomes[0];
@@ -476,7 +476,7 @@ document.head.appendChild(styleSheet);
                     );
                   })()
                 ) : (
-                  <p style={{ color: 'white', textAlign: 'center', margin: 'auto' }}>No outcomes available.</p>
+                  <p style={{ color: "var(--ov-on-color, #fff)", textAlign: 'center', margin: 'auto' }}>No outcomes available.</p>
                 )}
               </div>
 
@@ -489,7 +489,7 @@ document.head.appendChild(styleSheet);
               <div className="card-risk-stratification" style={styles.whiteCard}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <Users size={20} color="#001166" />
+                    <Users size={20} color="#087F8C" />
                     <h3 style={styles.cardTitleBlack}>5. Clinic Risk Stratification</h3>
                   </div>
                 </div>
@@ -558,7 +558,7 @@ document.head.appendChild(styleSheet);
                             <button
                               onClick={() => handlePredictNoShow(appt.appointment_id)}
                               disabled={predictingAppts[appt.appointment_id]}
-                              style={{ ...styles.reminderBtn, backgroundColor: '#4f46e5', opacity: predictingAppts[appt.appointment_id] ? 0.7 : 1 }}
+                              style={{ ...styles.reminderBtn, backgroundColor: '#078493', opacity: predictingAppts[appt.appointment_id] ? 0.7 : 1 }}
                             >
                               {predictingAppts[appt.appointment_id] ? "Processing..." : "Predict Risk"}
                             </button>
@@ -595,7 +595,7 @@ document.head.appendChild(styleSheet);
             <div className="card-diagnostic-findings" style={styles.whiteCard}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <ActivitySquare size={20} color="#001166" />
+                  <ActivitySquare size={20} color="#087F8C" />
                   <h3 style={styles.cardTitleBlack}>4. Patient Diagnostic Findings</h3>
                 </div>
               </div>
@@ -655,7 +655,7 @@ document.head.appendChild(styleSheet);
                                     padding: '2px 6px',
                                     borderRadius: '6px',
                                     backgroundColor: humanVerified ? '#10b981' : '#6b7280',
-                                    color: 'white',
+                                    color: "var(--ov-on-color, #fff)",
                                     fontWeight: '700'
                                   }}>
                                     {humanVerified ? 'Verified' : 'AI'}
@@ -718,7 +718,7 @@ document.head.appendChild(styleSheet);
               {/* Header */}
               <div style={styles.modalHeader}>
                 <div>
-                  <h2 style={{ margin: 0, color: "#001166" }}>{activePatient?.name}</h2>
+                  <h2 style={{ margin: 0, color: "#087F8C" }}>{activePatient?.name}</h2>
                   <p style={{ margin: 0, color: "#666", fontSize: "14px" }}>
                     Current Path: <strong>{activePatient?.issue}</strong>
                   </p>
@@ -737,7 +737,7 @@ document.head.appendChild(styleSheet);
                 ) : (
                   <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
                     <thead>
-                      <tr style={{ backgroundColor: "#001166", color: "white" }}>
+                      <tr className="ov-color-surface" style={{ "--ov-on-color": "var(--ov-ink)", backgroundColor: "var(--ov-primary)", color: "var(--ov-on-color, #fff)" }}>
                         <th style={{ padding: "12px 15px" }}>Indicator</th>
                         <th style={{ padding: "12px 15px" }}>Value</th>
                       </tr>
@@ -775,7 +775,7 @@ document.head.appendChild(styleSheet);
             <div style={styles.modalContent}>
               <div style={styles.modalHeader}>
                 <div>
-                  <h2 style={{ margin: 0, color: "#001166" }}>{stratPatientsModal.riskLevel} Risk Patients</h2>
+                  <h2 style={{ margin: 0, color: "#087F8C" }}>{stratPatientsModal.riskLevel} Risk Patients</h2>
                   <p style={{ margin: 0, color: "#666", fontSize: "14px" }}>
                     Patients assessed as {stratPatientsModal.riskLevel} risk level
                   </p>
@@ -793,7 +793,7 @@ document.head.appendChild(styleSheet);
                 ) : stratPatientsModal.patients.length > 0 ? (
                   <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
                     <thead>
-                      <tr style={{ backgroundColor: "#001166", color: "white" }}>
+                      <tr className="ov-color-surface" style={{ "--ov-on-color": "var(--ov-ink)", backgroundColor: "var(--ov-primary)", color: "var(--ov-on-color, #fff)" }}>
                         <th style={{ padding: "12px 15px" }}>ID</th>
                         <th style={{ padding: "12px 15px" }}>Patient Name</th>
                         <th style={{ padding: "12px 15px" }}>Risk Score</th>
@@ -804,7 +804,7 @@ document.head.appendChild(styleSheet);
                       {stratPatientsModal.patients.map((patient, index) => (
                         <tr key={index} style={{ borderBottom: "1px solid #eee" }}>
                           <td style={{ padding: "12px 15px", color: "#333", fontWeight: "600" }}>{patient.patient_id}</td>
-                          <td style={{ padding: "12px 15px", color: "#001166", fontWeight: "600" }}>{patient.full_name}</td>
+                          <td style={{ padding: "12px 15px", color: "#087F8C", fontWeight: "600" }}>{patient.full_name}</td>
                           <td style={{ padding: "12px 15px" }}>
                             <span style={{
                               padding: "4px 8px",
@@ -838,32 +838,32 @@ document.head.appendChild(styleSheet);
 }
 
 const styles = {
-  container: { display: 'flex', flexDirection: 'column', width: '100%', minHeight: '100vh', backgroundColor: '#f4f6f9', fontFamily: "'Poppins', sans-serif" },
-  header: { height: '80px', background: '#001166', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px', position: 'sticky', top: 0, zIndex: 10 },
-  searchBox: { display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.1)', padding: '10px 20px', borderRadius: '12px', width: '300px' },
-  searchInput: { border: 'none', background: 'transparent', marginLeft: '10px', outline: 'none', width: '100%', color: 'white' },
+  container: { display: 'flex', flexDirection: 'column', width: '100%', minHeight: '100vh', backgroundColor: '#f4f6f9', fontFamily: "'Manrope', sans-serif" },
+  header: { "--ov-on-color": "var(--ov-ink)", height: '80px', background: "var(--ov-primary)", display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px', position: 'sticky', top: 0, zIndex: 10 },
+  searchBox: { display: 'flex', alignItems: 'center', background: "var(--ov-on-wash, rgba(255,255,255,0.1))", padding: '10px 20px', borderRadius: '12px', width: '300px' },
+  searchInput: { border: 'none', background: 'transparent', marginLeft: '10px', outline: 'none', width: '100%', color: "var(--ov-on-color, #fff)" },
   headerActions: { display: 'flex', alignItems: 'center', gap: '25px' },
-  profileHeader: { display: 'flex', alignItems: 'center', gap: '15px', borderLeft: '1px solid rgba(255,255,255,0.2)', paddingLeft: '20px' },
+  profileHeader: { display: 'flex', alignItems: 'center', gap: '15px', borderLeft: "1px solid var(--ov-on-line, rgba(255,255,255,0.2))", paddingLeft: '20px' },
   profileText: { textAlign: 'right' },
-  userName: { margin: 0, fontWeight: 'bold', fontSize: '14px', color: 'white' },
-  userRole: { margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.6)' },
+  userName: { margin: 0, fontWeight: 'bold', fontSize: '14px', color: "var(--ov-on-color, #fff)" },
+  userRole: { margin: 0, fontSize: '12px', color: "var(--ov-on-muted, rgba(255,255,255,0.75))" },
   avatar: { width: '40px', height: '40px', background: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' },
 
   content: { padding: '40px' },
   topRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' },
-  pageTitle: { fontSize: '28px', fontWeight: '800', color: '#001166', margin: 0 },
+  pageTitle: { fontSize: '28px', fontWeight: '800', color: '#087F8C', margin: 0 },
   pageSubtitle: { fontSize: '14px', color: '#666' },
-  aiBadge: { backgroundColor: '#e0e7ff', color: '#4f46e5', padding: '10px 20px', borderRadius: '30px', fontWeight: '700', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid #c7d2fe' },
+  aiBadge: { backgroundColor: '#DDF5F7', color: '#078493', padding: '10px 20px', borderRadius: '30px', fontWeight: '700', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid #c7d2fe' },
 
   mainLayout: { display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '30px' },
   sectionContainer: { display: 'flex', flexDirection: 'column', gap: '20px', margin: "20px" },
-  sectionHeading: { fontSize: '20px', fontWeight: '800', color: '#001166', marginTop: "20px", display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '2px solid #e0e7ff', paddingBottom: '10px' },
+  sectionHeading: { fontSize: '20px', fontWeight: '800', color: '#087F8C', marginTop: "20px", display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '2px solid #DDF5F7', paddingBottom: '10px' },
   rowGridClinical: { display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '30px' },
   rowGridOperations: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' },
-  navButton: { padding: '5px 12px', borderRadius: '5px', border: '1px solid #e0e7ff', background: 'white', color: '#001166', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' },
+  navButton: { padding: '5px 12px', borderRadius: '5px', border: '1px solid #DDF5F7', background: 'white', color: '#087F8C', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' },
 
   whiteCard: { background: 'white', borderRadius: '20px', padding: '25px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', height: '100%' },
-  cardTitleBlack: { fontSize: '18px', fontWeight: '700', color: '#001166', margin: 0 },
+  cardTitleBlack: { fontSize: '18px', fontWeight: '700', color: '#087F8C', margin: 0 },
 
   barChartContainer: { display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '20px' },
   barRow: { display: 'flex', flexDirection: 'column', gap: '6px' },
@@ -871,31 +871,31 @@ const styles = {
   barTrack: { width: '100%', height: '10px', backgroundColor: '#f0f0f0', borderRadius: '5px', overflow: 'hidden' },
   barFill: { height: '100%', borderRadius: '5px' },
 
-  insightsCard: { background: '#001166', borderRadius: '20px', padding: '25px', color: 'white', boxShadow: '0 10px 30px rgba(0,17,102,0.1)', height: '100%' },
+  insightsCard: { "--ov-on-color": "var(--ov-ink)", background: "var(--ov-primary)", borderRadius: '20px', padding: '25px', color: "var(--ov-on-color, #fff)", boxShadow: '0 10px 30px rgba(8, 127, 140,0.1)', height: '100%' },
   cardTitleWhite: { fontSize: '18px', fontWeight: '700', margin: 0 },
-  insightItem: { display: 'flex', gap: '15px', marginBottom: '15px', background: 'rgba(255,255,255,0.05)', padding: '15px', borderRadius: '15px', alignItems: 'center' },
-  scoreCircleSmall: { width: '45px', height: '45px', borderRadius: '50%', border: '3px solid #60a5fa', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: '800', color: '#60a5fa', flexShrink: 0 },
+  insightItem: { display: 'flex', gap: '15px', marginBottom: '15px', background: "var(--ov-on-wash, rgba(255,255,255,0.05))", padding: '15px', borderRadius: '15px', alignItems: 'center' },
+  scoreCircleSmall: { width: '45px', height: '45px', borderRadius: '50%', border: '3px solid #27B8C7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: '800', color: '#27B8C7', flexShrink: 0 },
   insightTitle: { margin: '0 0 5px 0', fontSize: '15px', fontWeight: '700' },
   insightText: { margin: 0, fontSize: '12px', opacity: 0.8, lineHeight: '1.4' },
 
   noShowItem: { display: 'flex', justifyContent: 'space-between', padding: '15px', border: '1px solid #f0f0f0', borderRadius: '12px', backgroundColor: '#fafbfc' },
-  noShowName: { fontSize: '15px', fontWeight: '700', color: '#001166', margin: '0 0 5px 0' },
+  noShowName: { fontSize: '15px', fontWeight: '700', color: '#087F8C', margin: '0 0 5px 0' },
   noShowTime: { fontSize: '13px', color: '#444', margin: '0 0 8px 0', fontWeight: '600' },
   noShowReason: { fontSize: '12px', color: '#dc2626', margin: 0 },
   probBadge: { backgroundColor: '#fef2f2', color: '#dc2626', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', border: '1px solid #fecaca' },
-  reminderBtn: { backgroundColor: '#001166', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' },
+  reminderBtn: { "--ov-on-color": "var(--ov-ink)", backgroundColor: "var(--ov-primary)", color: "var(--ov-on-color, #fff)", border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' },
 
   queueCard: { background: 'white', borderRadius: '20px', padding: '30px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', height: '100%' },
   cardHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' },
-  viewAll: { fontSize: '13px', color: '#4f46e5', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center' },
+  viewAll: { fontSize: '13px', color: '#078493', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center' },
   queueDesc: { fontSize: '13px', color: '#666', marginBottom: '25px' },
 
   queueList: { display: 'flex', flexDirection: 'column', gap: '20px' },
   queueItem: { border: '1px solid #eee', borderRadius: '15px', padding: '20px', backgroundColor: '#fafbfc' },
   queueTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' },
   queueInfo: { display: 'flex', gap: '15px' },
-  queueAvatar: { width: '40px', height: '40px', backgroundColor: '#e0e7ff', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  queueName: { margin: '0 0 4px 0', fontSize: '15px', fontWeight: '700', color: '#001166' },
+  queueAvatar: { width: '40px', height: '40px', backgroundColor: '#DDF5F7', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  queueName: { margin: '0 0 4px 0', fontSize: '15px', fontWeight: '700', color: '#087F8C' },
   queueId: { fontSize: '12px', color: '#888', fontWeight: '500' },
   queueIssue: { margin: 0, fontSize: '13px', color: '#dc2626' },
   scoreCircle: { width: '45px', height: '45px', borderRadius: '50%', border: '3px solid #dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: '800', color: '#dc2626' },
@@ -905,9 +905,9 @@ const styles = {
 
   queueBottom: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #eee', paddingTop: '15px' },
   aiActionBox: { display: 'flex', gap: '10px', alignItems: 'flex-start', flex: 1 },
-  actionLabel: { display: 'block', fontSize: '11px', color: '#4f46e5', fontWeight: '700', textTransform: 'uppercase', marginBottom: '2px' },
+  actionLabel: { display: 'block', fontSize: '11px', color: '#078493', fontWeight: '700', textTransform: 'uppercase', marginBottom: '2px' },
   actionText: { display: 'block', fontSize: '13px', color: '#333', fontWeight: '500' },
-  reviewBtn: { backgroundColor: '#001166', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' },
+  reviewBtn: { "--ov-on-color": "var(--ov-ink)", backgroundColor: "var(--ov-primary)", color: "var(--ov-on-color, #fff)", border: 'none', padding: '10px 20px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' },
 
   modalOverlay: {
     position: "fixed",
@@ -952,11 +952,11 @@ styleSheet.innerText = `
     background: transparent;
   }
   .clinical-notes-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(0, 17, 102, 0.15);
+    background: rgba(8, 127, 140, 0.15);
     border-radius: 3px;
   }
   .clinical-notes-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 17, 102, 0.3);
+    background: rgba(8, 127, 140, 0.3);
   }
 `;
 document.head.appendChild(styleSheet);

@@ -116,26 +116,26 @@ function StaffSettings() {
     <AdminLayout>
       <div style={styles.container}>
         {/* HEADER - Staff Profile */}
-        <header style={styles.header} className="dashboard-page-header">
+        <header style={styles.header} className="dashboard-page-header ov-header">
           <div style={styles.searchBox} className="header-search-box">
-            <Search size={18} color="rgba(255,255,255,0.6)" />
+            <Search size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
             <input type="text" placeholder="Search patients, appointments..." style={styles.searchInput} />
           </div>
           <div style={styles.headerActions} className="header-actions">
-            <Bell size={20} color="white" />
-            <MessageSquare size={20} color="white" />
+            <Bell size={20} color="var(--ov-on-color, #fff)" />
+            <MessageSquare size={20} color="var(--ov-on-color, #fff)" />
             <div style={styles.profile} className="header-profile">
               <div style={styles.profileText} className="header-profile-text">
                 <p style={styles.userName}>{profileData.firstName} {profileData.lastName}</p>
                 <p style={styles.userRole}>Receptionist</p>
               </div>
-              <div style={styles.avatar}><User size={20} color="#001166" /></div>
+              <div style={styles.avatar}><User size={20} color="#087F8C" /></div>
             </div>
           </div>
         </header>
 
         {/* CONTENT AREA */}
-        <div style={styles.content} className="settings-content">
+        <div style={styles.content} className="settings-content ov-workspace-content">
           <div style={styles.titleSection}>
             <h1 style={styles.pageTitle}>Settings</h1>
             <p style={styles.pageSubtitle}>Manage your profile and account security</p>
@@ -144,7 +144,7 @@ function StaffSettings() {
           <div style={styles.mainGrid} className="settings-grid">
             {/* LEFT COLUMN: Profile & Password */}
             <div style={styles.leftCol}>
-              <div style={styles.formCard}>
+              <div className="ov-panel" style={styles.formCard}>
                 <div style={styles.cardHeader}>
                   <User size={18} style={{ marginRight: '10px' }} />
                   <h3 style={styles.cardTitle}>Account Settings</h3>
@@ -192,7 +192,7 @@ function StaffSettings() {
                 <button style={styles.saveBtn} onClick={handleProfileUpdate}>Update Profile</button>
               </div>
 
-              <div style={{ ...styles.formCard, marginTop: '25px' }}>
+              <div className="ov-panel" style={{ ...styles.formCard, marginTop: '25px' }}>
                 <div style={styles.cardHeader}>
                   <Lock size={18} style={{ marginRight: '10px' }} />
                   <h3 style={styles.cardTitle}>Change Password</h3>
@@ -209,7 +209,7 @@ function StaffSettings() {
                       style={styles.input}
                     />
                     <button type="button" onClick={() => setShowCurrent(!showCurrent)} style={styles.eyeBtn}>
-                      {showCurrent ? <EyeOff size={18} color="rgba(255,255,255,0.6)" /> : <Eye size={18} color="rgba(255,255,255,0.6)" />}
+                      {showCurrent ? <EyeOff size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" /> : <Eye size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />}
                     </button>
                   </div>
                 </div>
@@ -225,7 +225,7 @@ function StaffSettings() {
                       style={styles.input}
                     />
                     <button type="button" onClick={() => setShowNew(!showNew)} style={styles.eyeBtn}>
-                      {showNew ? <EyeOff size={18} color="rgba(255,255,255,0.6)" /> : <Eye size={18} color="rgba(255,255,255,0.6)" />}
+                      {showNew ? <EyeOff size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" /> : <Eye size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />}
                     </button>
                   </div>
 
@@ -260,7 +260,7 @@ function StaffSettings() {
                       style={styles.input}
                     />
                     <button type="button" onClick={() => setShowConfirm(!showConfirm)} style={styles.eyeBtn}>
-                      {showConfirm ? <EyeOff size={18} color="rgba(255,255,255,0.6)" /> : <Eye size={18} color="rgba(255,255,255,0.6)" />}
+                      {showConfirm ? <EyeOff size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" /> : <Eye size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />}
                     </button>
                   </div>
                 </div>
@@ -271,7 +271,7 @@ function StaffSettings() {
 
             {/* RIGHT COLUMN: Permissions & Sessions */}
             <div style={styles.rightCol}>
-              <div style={styles.infoCard}>
+              <div className="ov-panel" style={styles.infoCard}>
                 <div style={styles.cardHeader}>
                   <Shield size={18} style={{ marginRight: '10px' }} />
                   <h3 style={styles.cardTitle}>Your Permissions</h3>
@@ -295,7 +295,7 @@ function StaffSettings() {
                 </p>
               </div>
 
-              <div style={{ ...styles.infoCard, marginTop: '25px' }}>
+              <div className="ov-panel" style={{ ...styles.infoCard, marginTop: '25px' }}>
                 <h3 style={{ ...styles.cardTitle, marginBottom: '15px' }}>System Status</h3>
                 <div style={styles.sessionItem}><p style={styles.sessionLabel}>App Version</p><p style={styles.sessionVal}>v1.0.4-beta</p></div>
                 <div style={styles.sessionItem}><p style={styles.sessionLabel}>Server Status</p><p style={{ ...styles.sessionVal, color: '#4ade80' }}>Online</p></div>
@@ -311,44 +311,44 @@ function StaffSettings() {
 
 const styles = {
   container: { display: 'flex', flexDirection: 'column', width: '100%' },
-  header: { height: '80px', background: '#001166', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px', position: 'sticky', top: 0, zIndex: 10 },
-  searchBox: { display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.1)', padding: '10px 20px', borderRadius: '12px', width: '350px' },
-  searchInput: { border: 'none', background: 'transparent', marginLeft: '10px', outline: 'none', width: '100%', color: 'white' },
+  header: { "--ov-on-color": "var(--ov-ink)", height: '80px', background: "var(--ov-primary)", display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px', position: 'sticky', top: 0, zIndex: 10 },
+  searchBox: { display: 'flex', alignItems: 'center', background: "var(--ov-on-wash, rgba(255,255,255,0.1))", padding: '10px 20px', borderRadius: '12px', width: '350px' },
+  searchInput: { border: 'none', background: 'transparent', marginLeft: '10px', outline: 'none', width: '100%', color: "var(--ov-on-color, #fff)" },
   headerActions: { display: 'flex', alignItems: 'center', gap: '25px' },
-  profile: { display: 'flex', alignItems: 'center', gap: '15px', borderLeft: '1px solid rgba(255,255,255,0.2)', paddingLeft: '20px' },
+  profile: { display: 'flex', alignItems: 'center', gap: '15px', borderLeft: "1px solid var(--ov-on-line, rgba(255,255,255,0.2))", paddingLeft: '20px' },
   profileText: { textAlign: 'right' },
-  userName: { margin: 0, fontWeight: 'bold', fontSize: '14px', color: 'white' },
-  userRole: { margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.6)' },
+  userName: { margin: 0, fontWeight: 'bold', fontSize: '14px', color: "var(--ov-on-color, #fff)" },
+  userRole: { margin: 0, fontSize: '12px', color: "var(--ov-on-muted, rgba(255,255,255,0.75))" },
   avatar: { width: '40px', height: '40px', background: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' },
 
-  content: { padding: '40px', backgroundColor: '#F4F7FE', minHeight: 'calc(100vh - 80px)' },
+  content: { padding: '40px', backgroundColor: '#F3F9FA', minHeight: 'calc(100vh - 80px)' },
   titleSection: { marginBottom: '30px' },
-  pageTitle: { fontSize: '28px', fontWeight: '700', color: '#001166', margin: 0 },
+  pageTitle: { fontSize: '28px', fontWeight: '700', color: '#087F8C', margin: 0 },
   pageSubtitle: { fontSize: '14px', color: '#666', marginTop: '5px' },
 
   mainGrid: { display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: '25px' },
-  formCard: { background: '#001166', borderRadius: '15px', padding: '25px', color: 'white' },
+  formCard: { "--ov-on-color": "var(--ov-ink)", background: "var(--ov-primary)", borderRadius: '15px', padding: '25px', color: "var(--ov-on-color, #fff)" },
   cardHeader: { display: 'flex', alignItems: 'center', marginBottom: '20px' },
   cardTitle: { margin: 0, fontSize: '16px', fontWeight: 'bold' },
 
   inputGroup: { marginBottom: '20px' },
   label: { display: 'block', fontSize: '12px', marginBottom: '8px', opacity: 0.8 },
   inputWrapper: { position: 'relative', display: 'flex', alignItems: 'center' },
-  input: { width: '100%', padding: '12px 45px 12px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: 'white', outline: 'none', boxSizing: 'border-box' },
+  input: { width: '100%', padding: '12px 45px 12px 12px', borderRadius: '8px', border: "1px solid var(--ov-on-line, rgba(255,255,255,0.1))", background: "var(--ov-on-wash, rgba(255,255,255,0.05))", color: "var(--ov-on-color, #fff)", outline: 'none', boxSizing: 'border-box' },
   eyeBtn: { position: 'absolute', right: '15px', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' },
-  saveBtn: { padding: '10px 25px', background: 'white', color: '#001166', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' },
+  saveBtn: { padding: '10px 25px', background: 'white', color: '#087F8C', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' },
 
   validationContainer: { marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '6px' },
   valItem: { margin: 0, fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '600', transition: 'color 0.2s' },
 
-  infoCard: { background: '#001166', borderRadius: '15px', padding: '25px', color: 'white' },
-  roleBoxActive: { background: 'white', color: '#001166', borderRadius: '12px', padding: '15px', marginBottom: '15px' },
+  infoCard: { "--ov-on-color": "var(--ov-ink)", background: "var(--ov-primary)", borderRadius: '15px', padding: '25px', color: "var(--ov-on-color, #fff)" },
+  roleBoxActive: { background: 'white', color: '#087F8C', borderRadius: '12px', padding: '15px', marginBottom: '15px' },
   roleHeader: { display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' },
   roleName: { margin: 0, fontWeight: 'bold', fontSize: '14px' },
   roleList: { margin: 0, paddingLeft: '20px', fontSize: '11px', lineHeight: '1.8' },
   permissionNote: { fontSize: '11px', opacity: 0.6, fontStyle: 'italic', textAlign: 'center' },
 
-  sessionItem: { display: 'flex', justifyContent: 'space-between', marginBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px' },
+  sessionItem: { display: 'flex', justifyContent: 'space-between', marginBottom: '12px', borderBottom: "1px solid var(--ov-on-line, rgba(255,255,255,0.05))", paddingBottom: '8px' },
   sessionLabel: { margin: 0, fontSize: '11px', opacity: 0.6 },
   sessionVal: { margin: 0, fontSize: '11px', fontWeight: '600' }
 };
