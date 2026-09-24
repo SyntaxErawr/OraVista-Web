@@ -119,7 +119,7 @@ function LoginPage() {
 
       const data = await response.json();
 
-      if (response.ok) {
+      if (response.ok && /^\d{6}$/.test(String(data.generatedOtp || ""))) {
         setLoginOtpSent(String(data.generatedOtp || ""));
         setLoginOtpMessage("Security code sent! Please check your email.");
       } else {
@@ -378,7 +378,11 @@ function LoginPage() {
 
             <h2 style={{ color: brandBlue, fontWeight: "800", marginBottom: "10px" }}>2-Step Verification</h2>
             <p style={{ fontSize: "13px", color: "#666", marginBottom: "20px" }}>
-              For your security, we've sent a verification code to your email. Please enter it below to complete login.
+              {isLoginOtpLoading
+                ? "Requesting your verification code. Please wait."
+                : loginOtpSent
+                  ? "A verification code was sent to your email. Enter it below to complete login."
+                  : "We couldn't send your verification code. Try Resend Code. If this continues, contact the clinic for help."}
             </p>
 
             <input aria-label="Enter 6-digit code"
@@ -388,22 +392,24 @@ function LoginPage() {
               onChange={(e) => setLoginOtpInput(e.target.value)}
               style={{ ...inputStyle(false), marginBottom: "15px", letterSpacing: "5px", textAlign: "center", fontSize: "18px" }}
               maxLength="6"
-              disabled={isLoginOtpLoading}
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              disabled={isLoginOtpLoading || !loginOtpSent}
             />
 
             <button
               onClick={verifyLoginOTP}
-              disabled={isLoginOtpLoading}
+              disabled={isLoginOtpLoading || !loginOtpSent || !/^\d{6}$/.test(loginOtpInput)}
               style={{ "--ov-on-color": "var(--ov-ink)", width: "100%", padding: "12px", backgroundColor: "var(--ov-primary)", color: "var(--ov-on-color, #fff)", border: "none", borderRadius: "10px", fontWeight: "700", cursor: "pointer", opacity: isLoginOtpLoading ? 0.7 : 1 }}
             >
               {isLoginOtpLoading ? "Sending Code..." : "Verify & Login"}
             </button>
 
-            <button className="ov-ui-button" onClick={() => sendLoginOTP(fullUser.email)} style={{ marginTop: "15px", fontSize: "12px", color: brandBlue, cursor: "pointer", textDecoration: "underline" }} type="button">
+            <button className="ov-ui-button" disabled={isLoginOtpLoading} onClick={() => sendLoginOTP(fullUser.email)} style={{ marginTop: "15px", fontSize: "12px", color: brandBlue, cursor: "pointer", textDecoration: "underline" }} type="button">
               Resend Code
             </button>
 
-            {loginOtpMessage && <p style={{ color: loginOtpMessage.includes("sent") ? "green" : "red", fontSize: "12px", marginTop: "10px", fontWeight: "600" }}>{loginOtpMessage}</p>}
+            {loginOtpMessage && <p role={loginOtpSent ? "status" : "alert"} style={{ color: loginOtpSent ? "green" : "red", fontSize: "12px", marginTop: "10px", fontWeight: "600" }}>{loginOtpMessage}</p>}
           </div>
         </PatientDialog>
       )}

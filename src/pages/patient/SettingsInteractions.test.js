@@ -83,6 +83,40 @@ test('login cannot accept an empty OTP after email delivery fails', async () => 
   fireEvent.click(screen.getByRole('button', { name: /^Log ?in$/i }));
   await screen.findByText('Delivery failed.');
   fireEvent.click(screen.getByRole('button', { name: 'Verify & Login' }));
-  await waitFor(() => expect(screen.getByText('Invalid code. Please try again.')).toBeInTheDocument());
+  expect(screen.getByRole('button', { name: 'Verify & Login' })).toBeDisabled();
+  expect(screen.getByLabelText('Enter 6-digit code')).toBeDisabled();
+  expect(screen.getByRole('alert')).toHaveTextContent('Delivery failed.');
+  expect(screen.getByText(/We couldn't send your verification code/)).toBeInTheDocument();
   expect(screen.queryByText(/Login Successful/i)).not.toBeInTheDocument();
+});
+
+test('OTP resend keeps the existing API contract and enables verification only after delivery succeeds', async () => {
+  let finishResend;
+  let requests = 0;
+  global.fetch.mockImplementation(async url => {
+    if (url.endsWith('/api/login')) return reply({ user: { id: 7, email: 'test@example.test' } });
+    requests++;
+    return requests === 1 ? reply({ message: 'Failed to send email.' }, false)
+      : new Promise(resolve => { finishResend = resolve; });
+  });
+  render(<LoginPage />);
+  fireEvent.change(screen.getByPlaceholderText(/email/i), { target: { value: 'test@example.test' } });
+  fireEvent.change(screen.getByPlaceholderText(/password/i), { target: { value: 'OldPassword1!' } });
+  fireEvent.click(screen.getByRole('button', { name: /^Log ?in$/i }));
+  await screen.findByText('Failed to send email.');
+  const resend = screen.getByRole('button', { name: 'Resend Code' });
+  fireEvent.click(resend);
+  expect(resend).toBeDisabled();
+  expect(screen.getByText('Requesting your verification code. Please wait.')).toBeInTheDocument();
+  const otpCalls = global.fetch.mock.calls.filter(([url]) => url.endsWith('/api/send-otp'));
+  expect(otpCalls).toHaveLength(2);
+  otpCalls.forEach(([, options]) => {
+    expect(options.method).toBe('POST');
+    expect(JSON.parse(options.body)).toEqual({ email: 'test@example.test', action: 'login' });
+  });
+  finishResend(reply({ generatedOtp: '123456' }));
+  await screen.findByText('Security code sent! Please check your email.');
+  expect(screen.getByRole('button', { name: 'Verify & Login' })).toBeDisabled();
+  fireEvent.change(screen.getByLabelText('Enter 6-digit code'), { target: { value: '123456' } });
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Verify & Login' })).toBeEnabled());
 });
