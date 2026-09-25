@@ -1,6 +1,7 @@
+import { RoleNotifications } from '../../components/ClinicPortalTools';
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/AdminLayout';
-import { Search, Bell, MessageSquare, User, Eye, Edit, Plus, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, User, Eye, Edit, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 
 function AdminDentistList() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -77,7 +78,7 @@ function AdminDentistList() {
             cursor: pointer;
             padding: 5px;
           }
-          
+
           .mobile-search-collapsible {
             display: none;
           }
@@ -86,7 +87,7 @@ function AdminDentistList() {
           .table-container-scrollable {
             overflow-x: auto;
           }
-          
+
           .dentist-table {
             width: 100%;
             min-width: 800px; /* Forces scrolling on small screens instead of breaking layout */
@@ -170,8 +171,8 @@ function AdminDentistList() {
               {isSearchOpen ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
             </button>
 
-            <Bell size={20} color="var(--ov-on-color, #fff)" style={{ cursor: 'pointer' }} />
-            <MessageSquare size={20} color="var(--ov-on-color, #fff)" style={{ cursor: 'pointer' }} />
+            <RoleNotifications />
+
             <div style={styles.profile} className="header-profile">
               <div style={styles.profileText} className="header-profile-text">
                 <p style={styles.userName}>Admin User</p>

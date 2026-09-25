@@ -1,6 +1,7 @@
+import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTools';
 import React from 'react';
 import AdminLayout from '../../components/AdminLayout';
-import { Search, Bell, MessageSquare, User, ZoomIn, RotateCw, Copy } from 'lucide-react';
+import { Search, User, ZoomIn, RotateCw, Copy } from 'lucide-react';
 
 function AdminDiagnostics() {
   const diagnosticInsights = [
@@ -17,11 +18,11 @@ function AdminDiagnostics() {
         <header className="ov-header" style={styles.header}>
           <div style={styles.searchBox}>
             <Search size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
-            <input type="text" placeholder="Search patients, appointments..." style={styles.searchInput} />
+            <PortalSearch style={styles.searchInput} />
           </div>
           <div style={styles.headerActions}>
-            <Bell size={20} color="var(--ov-on-color, #fff)" />
-            <MessageSquare size={20} color="var(--ov-on-color, #fff)" />
+            <RoleNotifications />
+
             <div style={styles.profile}>
               <div style={styles.profileText}>
                 <p style={styles.userName}>Admin User</p>
@@ -58,7 +59,7 @@ function AdminDiagnostics() {
 
           {/* MAIN DIAGNOSTIC GRID */}
           <div style={styles.mainGrid}>
-            
+
             {/* LEFT: X-RAY VIEWER */}
             <div className="ov-panel" style={styles.viewerCard}>
               <div style={styles.viewerHeader}>
@@ -135,7 +136,7 @@ const styles = {
   sectionTitle: { fontSize: '16px', fontWeight: '700', margin: 0 },
   viewerActions: { display: 'flex', gap: '10px' },
   vBtn: { background: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: '600', color: '#087F8C', display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' },
-  
+
   xrayPlaceholder: { height: '400px', background: "var(--ov-on-wash, rgba(255,255,255,0.05))", borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: "1px dashed var(--ov-on-line, rgba(255,255,255,0.2))" },
   xrayCircle: { width: '80px', height: '80px', background: "var(--ov-on-wash, rgba(255,255,255,0.1))", borderRadius: '50%', marginBottom: '15px' },
   xrayText: { margin: 0, fontWeight: '600', fontSize: '14px' },

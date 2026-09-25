@@ -1,10 +1,11 @@
+import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTools';
 import React, { useState, useRef, useEffect } from 'react';
 
 import { useSearchParams } from 'react-router-dom';
 
 import AdminLayout from '../../components/AdminLayout';
 
-import { Search, Bell, MessageSquare, User, ZoomIn, RotateCw, UploadCloud, CheckCircle, X, Activity, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, User, ZoomIn, RotateCw, UploadCloud, CheckCircle, X, Activity, ChevronDown, ChevronUp } from 'lucide-react';
 
 
 
@@ -952,7 +953,7 @@ function DentistDiagnostics() {
 
         .dd-container { display: flex; flex-direction: column; width: 100%; }
 
-        
+
 
         /* HEADER */
 
@@ -1000,7 +1001,7 @@ function DentistDiagnostics() {
 
           .dd-header { padding: 0 15px; justify-content: flex-end; position: relative; }
 
-          
+
 
           .dd-search-wrapper { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); z-index: 20; }
 
@@ -1062,7 +1063,7 @@ function DentistDiagnostics() {
 
               <Search className="dd-search-icon" size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
 
-              <input type="text" placeholder="Search diagnostics..." className="dd-search-input" />
+              <PortalSearch className="dd-search-input" />
 
               <button className="dd-mobile-toggle" onClick={() => setIsSearchExpanded(!isSearchExpanded)}>
 
@@ -1076,9 +1077,9 @@ function DentistDiagnostics() {
 
           <div className={`dd-header-actions ${isSearchExpanded ? 'hidden' : ''}`}>
 
-            <Bell size={20} color="var(--ov-on-color, #fff)" />
+            <RoleNotifications />
 
-            <MessageSquare size={20} color="var(--ov-on-color, #fff)" />
+
 
             <div className="dd-profile">
 

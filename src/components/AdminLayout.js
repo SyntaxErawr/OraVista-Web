@@ -2,13 +2,14 @@ import BrandWordmark from "./BrandWordmark";
 import React, { useState } from 'react';
 import Sidebar from './Sidebar';
 import { Menu } from 'lucide-react';
+import { ClinicPortalProvider } from './ClinicPortalTools';
 
 const AdminLayout = ({ children }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F3F9FA', flexDirection: 'column' }}>
+    <ClinicPortalProvider><div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F3F9FA', flexDirection: 'column' }}>
       {/* Mobile Top Bar */}
       <header className="mobile-top-bar">
         <button 
@@ -48,7 +49,7 @@ const AdminLayout = ({ children }) => {
           {children}
         </main>
       </div>
-    </div>
+    </div></ClinicPortalProvider>
   );
 };
 

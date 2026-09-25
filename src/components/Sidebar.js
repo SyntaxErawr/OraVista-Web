@@ -49,6 +49,7 @@ const Sidebar = ({ onToggle, isMobileOpen, onMobileClose }) => {
       { name: 'Settings', path: '/staff/settings', icon: <Settings size={20}/> },
     ],
     dentist: [
+      { name: 'Appointments', path: '/dentist/appointments', icon: <Calendar size={20}/> },
       { name: 'Dashboard', path: '/dentist/dashboard', icon: <LayoutDashboard size={20}/> },
       { name: 'Patient List', path: '/dentist/patients', icon: <Users size={20}/> },
       { name: 'Profile', path: '/dentist/profile', icon: <UserRound size={20}/> },

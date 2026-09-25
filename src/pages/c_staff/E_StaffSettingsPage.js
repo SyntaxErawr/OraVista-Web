@@ -1,6 +1,7 @@
+import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTools';
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/AdminLayout';
-import { Search, Bell, MessageSquare, User, Shield, Lock, Briefcase, Eye, EyeOff, CheckCircle2, XCircle } from 'lucide-react';
+import { Search, User, Shield, Lock, Briefcase, Eye, EyeOff, CheckCircle2, XCircle } from 'lucide-react';
 
 function StaffSettings() {
   // 1. Load User ID and Profile State
@@ -119,11 +120,11 @@ function StaffSettings() {
         <header style={styles.header} className="dashboard-page-header ov-header">
           <div style={styles.searchBox} className="header-search-box">
             <Search size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
-            <input type="text" placeholder="Search patients, appointments..." style={styles.searchInput} />
+            <PortalSearch style={styles.searchInput} />
           </div>
           <div style={styles.headerActions} className="header-actions">
-            <Bell size={20} color="var(--ov-on-color, #fff)" />
-            <MessageSquare size={20} color="var(--ov-on-color, #fff)" />
+            <RoleNotifications />
+
             <div style={styles.profile} className="header-profile">
               <div style={styles.profileText} className="header-profile-text">
                 <p style={styles.userName}>{profileData.firstName} {profileData.lastName}</p>

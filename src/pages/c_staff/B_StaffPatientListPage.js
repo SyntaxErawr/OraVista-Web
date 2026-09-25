@@ -1,7 +1,8 @@
+import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTools';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/AdminLayout';
-import { Search, Bell, MessageSquare, User, Eye, Edit, Plus, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, User, Eye, Edit, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 
 function StaffPatientList() {
   const navigate = useNavigate();
@@ -62,11 +63,7 @@ function StaffPatientList() {
           <div style={styles.headerActions} className="header-actions">
             <div style={styles.searchBox} className="header-search-box">
               <Search size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
-              <input
-                type="text"
-                placeholder="Search patients, appointments..."
-                style={styles.searchInput}
-              />
+              <PortalSearch style={styles.searchInput} />
             </div>
 
             {/* Mobile Search Toggle */}
@@ -77,8 +74,8 @@ function StaffPatientList() {
               {isSearchOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
             </button>
 
-            <Bell size={20} color="var(--ov-on-color, #fff)" />
-            <MessageSquare size={20} color="var(--ov-on-color, #fff)" />
+            <RoleNotifications />
+
             <div style={styles.profile} className="header-profile">
               <div style={styles.profileText} className="header-profile-text">
                 <p style={styles.userName}>Staff User</p>
@@ -96,11 +93,7 @@ function StaffPatientList() {
           <div className="mobile-search-collapsible">
             <div style={{ ...styles.searchBox, width: "100%" }}>
               <Search size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
-              <input
-                type="text"
-                placeholder="Search patients, appointments..."
-                style={styles.searchInput}
-              />
+              <PortalSearch style={styles.searchInput} />
             </div>
           </div>
         )}

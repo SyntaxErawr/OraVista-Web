@@ -1,8 +1,9 @@
+import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTools';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import AdminLayout from '../../components/AdminLayout';
 import {
-  Search, Bell, MessageSquare, User, Mail, Phone, MapPin,
+  Search, User, Mail, Phone, MapPin,
   Calendar, Edit, Download, FileText, X, ExternalLink, Clock,
   ChevronDown, ChevronUp
 } from 'lucide-react';
@@ -226,7 +227,7 @@ function AdminPatientProfile() {
           {/* Desktop search — hidden on mobile via CSS */}
           <div className="desktop-search">
             <Search size={16} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
-            <input type="text" placeholder="Search..." style={styles.searchInput} />
+            <PortalSearch style={styles.searchInput} />
           </div>
 
           {/* Right side actions */}
@@ -241,8 +242,8 @@ function AdminPatientProfile() {
               {searchExpanded ? <ChevronUp size={14} color="var(--ov-on-color, #fff)" /> : <ChevronDown size={14} color="var(--ov-on-color, #fff)" />}
             </button>
 
-            <Bell size={19} color="var(--ov-on-color, #fff)" style={{ cursor: 'pointer' }} />
-            <MessageSquare size={19} color="var(--ov-on-color, #fff)" style={{ cursor: 'pointer' }} />
+            <RoleNotifications />
+
             <div style={styles.profileHeader}>
               <div style={styles.profileText}>
                 <p style={styles.userName}>Admin User</p>
@@ -257,7 +258,7 @@ function AdminPatientProfile() {
             <div className={`mobile-search-row${searchExpanded ? ' expanded' : ''}`}>
               <div className="mobile-search-inner">
                 <Search size={16} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
-                <input type="text" placeholder="Search..." style={styles.searchInput} />
+                <PortalSearch style={styles.searchInput} />
               </div>
             </div>
           )}

@@ -353,3 +353,46 @@ p { line-height: 1.65; }
   .contact-locations-grid { grid-template-columns: 1fr !important; }
   .contact-footer { flex-wrap: wrap; gap: 16px; }
 }
+
+/* Clinic search, role updates and appointment controls. */
+.ov-portal-search { display: flex; align-items: center; position: relative; min-width: 0; width: 100%; gap: 6px; }
+.ov-portal-search input { min-width: 0; flex: 1; width: 100%; color: var(--ov-ink) !important; }
+.ov-portal-search input::placeholder { color: var(--ov-muted); }
+.ov-icon-button { display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; min-width: 40px; min-height: 40px; border: 1px solid var(--ov-border); border-radius: 14px; color: var(--ov-ink); background: var(--ov-surface); cursor: pointer; }
+.ov-search-results { position: absolute; top: calc(100% + 12px); right: 0; width: min(400px, 85vw); max-height: 420px; overflow: auto; padding: 14px; background: #eff8f9; color: var(--ov-ink); border: 1px solid var(--ov-border); border-radius: 18px; box-shadow: 0 12px 32px #153e5033; z-index: 1200; }
+.ov-search-results p { margin: 6px 0 12px; font-size: 12px; }
+.ov-search-result, .ov-search-all { width: 100%; display: flex; flex-direction: column; text-align: left; gap: 4px; background: var(--ov-surface); color: var(--ov-ink); border: 1px solid var(--ov-border); border-radius: 10px; padding: 10px; margin-top: 6px; cursor: pointer; overflow-wrap: anywhere; }
+.ov-search-result span { font-size: 12px; }
+.ov-notification-trigger { position: relative; }
+.ov-notification-count { position: absolute; top: -7px; right: -7px; background: #b4233a; color: white; min-width: 21px; border-radius: 12px; font-size: 11px; padding: 2px 5px; }
+.ov-notification-dialog { width: min(560px, 100%); max-height: 85vh; overflow: auto; padding: 24px; background: #eff8f9; border-radius: 24px; color: var(--ov-ink); }
+.ov-dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ov-dialog-heading h2 { font-size: 22px; margin: 0; }
+.ov-notification-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+.ov-notification-actions button, .ov-filter-clear, .ov-calendar-reset { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 12px; min-height: 42px; border-radius: 12px; border: 1px solid var(--ov-border); background: var(--ov-soft); color: var(--ov-ink); cursor: pointer; }
+.ov-notification-list { list-style: none; padding: 0; margin: 0; }
+.ov-notification-list li { border: 1px solid var(--ov-border); border-radius: 14px; margin-top: 8px; overflow: hidden; }
+.ov-notification-list li.is-unread { border-left: 5px solid #136a80; background: var(--ov-soft); }
+.ov-notification-item { display: flex; flex-direction: column; gap: 6px; width: 100%; text-align: left; padding: 14px; color: var(--ov-ink); background: transparent; border: 0; cursor: pointer; overflow-wrap: anywhere; }
+.ov-appointment-calendar { padding: 20px; }
+.ov-calendar-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 14px; }
+.ov-calendar-heading h2 { font-size: 16px; margin: 0; }
+.ov-calendar-heading button { border: 0; background: transparent; color: var(--ov-ink); padding: 8px; cursor: pointer; }
+.ov-calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; text-align: center; }
+.ov-calendar-weekday { font-size: 12px; font-weight: 700; padding-bottom: 8px; color: var(--ov-muted); }
+.ov-calendar-day { position: relative; min-height: 36px; border: 1px solid transparent; border-radius: 9px; color: var(--ov-ink); background: transparent; cursor: pointer; padding: 5px 0; }
+.ov-calendar-day[aria-current="date"] { border-color: #136a80; }
+.ov-calendar-day[aria-pressed="true"] { background: var(--ov-primary); color: var(--ov-ink); font-weight: 700; }
+.ov-calendar-dot { position: absolute; bottom: 3px; left: calc(50% - 2px); width: 4px; height: 4px; border-radius: 50%; background: #136a80; }
+.ov-appointment-filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; background: var(--ov-surface); border: 1px solid var(--ov-border); border-radius: 20px; padding: 16px; margin-bottom: 20px; }
+.ov-appointment-filters label { min-width: 0; display: flex; flex-direction: column; gap: 5px; color: var(--ov-ink); font-size: 12px; font-weight: 700; }
+.ov-appointment-query { grid-column: 1 / -1; }
+.ov-appointment-query > div { display: flex; align-items: center; gap: 8px; }
+.ov-appointment-filters input, .ov-appointment-filters select { width: 100%; min-width: 0; min-height: 42px; padding: 9px; border: 1px solid var(--ov-border); border-radius: 10px; color: var(--ov-ink); background: #eff8f9; }
+.ov-filter-count { grid-column: 1 / -1; margin: 0; color: var(--ov-muted); font-size: 12px; }
+#root .ov-booking-day:disabled { opacity: 1; color: #476675 !important; background: #f0f4f5; }
+#root .ov-photo-upload { background: var(--ov-primary) !important; color: var(--ov-ink) !important; border: 1px solid #136a80 !important; opacity: 1 !important; }
+#root .ov-photo-upload:disabled { background: #e3ecef !important; color: #476675 !important; border-color: #acbdc5 !important; }
+@media (max-width: 600px) { .ov-appointment-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ov-notification-dialog { padding: 18px; } }
+
+.ov-dialog-backdrop:has(.ov-notification-dialog) { position: fixed; inset: 0; z-index: 4000; display: flex; align-items: center; justify-content: center; padding: 16px; background: #153e5080; }

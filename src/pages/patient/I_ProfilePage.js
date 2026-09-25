@@ -695,6 +695,7 @@ function ProfilePage() {
                   style={{ display: "none" }}
                 />
                 <button
+                  className="ov-photo-upload"
                   onClick={triggerFileInput}
                   disabled={!isEditing || isUploading}
                   style={{

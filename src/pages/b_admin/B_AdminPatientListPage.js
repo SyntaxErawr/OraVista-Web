@@ -1,7 +1,8 @@
+import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTools';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/AdminLayout';
-import { Search, Bell, MessageSquare, User, Eye, Edit, Plus, X, FileText, ExternalLink, Download, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, User, Eye, Edit, Plus, X, FileText, ExternalLink, Download, ChevronDown, ChevronUp } from 'lucide-react';
 import AIDiagnosticModal from '../../components/AIDiagnosticModal';
 import { exportPatientPDF } from '../../utils/exportPDF';
 
@@ -204,7 +205,7 @@ function AdminPatientList() {
           <div style={styles.headerActions} className="header-actions">
             <div style={styles.searchBox} className="header-search-box">
               <Search size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
-              <input type="text" placeholder="Search header..." style={styles.searchInput} />
+              <PortalSearch style={styles.searchInput} />
             </div>
 
             {/* Mobile Search Toggle */}
@@ -215,8 +216,8 @@ function AdminPatientList() {
               {isSearchOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
             </button>
 
-            <Bell size={20} color="var(--ov-on-color, #fff)" style={styles.actionIcon} />
-            <MessageSquare size={20} color="var(--ov-on-color, #fff)" style={styles.actionIcon} />
+            <RoleNotifications />
+
             <div style={styles.profile} className="header-profile">
               <div style={styles.profileText} className="header-profile-text">
                 <p style={styles.userName}>Admin User</p>
@@ -232,11 +233,7 @@ function AdminPatientList() {
           <div className="mobile-search-collapsible">
             <div style={{ ...styles.searchBox, width: "100%" }}>
               <Search size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
-              <input
-                type="text"
-                placeholder="Search header..."
-                style={styles.searchInput}
-              />
+              <PortalSearch style={styles.searchInput} />
             </div>
           </div>
         )}

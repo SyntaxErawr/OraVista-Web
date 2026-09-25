@@ -1,6 +1,7 @@
+import { RoleNotifications } from '../../components/ClinicPortalTools';
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/AdminLayout';
-import { Search, Bell, MessageSquare, User, Eye, Edit, Plus, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, User, Eye, Edit, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 
 function StaffDentistList() {
   // UPDATED: Added state management to mirror Admin functionality
@@ -80,7 +81,7 @@ function StaffDentistList() {
             cursor: pointer;
             padding: 5px;
           }
-          
+
           .mobile-search-collapsible {
             display: none;
           }
@@ -91,7 +92,7 @@ function StaffDentistList() {
             overflow-y: auto;
             max-height: 60vh; /* Vertical scroll for long lists */
           }
-          
+
           .dentist-table {
             width: 100%;
             min-width: 800px; /* Forces horizontal scrolling on small screens instead of breaking layout */
@@ -196,8 +197,8 @@ function StaffDentistList() {
               {isSearchOpen ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
             </button>
 
-            <Bell size={20} color="var(--ov-on-color, #fff)" style={{ cursor: 'pointer' }} />
-            <MessageSquare size={20} color="var(--ov-on-color, #fff)" style={{ cursor: 'pointer' }} />
+            <RoleNotifications />
+
             <div style={styles.profile} className="header-profile">
               <div style={styles.profileText} className="header-profile-text">
                 <p style={styles.userName}>Staff User</p>

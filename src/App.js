@@ -54,6 +54,7 @@ import StaffBooking from "./pages/c_staff/G_StaffBookingPage";
 import StaffBillings from "./pages/c_staff/H_StaffBillingsPage";
 
 // Dentist
+import DentistAppointments from './pages/d_dentist/D_DentistAppointmentPage';
 import DentistDashboard from "./pages/d_dentist/A_DentistDashboardPage";
 import DentistPatients from "./pages/d_dentist/B_DentistPatientListPage";
 import DentistProfile from "./pages/d_dentist/C_DentistProfilePage";
@@ -139,6 +140,7 @@ function App() {
         <Route path="/admin/patients" element={user?.role === 'admin' ? <AdminPatients /> : <Navigate to="/clinic/login" replace />} />
         <Route path="/admin/patient-profile/:id" element={user?.role === 'admin' ? <AdminPatientProfile /> : <Navigate to="/clinic/login" replace />} />
         <Route path="/admin/dentists" element={user?.role === 'admin' ? <AdminDentists /> : <Navigate to="/clinic/login" replace />} />
+        <Route path="/admin/booking" element={user?.role === 'admin' ? <StaffBooking /> : <Navigate to="/clinic/login" replace />} />
         <Route path="/admin/appointments" element={user?.role === 'admin' ? <AdminAppointments /> : <Navigate to="/clinic/login" replace />} />
         <Route path="/admin/diagnostics" element={user?.role === 'admin' ? <AdminDiagnostics /> : <Navigate to="/clinic/login" replace />} />
         <Route path="/admin/create-account" element={user?.role === 'admin' ? <AdminAccountCreation /> : <Navigate to="/clinic/login" replace />} />
@@ -155,6 +157,8 @@ function App() {
         <Route path="/staff/settings" element={user?.role === 'staff' ? <StaffSettings /> : <Navigate to="/clinic/login" replace />} />
 
         {/* Protected Dentist Routes */}
+        <Route path="/dentist/appointments" element={user?.role === 'dentist' ? <DentistAppointments /> : <Navigate to="/clinic/login" replace />} />
+        <Route path="/dentist/booking" element={user?.role === 'dentist' ? <StaffBooking /> : <Navigate to="/clinic/login" replace />} />
         <Route path="/dentist/dashboard" element={user?.role === 'dentist' ? <DentistDashboard /> : <Navigate to="/clinic/login" replace />} />
         <Route path="/dentist/patients" element={user?.role === 'dentist' ? <DentistPatients /> : <Navigate to="/clinic/login" replace />} />
         <Route path="/dentist/patient-profile/:id" element={user?.role === 'dentist' ? <DentistPatientProfile /> : <Navigate to="/clinic/login" replace />} />

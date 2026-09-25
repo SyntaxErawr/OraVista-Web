@@ -1117,7 +1117,7 @@ function BookingPage() {
                         currentDentist?.schedule.includes(dayStr);
                       const isSelected = bookingData.date === dayStr;
                       return (
-                        <button className="ov-ui-button"
+                        <button className="ov-ui-button ov-booking-day"
                           key={i}
                           onClick={() =>
                             isAvailable &&
@@ -1141,7 +1141,7 @@ function BookingPage() {
                               ? "var(--ov-ink)"
                               : isAvailable
                                 ? "#087F8C"
-                                : "#ccc",
+                                : "#476675",
                           }}
                          disabled={!isAvailable} aria-pressed={isSelected} aria-label={currentDayDate.toLocaleDateString("en-PH", { dateStyle: "full" })} type="button">
                           {i + 1}

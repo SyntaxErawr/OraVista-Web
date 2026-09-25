@@ -1,10 +1,13 @@
+import AppointmentCalendar from '../../components/AppointmentCalendar';
+import AppointmentFilters from '../../components/AppointmentFilters';
+import { matchesAppointment, todaySummary, scopeAppointments, readClinicUser } from '../../utils/clinicAppointments';
+import { useSearchParams } from 'react-router-dom';
+import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTools';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/AdminLayout';
 import {
   Search,
-  Bell,
-  MessageSquare,
   User,
   ChevronLeft,
   ChevronRight,
@@ -31,6 +34,11 @@ function formatAppointmentTime(value) {
 
 function AdminAppointments() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [filters, setFilters] = useState({ query: searchParams.get('q') || '', appointment: searchParams.get('appointment') || '', dentist: '', status: '', fromTime: '', toTime: '' });
+  const [loadError, setLoadError] = useState('');
+  useEffect(() => { setFilters(current => ({ ...current, query: searchParams.get('q') || '', appointment: searchParams.get('appointment') || '' })); setSelectedDate(null); }, [searchParams]);
+  const clearFilters = () => { setFilters({ query: '', appointment: '', dentist: '', status: '', fromTime: '', toTime: '' }); setSelectedDate(null); };
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [appointments, setAppointments] = useState([]);
   const [summary, setSummary] = useState({ total: 0, confirmed: 0, pending: 0, completed: 0, canceled: 0 });
@@ -45,27 +53,9 @@ function AdminAppointments() {
   });
 
   // --- Calendar & Filter States ---
-  const [viewDate, setViewDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const appointmentsPerPage = 5;
-
-  // --- Dynamic Calendar Logic ---
-  const currentYear = viewDate.getFullYear();
-  const currentMonth = viewDate.getMonth();
-  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-  const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
-  const currentMonthName = viewDate.toLocaleString('default', { month: 'long' });
-
-  const formatDate = (y, m, d) => {
-    return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-  };
-
-  const formatDbDate = (dbDate) => {
-    if (!dbDate) return "";
-    const d = new Date(dbDate);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  };
 
   const formatDisplayDate = (dbDate) => {
     if (!dbDate) return "No date";
@@ -99,6 +89,9 @@ function AdminAppointments() {
       const response = await fetch(`${API_BASE_URL}/api/dashboard/stats`);
       const data = await response.json();
 
+      if (!response.ok || !Array.isArray(data.schedule)) throw new Error('Unable to load appointments. Please try again.');
+      data.schedule = scopeAppointments(data.schedule, readClinicUser());
+      setLoadError('');
       if (data.schedule) {
         const formattedApps = data.schedule.map((app) => ({
           dbId: app.id,
@@ -118,15 +111,9 @@ function AdminAppointments() {
         setAppointments(formattedApps);
       }
 
-      setSummary({
-        total: data.todayCount || 0,
-        confirmed: data.schedule.filter(a => a.status === 'Confirmed').length,
-        pending: data.schedule.filter(a => a.status === 'Pending').length,
-        completed: data.schedule.filter(a => a.status === 'Completed').length,
-        canceled: data.schedule.filter(a => a.status === 'Canceled' || a.status === 'Cancelled').length
-      });
+      setSummary(todaySummary(data.schedule));
     } catch (err) {
-      console.error("Error fetching appointments:", err);
+      setLoadError(err.message || "Unable to load appointments.");
     } finally {
       setLoading(false);
     }
@@ -171,6 +158,7 @@ function AdminAppointments() {
     } catch (err) {
       setFeedbackModal({ show: true, type: "error", message: err.message || "Approval failed." });
     } finally {
+      window.dispatchEvent(new Event("oravista:appointments-updated"));
       await fetchAppointments();
       approvalInProgress.current = false;
       setApprovingId(null);
@@ -200,6 +188,7 @@ function AdminAppointments() {
         type: "success",
         message: "The appointment is now marked Late / No Show. The patient has been sent an email and dashboard notification with cancel and reschedule options.",
       });
+      window.dispatchEvent(new Event("oravista:appointments-updated"));
       await fetchAppointments();
     } catch (err) {
       setLateNoShowAppointment(null);
@@ -234,10 +223,7 @@ function AdminAppointments() {
   };
 
   // --- APPOINTMENT FILTER LOGIC ---
-  const filteredAppointments = (selectedDate
-    ? appointments.filter(app => formatDbDate(app.date) === selectedDate)
-    : appointments
-  ).slice().sort((a, b) => {
+  const filteredAppointments = appointments.filter(app => matchesAppointment(app, { ...filters, date: selectedDate })).slice().sort((a, b) => {
     const aTime = a.bookedAt ? new Date(a.bookedAt).getTime() : Number.MAX_SAFE_INTEGER;
     const bTime = b.bookedAt ? new Date(b.bookedAt).getTime() : Number.MAX_SAFE_INTEGER;
     return aTime - bTime || a.dbId - b.dbId;
@@ -252,7 +238,7 @@ function AdminAppointments() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedDate]);
+  }, [selectedDate, filters]);
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -318,7 +304,7 @@ function AdminAppointments() {
           <div style={styles.headerActions} className="header-actions">
             <div style={styles.searchBox} className="header-search-box">
               <Search size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
-              <input type="text" placeholder="Search patients, appointments..." style={styles.searchInput} />
+              <PortalSearch style={styles.searchInput} />
             </div>
 
             {/* Mobile Search Toggle */}
@@ -329,8 +315,8 @@ function AdminAppointments() {
               {isSearchOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
             </button>
 
-            <Bell size={20} color="var(--ov-on-color, #fff)" />
-            <MessageSquare size={20} color="var(--ov-on-color, #fff)" />
+            <RoleNotifications />
+
             <div style={styles.profile} className="header-profile">
               <div style={styles.profileText} className="header-profile-text">
                 <p style={styles.userName}>Admin User</p>
@@ -346,11 +332,7 @@ function AdminAppointments() {
           <div className="mobile-search-collapsible">
             <div style={{ ...styles.searchBox, width: "100%" }}>
               <Search size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
-              <input
-                type="text"
-                placeholder="Search patients, appointments..."
-                style={styles.searchInput}
-              />
+              <PortalSearch style={styles.searchInput} />
             </div>
           </div>
         )}
@@ -364,40 +346,7 @@ function AdminAppointments() {
 
           <div style={styles.mainGrid} className="appointment-main-grid">
             <div style={styles.leftCol}>
-              <div className="ov-panel" style={styles.calendarCard}>
-                <div style={styles.calHeader}>
-                  <p style={styles.calMonth}>{currentMonthName} {currentYear}</p>
-                  <div style={styles.calNav}>
-                    <ChevronLeft size={16} cursor="pointer" onClick={() => setViewDate(new Date(currentYear, currentMonth - 1, 1))} />
-                    <ChevronRight size={16} cursor="pointer" onClick={() => setViewDate(new Date(currentYear, currentMonth + 1, 1))} />
-                  </div>
-                </div>
-                <div style={styles.calGrid}>
-                  {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => <div key={day} style={styles.calDayHead}>{day}</div>)}
-
-                  {[...Array(firstDayOfMonth)].map((_, i) => <div key={`empty-${i}`}></div>)}
-
-                  {[...Array(daysInMonth)].map((_, i) => {
-                    const dateStr = formatDate(currentYear, currentMonth, i + 1);
-                    const isSelected = selectedDate === dateStr;
-
-                    return (
-                      <div
-                        key={i}
-                        onClick={() => setSelectedDate(isSelected ? null : dateStr)}
-                        style={{
-                          ...styles.calDay,
-                          backgroundColor: isSelected ? 'white' : 'transparent',
-                          color: isSelected ? '#087F8C' : "#fff",
-                          fontWeight: isSelected ? 'bold' : 'normal'
-                        }}
-                      >
-                        {i + 1}
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
+              <AppointmentCalendar selectedDate={selectedDate} onSelect={date => { setSelectedDate(date); setFilters(current => ({ ...current, appointment: '' })); }} appointments={appointments} />
 
               <div className="ov-panel" style={styles.summaryCard}>
                 <p style={styles.sectionTitle}>Today's Summary</p>
@@ -422,6 +371,8 @@ function AdminAppointments() {
                 </button>
               </div>
 
+              <AppointmentFilters appointments={appointments} filters={filters} setFilters={setFilters} selectedDate={selectedDate} setSelectedDate={setSelectedDate} count={filteredAppointments.length} clear={clearFilters} />
+              {loadError && <p className="ov-inline-error" role="alert">{loadError} <button type="button" onClick={fetchAppointments}>Retry</button></p>}
               <div className="appointment-list-scrollable">
                 {loading ? (
                   <p style={{ color: "#666", padding: "20px 0" }}>Loading appointments...</p>
@@ -431,11 +382,11 @@ function AdminAppointments() {
                   paginatedAppointments.map((app) => {
                     const isCanceled = app.status === 'Canceled' || app.status === 'Cancelled';
                     const isLateNoShow = app.status === "Late / No Show";
-                    let badgeColor = '#f59e0b';
+                    let badgeColor = '#92400e';
                     let badgeText = '#ffffff';
-                    if (app.status === 'Confirmed') { badgeColor = '#10b981'; badgeText = 'white'; }
+                    if (app.status === 'Confirmed') { badgeColor = '#087A53'; badgeText = 'white'; }
                     if (app.status === "Completed") { badgeColor = "var(--ov-completed, #2864c5)"; badgeText = "white"; }
-                    if (isCanceled) { badgeColor = '#ef4444'; badgeText = 'white'; }
+                    if (isCanceled) { badgeColor = '#B4233A'; badgeText = 'white'; }
                     if (isLateNoShow) { badgeColor = "#dc2626"; badgeText = "white"; }
 
                     return (
@@ -510,26 +461,24 @@ function AdminAppointments() {
                               disabled={approvingId !== null || !["Pending", "Approved", "Reschedule Requested"].includes(app.status)}
                               style={{
                                 ...styles.actionBtn,
-                                background: app.approved ? '#10b981' : 'transparent',
+                                background: app.approved ? '#087A53' : 'transparent',
                                 border: app.approved ? 'none' : '1px solid #10b981',
-                                color: app.approved ? "#fff" : '#10b981',
+                                color: app.approved ? "#fff" : '#087A53',
                                 cursor: app.approved ? 'default' : 'pointer',
                               }}
                             >
                               {approvingId === app.dbId ? "Approving..." : app.status === "Reschedule Requested" ? "Approve Reschedule" : app.approved ? "Approved" : "Approve"}
                             </button>
                             {app.status !== "Reschedule Requested" && (
-                              <button style={styles.actionBtnOutline}>
-                                Reschedule
-                              </button>
+                              <span style={{ color: "var(--ov-muted)", fontSize: 12 }}>Rescheduling starts from the patient's appointment page.</span>
                             )}
                             {app.status === "Confirmed" && (
                               <button
                                 onClick={() => setLateNoShowAppointment(app)}
                                 style={{
                                   ...styles.actionBtnOutline,
-                                  borderColor: "#fca5a5",
-                                  color: "#fca5a5",
+                                  borderColor: "#B4233A",
+                                  color: "#B4233A",
                                   backgroundColor: "rgba(220, 38, 38, 0.12)",
                                 }}
                               >
@@ -641,7 +590,7 @@ const styles = {
   listHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' },
   listTitle: { fontSize: '16px', fontWeight: 'bold', color: '#333' },
   newAppBtn: { "--ov-on-color": "var(--ov-ink)", background: "var(--ov-primary)", color: "var(--ov-on-color, #fff)", border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' },
-  
+
   // Card Styles
   appCard: { "--ov-on-color": "var(--ov-ink)",
     background: "var(--ov-primary)",

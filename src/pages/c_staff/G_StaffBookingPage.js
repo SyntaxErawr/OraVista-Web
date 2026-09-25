@@ -1,13 +1,21 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { readClinicUser } from '../../utils/clinicAppointments';
+import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTools';
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from '../../components/AdminLayout';
 import {
-  Search, Bell, MessageSquare, User, AlertTriangle, CheckCircle2, RotateCw, ChevronLeft, ChevronRight
+  Search, User, AlertTriangle, CheckCircle2, RotateCw, ChevronLeft, ChevronRight
 } from "lucide-react";
 
 function StaffBookingPage() {
   const navigate = useNavigate();
   const [userData, setUserData] = useState({ id: null, firstName: "Staff" });
+  const availabilityVersion = useRef(0);
+  const saving = useRef(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [availabilityKey, setAvailabilityKey] = useState('');
+  const [bookingError, setBookingError] = useState('');
+  const [availabilityError, setAvailabilityError] = useState('');
   const [bookedSlots, setBookedSlots] = useState([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -96,6 +104,7 @@ function StaffBookingPage() {
         const response = await fetch('https://oravista-server-474976105474.asia-southeast1.run.app/api/dentists');
         const data = await response.json();
 
+        if (!response.ok || !Array.isArray(data)) throw new Error('Unable to load dentists. Reload the page to try again.');
         const formattedDentists = data.map(d => ({
           name: `Dr. ${d.first_name} ${d.last_name}`,
           branch: d.branch || "Main Branch",
@@ -109,7 +118,7 @@ function StaffBookingPage() {
         const uniqueBranches = [...new Set(formattedDentists.map(d => d.branch))];
         setBranches(uniqueBranches);
       } catch (err) {
-        console.error("Failed to load booking options:", err);
+        setAvailabilityError(err.message || 'Unable to load booking options. Reload the page to try again.');
       }
     };
     fetchBookingData();
@@ -182,14 +191,18 @@ function StaffBookingPage() {
   const selectedServicePrice = getSelectedServicePrice();
 
   const fetchBookedSlots = useCallback(async () => {
-    if (!bookingData.date || !bookingData.dentist) return;
+    const version = ++availabilityVersion.current;
+    setAvailabilityKey('');
+    if (!bookingData.date || !bookingData.dentist) { setIsRefreshing(false); return; }
     setIsRefreshing(true);
+    setAvailabilityError('');
     try {
       const response = await fetch(
         `https://oravista-server-474976105474.asia-southeast1.run.app/api/appointments/check-availability?date=${bookingData.date}&dentist=${encodeURIComponent(bookingData.dentist)}`
       );
       const data = await response.json();
 
+      if (!response.ok || !Array.isArray(data)) throw new Error('Unable to check availability. Refresh before booking.');
       const allOccupiedMinutes = [];
       data.forEach(app => {
         const start = timeToMinutes(app.time);
@@ -198,11 +211,14 @@ function StaffBookingPage() {
           allOccupiedMinutes.push(start + i);
         }
       });
-      setBookedSlots(allOccupiedMinutes);
+      if (version === availabilityVersion.current) {
+        setBookedSlots(allOccupiedMinutes);
+        setAvailabilityKey(`${bookingData.dentist}|${bookingData.date}`);
+      }
     } catch (error) {
-      console.error("Error fetching booked slots:", error);
+      if (version === availabilityVersion.current) setAvailabilityError(error.message || 'Unable to check availability. Please refresh.');
     } finally {
-      setTimeout(() => setIsRefreshing(false), 500);
+      if (version === availabilityVersion.current) setIsRefreshing(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookingData.date, bookingData.dentist]);
@@ -216,8 +232,12 @@ function StaffBookingPage() {
   };
 
   const handleFinalSubmit = async () => {
+    if (saving.current || !canBook) return;
+    saving.current = true;
+    setIsSubmitting(true);
+    setBookingError('');
     const appointmentData = {
-      user_id: bookingData.patientId || userData.id,
+      user_id: bookingData.patientId.trim(),
       service_type: bookingData.specificService,
       dentist_name: bookingData.dentist,
       appointment_date: bookingData.date,
@@ -233,15 +253,18 @@ function StaffBookingPage() {
         body: JSON.stringify(appointmentData),
       });
 
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.message || 'Unable to save the booking. Please try again.');
       if (response.ok) {
+        window.dispatchEvent(new Event('oravista:appointments-updated'));
         setShowConfirmModal(false);
         setShowSuccessModal(true);
         handleDiscard();
         fetchBookedSlots();
       }
     } catch (error) {
-      console.error("Connection Error:", error);
-    }
+      setBookingError(error.message || 'Unable to save the booking. Please try again.');
+    } finally { saving.current = false; setIsSubmitting(false); }
   };
 
   const currentDentist = filteredDentists.find(d => d.name === bookingData.dentist);
@@ -251,6 +274,12 @@ function StaffBookingPage() {
   const startTimeMins = timeToMinutes(bookingData.time);
   const endTimeStr = minutesToTime(startTimeMins + selectedDuration);
 
+  const slotUnavailable = time => {
+    const start = timeToMinutes(time);
+    return Array.from({ length: Math.ceil(Math.max(selectedDuration, 30) / 30) }, (_, i) => start + i * 30).some(minute => bookedSlots.includes(minute));
+  };
+  const canBook = Boolean(bookingData.patientId.trim() && selectedBranch && bookingData.mainService && bookingData.specificService && currentDentist?.available && currentDentist.schedule.includes(bookingData.date) && bookingData.time && !slotUnavailable(bookingData.time) && !isRefreshing && !availabilityError && availabilityKey === `${bookingData.dentist}|${bookingData.date}`);
+
   return (
     <AdminLayout>
       <div style={styles.container}>
@@ -258,15 +287,15 @@ function StaffBookingPage() {
         <header className="ov-header" style={styles.header}>
           <div style={styles.searchBox}>
             <Search size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
-            <input type="text" placeholder="Search patients, appointments..." style={styles.searchInput} />
+            <PortalSearch style={styles.searchInput} />
           </div>
           <div style={styles.headerActions}>
-            <Bell size={20} color="var(--ov-on-color, #fff)" />
-            <MessageSquare size={20} color="var(--ov-on-color, #fff)" />
+            <RoleNotifications />
+
             <div style={styles.profile}>
               <div style={styles.profileText}>
-                <p style={styles.userName}>Staff User</p>
-                <p style={styles.userRole}>Receptionist</p>
+                <p style={styles.userName}>{userData.firstName}</p>
+                <p style={styles.userRole}>{readClinicUser().role}</p>
               </div>
               <div style={styles.avatar}><User size={20} color="#087F8C" /></div>
             </div>
@@ -280,15 +309,15 @@ function StaffBookingPage() {
             <p style={styles.pageSubtitle}>Schedule a new visit on behalf of a patient</p>
           </div>
 
-          <div style={{ backgroundColor: "#EAF5F6", borderRadius: "20px", padding: "40px" }}>
+          <div style={{ backgroundColor: "#EAF5F6", borderRadius: "20px", padding: "clamp(16px, 3vw, 40px)" }}>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: "20px", marginBottom: "40px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "20px", marginBottom: "40px" }}>
               <div>
                 <label style={{ color: "#087F8C", fontWeight: "700", marginBottom: "10px", display: "block" }}>Patient ID</label>
                 <input
                   type="text"
                   style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #ccc", boxSizing: "border-box" }}
-                  placeholder="e.g. 1"
+                  placeholder="e.g. 1" aria-label="Patient ID"
                   value={bookingData.patientId}
                   onChange={(e) => setBookingData({ ...bookingData, patientId: e.target.value })}
                 />
@@ -296,7 +325,7 @@ function StaffBookingPage() {
 
               <div>
                 <label style={{ color: "#087F8C", fontWeight: "700", marginBottom: "10px", display: "block" }}>Select Branch</label>
-                <select style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #ccc" }} value={selectedBranch} onChange={(e) => { setSelectedBranch(e.target.value); setBookingData({ ...bookingData, dentist: "", date: "", time: "" }); }}>
+                <select aria-label="Branch" style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #ccc" }} value={selectedBranch} onChange={(e) => { setSelectedBranch(e.target.value); setBookingData({ ...bookingData, dentist: "", date: "", time: "" }); }}>
                   <option value="">Choose Branch</option>
                   {branches.map((b, index) => <option key={index} value={b}>{b}</option>)}
                 </select>
@@ -304,7 +333,7 @@ function StaffBookingPage() {
 
               <div>
                 <label style={{ color: "#087F8C", fontWeight: "700", marginBottom: "10px", display: "block" }}>Services</label>
-                <select style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #ccc" }} value={bookingData.mainService} onChange={(e) => setBookingData({ ...bookingData, mainService: e.target.value, specificService: "" })}>
+                <select aria-label="Service" style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #ccc" }} value={bookingData.mainService} onChange={(e) => setBookingData({ ...bookingData, mainService: e.target.value, specificService: "" })}>
                   <option value="">Select Service</option>
                   {Object.keys(servicesData).map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
@@ -312,7 +341,7 @@ function StaffBookingPage() {
 
               <div>
                 <label style={{ color: "#087F8C", fontWeight: "700", marginBottom: "10px", display: "block" }}>Dentist</label>
-                <select style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #ccc" }} value={bookingData.dentist} onChange={(e) => setBookingData({ ...bookingData, dentist: e.target.value, date: "", time: "" })} disabled={!selectedBranch}>
+                <select aria-label="Dentist" style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #ccc" }} value={bookingData.dentist} onChange={(e) => setBookingData({ ...bookingData, dentist: e.target.value, date: "", time: "" })} disabled={!selectedBranch}>
                   <option value="">Select Dentist</option>
                   {filteredDentists.length > 0 ? (
                     filteredDentists.map(d => <option key={d.name} value={d.name} disabled={!d.available}>{d.name}</option>)
@@ -324,14 +353,14 @@ function StaffBookingPage() {
 
               <div>
                 <label style={{ color: "#087F8C", fontWeight: "700", marginBottom: "10px", display: "block" }}>Slot Date</label>
-                <select style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #ccc" }} value={bookingData.date} onChange={(e) => setBookingData({ ...bookingData, date: e.target.value, time: "" })} disabled={!bookingData.dentist}>
+                <select aria-label="Date" style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #ccc" }} value={bookingData.date} onChange={(e) => setBookingData({ ...bookingData, date: e.target.value, time: "" })} disabled={!bookingData.dentist}>
                   <option value="">Select Date</option>
                   {currentDentist?.schedule.map(date => <option key={date} value={date}>{date}</option>)}
                 </select>
               </div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "30px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "30px" }}>
               <div>
                 <label style={{ color: "#087F8C", fontWeight: "700", marginBottom: "10px", display: "block" }}>Choose Type</label>
                 <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -367,14 +396,14 @@ function StaffBookingPage() {
                       const isAvailable = currentDentist?.schedule.includes(dayStr);
                       const isSelected = bookingData.date === dayStr;
                       return (
-                        <div key={i} onClick={() => isAvailable && setBookingData({ ...bookingData, date: dayStr, time: "" })}
+                        <button type="button" className="ov-booking-day" disabled={!isAvailable} aria-pressed={isSelected} aria-label={dayStr} key={i} onClick={() => isAvailable && setBookingData({ ...bookingData, date: dayStr, time: "" })}
                           style={{ "--ov-on-color": "var(--ov-ink)",
-                            padding: "8px 0", borderRadius: "6px", fontSize: "12px", cursor: isAvailable ? "pointer" : "default",
+                            border: "none", padding: "8px 0", borderRadius: "6px", fontSize: "12px", cursor: isAvailable ? "pointer" : "default",
                             backgroundColor: isSelected ? "var(--ov-primary)" : (isAvailable ? "#EAF5F6" : "transparent"),
-                            color: isSelected ? "var(--ov-ink)" : (isAvailable ? "#087F8C" : "#ccc")
+                            color: isSelected ? "var(--ov-ink)" : (isAvailable ? "#087F8C" : "#476675")
                           }}>
                           {i + 1}
-                        </div>
+                        </button>
                       )
                     })}
                   </div>
@@ -395,12 +424,11 @@ function StaffBookingPage() {
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                   {bookingData.date ? timeSlots.map(t => {
-                    const currentMinutes = timeToMinutes(t);
-                    const isTaken = bookedSlots.includes(currentMinutes);
+                    const isTaken = slotUnavailable(t);
                     return (
                       <button key={t}
                         onClick={() => !isTaken && setBookingData({ ...bookingData, time: t })}
-                        disabled={isTaken}
+                        disabled={isTaken || isRefreshing || Boolean(availabilityError) || availabilityKey !== `${bookingData.dentist}|${bookingData.date}`}
                         style={{ "--ov-on-color": "var(--ov-ink)",
                           padding: "12px", borderRadius: "10px", border: "none", fontWeight: "600",
                           cursor: isTaken ? "not-allowed" : "pointer",
@@ -416,9 +444,10 @@ function StaffBookingPage() {
               </div>
             </div>
 
+            {availabilityError && <p className="ov-inline-error" role="alert">{availabilityError}</p>}
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "20px", marginTop: "40px" }}>
               <button onClick={handleDiscard} style={{ padding: "12px 30px", borderRadius: "10px", border: "none", backgroundColor: "#ff4d4d", color: "var(--ov-on-color, #fff)", fontWeight: "700", cursor: "pointer" }}>Clear Fields</button>
-              <button onClick={() => setShowConfirmModal(true)} disabled={!bookingData.time}
+              <button onClick={() => setShowConfirmModal(true)} disabled={!canBook || isSubmitting}
                 style={{ padding: "12px 30px", borderRadius: "10px", border: "none", backgroundColor: "#28a745", color: "var(--ov-on-color, #fff)", fontWeight: "700", cursor: "pointer", opacity: !bookingData.time ? 0.6 : 1 }}>
                 Confirm Booking
               </button>
@@ -430,11 +459,12 @@ function StaffBookingPage() {
       {/* MODALS */}
       {showConfirmModal && (
         <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 2000 }}>
-          <div style={{ backgroundColor: "white", padding: "30px", borderRadius: "20px", textAlign: "center", width: "400px" }}>
+          <div style={{ backgroundColor: "white", padding: "30px", borderRadius: "20px", textAlign: "center", width: "min(400px, 94vw)" }}>
             <AlertTriangle size={50} color="#087F8C" style={{ marginBottom: "15px", margin: "0 auto" }} />
             <h3 style={{ color: "#087F8C", fontWeight: "800", marginBottom: "5px" }}>Confirm Appointment?</h3>
+            {bookingError && <p className="ov-inline-error" role="alert">{bookingError}</p>}
             <div style={{ borderTop: "1px solid #eee", borderBottom: "1px solid #eee", padding: "15px 0", margin: "15px 0", textAlign: "left" }}>
-              <p style={{ fontSize: "14px", margin: "5px 0" }}><strong>Patient ID:</strong> {bookingData.patientId || userData.id}</p>
+              <p style={{ fontSize: "14px", margin: "5px 0" }}><strong>Patient ID:</strong> {bookingData.patientId}</p>
               <p style={{ fontSize: "14px", margin: "5px 0" }}><strong>Branch:</strong> {selectedBranch}</p>
               <p style={{ fontSize: "14px", margin: "5px 0" }}><strong>Service:</strong> {bookingData.specificService}</p>
               <p style={{ fontSize: "14px", margin: "5px 0" }}><strong>Dentist:</strong> {bookingData.dentist}</p>
@@ -443,8 +473,8 @@ function StaffBookingPage() {
               <p style={{ fontSize: "15px", margin: "10px 0 0 0", color: "#28a745", fontWeight: "800" }}><strong>Base Price:</strong> ₱{selectedServicePrice.toLocaleString()}</p>
             </div>
             <div style={{ display: "flex", gap: "10px" }}>
-              <button onClick={() => setShowConfirmModal(false)} style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "1px solid #ccc", cursor: "pointer", background: "white" }}>Cancel</button>
-              <button onClick={handleFinalSubmit} style={{ "--ov-on-color": "var(--ov-ink)", flex: 1, padding: "12px", borderRadius: "10px", border: "none", backgroundColor: "var(--ov-primary)", color: "var(--ov-on-color, #fff)", cursor: "pointer" }}>Confirm</button>
+              <button disabled={isSubmitting} onClick={() => setShowConfirmModal(false)} style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "1px solid #ccc", cursor: "pointer", background: "white" }}>Cancel</button>
+              <button onClick={handleFinalSubmit} disabled={!canBook || isSubmitting} style={{ "--ov-on-color": "var(--ov-ink)", flex: 1, padding: "12px", borderRadius: "10px", border: "none", backgroundColor: "var(--ov-primary)", color: "var(--ov-on-color, #fff)", cursor: "pointer" }}>{isSubmitting ? 'Saving...' : 'Confirm'}</button>
             </div>
           </div>
         </div>
@@ -452,13 +482,13 @@ function StaffBookingPage() {
 
       {showSuccessModal && (
         <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 2100 }}>
-          <div style={{ backgroundColor: "white", padding: "30px", borderRadius: "20px", textAlign: "center", width: "400px" }}>
+          <div style={{ backgroundColor: "white", padding: "30px", borderRadius: "20px", textAlign: "center", width: "min(400px, 94vw)" }}>
             <CheckCircle2 size={50} color="#28a745" style={{ marginBottom: "15px", margin: "0 auto" }} />
             <h3 style={{ color: "#087F8C", fontWeight: "800" }}>Appointment Booked!</h3>
             <button
               onClick={() => {
                 setShowSuccessModal(false);
-                navigate('/staff/appointments');
+                navigate(`/${readClinicUser().role || 'staff'}/appointments`);
               }}
               style={{ "--ov-on-color": "var(--ov-ink)", width: "100%", padding: "12px", borderRadius: "10px", border: "none", backgroundColor: "var(--ov-primary)", color: "var(--ov-on-color, #fff)", cursor: "pointer", marginTop: "15px" }}
             >

@@ -1,6 +1,7 @@
+import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTools';
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/AdminLayout';
-import { Search, Bell, MessageSquare, User, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, User, ChevronDown, ChevronUp } from 'lucide-react';
 
 function DentistProfile() {
   const [dentistData, setDentistData] = useState(null);
@@ -39,14 +40,14 @@ function DentistProfile() {
         {`
           .dp-container { display: flex; flex-direction: column; width: 100%; font-family: sans-serif; }
           .dp-header { height: 80px; background: #087F8C; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; position: sticky; top: 0; z-index: 10; }
-          
+
           .dp-search-wrapper { display: flex; align-items: center; }
           .dp-search-box { display: flex; align-items: center; background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 12px; width: 350px; transition: all 0.3s ease; box-sizing: border-box; }
           .dp-search-icon { flex-shrink: 0; }
           .dp-search-input { border: none; background: transparent; margin-left: 10px; outline: none; width: 100%; color: var(--ov-on-color, #fff); }
           .dp-search-input::placeholder { color: var(--ov-on-muted, rgba(255,255,255,0.75)); }
           .dp-mobile-toggle { display: none; }
-          
+
           .dp-header-actions { display: flex; align-items: center; gap: 25px; margin-left: auto; }
           .dp-profile { display: flex; align-items: center; gap: 15px; border-left: 1px solid rgba(255,255,255,0.2); padding-left: 20px; }
           .dp-profile-text { text-align: right; }
@@ -94,25 +95,25 @@ function DentistProfile() {
           /* Responsive Mobile View */
           @media (max-width: 768px) {
             .dp-header { padding: 0 20px; justify-content: flex-end; position: relative; }
-            
+
             .dp-search-wrapper { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); z-index: 20; }
             .dp-search-box { width: 44px; height: 44px; padding: 0; justify-content: center; cursor: pointer; }
             .dp-search-box.expanded { width: calc(100vw - 40px); background: #066875; border: 1px solid rgba(255,255,255,0.2); padding: 0 15px; justify-content: space-between; }
-            
+
             .dp-search-input { display: none; }
             .dp-search-box.expanded .dp-search-input { display: block; }
-            
+
             .dp-search-box:not(.expanded) .dp-search-icon { display: none; }
-            
+
             .dp-mobile-toggle { display: flex; align-items: center; justify-content: center; background: transparent; border: none; color: var(--ov-on-color, #fff); padding: 0; cursor: pointer; }
             .dp-search-box.expanded .dp-mobile-toggle { margin-left: 10px; }
 
             .dp-header-actions { gap: 15px; transition: opacity 0.3s ease; }
             .dp-header-actions.hidden { opacity: 0; pointer-events: none; }
-            
+
             .dp-profile { padding-left: 15px; gap: 10px; border-left: none; }
             .dp-profile-text { display: none; }
-            
+
             .dp-content { padding: 10px; }
             .dp-dashboard-grid { grid-template-columns: 1fr; gap: 10px; }
 
@@ -145,11 +146,7 @@ function DentistProfile() {
           <div className="dp-search-wrapper">
             <div className={`dp-search-box ${isSearchExpanded ? 'expanded' : ''}`}>
               <Search className="dp-search-icon" size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
-              <input 
-                type="text" 
-                placeholder="Search patients, appointments..." 
-                className="dp-search-input" 
-              />
+              <PortalSearch className="dp-search-input" />
               <button 
                 className="dp-mobile-toggle" 
                 onClick={() => setIsSearchExpanded(!isSearchExpanded)}
@@ -160,8 +157,8 @@ function DentistProfile() {
           </div>
 
           <div className={`dp-header-actions ${isSearchExpanded ? 'hidden' : ''}`}>
-            <Bell size={20} color="var(--ov-on-color, #fff)" />
-            <MessageSquare size={20} color="var(--ov-on-color, #fff)" />
+            <RoleNotifications />
+
             <div className="dp-profile">
               <div className="dp-profile-text">
                 <p className="dp-user-name">{dentistData ? `Dr. ${dentistData.last_name}` : 'Loading...'}</p>
