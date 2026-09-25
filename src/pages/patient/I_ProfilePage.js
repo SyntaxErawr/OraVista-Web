@@ -715,6 +715,7 @@ function ProfilePage() {
                 >
                   <Upload size={14} /> {isUploading ? "Uploading..." : "Update Photo"}
                 </button>
+                {!isEditing && <p className="ov-availability-note" style={{ maxWidth: "200px", textAlign: "center", margin: "8px 0 0" }}>Select Edit Information to update your photo.</p>}
                 {uploadError && <p className="ov-inline-error" role="alert">{uploadError}</p>}
                 {isEditing && <p className="ov-availability-note" style={{ maxWidth: "220px", textAlign: "center" }}>Photo uploads save immediately. Discard Changes applies to the form fields.</p>}
               </div>

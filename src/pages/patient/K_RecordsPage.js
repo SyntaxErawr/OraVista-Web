@@ -1,5 +1,6 @@
+import { fetchPatientHealth } from '../../utils/patientHealth';
 import BrandWordmark from "../../components/BrandWordmark";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Search,
@@ -68,6 +69,9 @@ function RecordsPage() {
   const [riskData, setRiskData] = useState(null);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [dataError, setDataError] = useState("");
+  const [healthFailures, setHealthFailures] = useState({ analytics: false, risk: false });
+  const healthRequest = useRef(0);
+  useEffect(() => { const invalidate = () => { healthRequest.current++; }; return invalidate; }, []);
   const [finalDiagnoses, setFinalDiagnoses] = useState([]);
   const [isDiagnosesLoading, setIsDiagnosesLoading] = useState(true);
   const [diagnosesError, setDiagnosesError] = useState("");
@@ -102,26 +106,19 @@ function RecordsPage() {
   }, []);
 
   const fetchData = useCallback(async (userId) => {
+    const request = ++healthRequest.current;
     setIsDataLoading(true);
-    setDataError("");
-    try {
-      const [analyticsRes, riskRes] = await Promise.all([
-        fetch(
-          `https://oravista-ai-engine-474976105474.asia-southeast1.run.app/api/patient/get/${userId}/analytics`,
-        ),
-        fetch(
-          `https://oravista-ai-engine-474976105474.asia-southeast1.run.app/api/patient/get/${userId}/oral-health-risk`,
-        ),
-      ]);
-      if (!analyticsRes.ok || !riskRes.ok) setDataError("Some health information could not be loaded. Please retry.");
-      if (analyticsRes.ok) setAnalyticsData(await analyticsRes.json());
-      if (riskRes.ok) setRiskData(await riskRes.json());
-    } catch (err) {
-      console.error("Error fetching data:", err);
-      setDataError("Health information could not be loaded. Please retry.");
-    } finally {
-      setIsDataLoading(false);
-    }
+    setDataError('');
+    const [analytics, risk] = await Promise.allSettled([
+      fetchPatientHealth(userId, 'analytics'),
+      fetchPatientHealth(userId, 'oral-health-risk'),
+    ]);
+    if (request !== healthRequest.current) return;
+    setAnalyticsData(analytics.status === 'fulfilled' ? analytics.value : null);
+    setRiskData(risk.status === 'fulfilled' ? risk.value : null);
+    setHealthFailures({ analytics: analytics.status === 'rejected', risk: risk.status === 'rejected' });
+    setDataError([analytics, risk].filter(result => result.status === 'rejected').map(result => result.reason.message).join(' '));
+    setIsDataLoading(false);
   }, []);
 
   const loadUser = useCallback(() => {
@@ -179,19 +176,13 @@ function RecordsPage() {
       const patientName = [userData.firstName, userData.lastName]
         .filter(Boolean)
         .join(" ");
-      const [analyticsRes, riskRes, savedDiagnoses] = await Promise.all([
-        fetch(
-          `https://oravista-ai-engine-474976105474.asia-southeast1.run.app/api/patient/get/${userData.id}/analytics`,
-        ),
-        fetch(
-          `https://oravista-ai-engine-474976105474.asia-southeast1.run.app/api/patient/get/${userData.id}/oral-health-risk`,
-        ),
+      const [analytics, risk, savedDiagnoses] = await Promise.all([
+        fetchPatientHealth(userData.id, 'analytics'),
+        fetchPatientHealth(userData.id, 'oral-health-risk'),
         fetchFinalDiagnoses(userData.id),
       ]);
-      let aData = {};
-      let rData = {};
-      if (analyticsRes.ok) aData = await analyticsRes.json();
-      if (riskRes.ok) rData = await riskRes.json();
+      const aData = analytics || {};
+      const rData = risk || {};
 
       const doc = new jsPDF();
       doc.setFontSize(22);
@@ -737,7 +728,7 @@ function RecordsPage() {
                                 color: "#666",
                               })}
                             >
-                              Data Not Available
+                              {healthFailures.analytics ? 'Health history could not be loaded.' : 'No health history has been recorded yet.'}
                             </td>
                           </tr>
                         )}
@@ -891,7 +882,7 @@ function RecordsPage() {
                                 color: "#666",
                               })}
                             >
-                              Data Not Available
+                              {healthFailures.risk ? 'Risk assessment could not be loaded.' : 'No risk assessment has been saved yet.'}
                             </td>
                           </tr>
                         )}

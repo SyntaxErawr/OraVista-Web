@@ -192,3 +192,32 @@ test.each([[BillingsPage, /billing information/], [AppointmentsPage, /load your 
   await waitFor(() => expect(screen.queryByRole("alert")).not.toBeInTheDocument());
   log.mockRestore();
 });
+
+
+test('records with no saved assessments show honest empty states without an error banner', async () => {
+ global.fetch.mockImplementation(async url => {
+  if (url.includes('patient-final-diagnoses')) return reply([]);
+  return { ok: false, status: 404, json: async () => ({ detail: url.endsWith('/analytics') ? 'Analytics for patient 7 not found.' : 'No risk assessment found for patient ID 7.' }) };
+ });
+ render(<RecordsPage />);
+ await screen.findByText('No health history has been recorded yet.');
+ expect(screen.getByText('No risk assessment has been saved yet.')).toBeInTheDocument();
+ expect(screen.queryByRole('alert')).toBeNull();
+});
+
+test('records preserve a successful section when the other fails, and retry clears stale errors', async () => {
+ let failRisk = true;
+ global.fetch.mockImplementation(async url => {
+  if (url.includes('patient-final-diagnoses')) return reply([]);
+  if (url.endsWith('/analytics')) return reply({ brushing_frequency: 'Twice daily' });
+  if (failRisk) throw new TypeError('Failed to fetch');
+  return reply({ risk_score: 2, health_grade: 'Low' });
+ });
+ render(<RecordsPage />);
+ await screen.findByText('Twice daily');
+ expect(screen.getByRole('alert')).toHaveTextContent('Check your connection');
+ expect(screen.getByText('Risk assessment could not be loaded.')).toBeInTheDocument();
+ failRisk = false; fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+ await screen.findByRole('cell', { name: 'Low' });
+ expect(screen.queryByRole('alert')).toBeNull();
+});

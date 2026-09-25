@@ -390,9 +390,16 @@ p { line-height: 1.65; }
 .ov-appointment-query > div { display: flex; align-items: center; gap: 8px; }
 .ov-appointment-filters input, .ov-appointment-filters select { width: 100%; min-width: 0; min-height: 42px; padding: 9px; border: 1px solid var(--ov-border); border-radius: 10px; color: var(--ov-ink); background: #eff8f9; }
 .ov-filter-count { grid-column: 1 / -1; margin: 0; color: var(--ov-muted); font-size: 12px; }
-#root .ov-booking-day:disabled { opacity: 1; color: #476675 !important; background: #f0f4f5; }
+/* Keep every date readable. Availability is expressed through fill/border, not faded text. */
+#root .ov-booking-day, #root .ov-calendar-day { color: #153e50 !important; -webkit-text-fill-color: #153e50; opacity: 1; font-weight: 600; }
+#root .ov-booking-day:disabled { opacity: 1; color: #153e50 !important; background: #f0f4f5 !important; }
+#root .ov-booking-day:not(:disabled) { box-shadow: inset 0 0 0 1px #639ca9; }
+#root .ov-booking-day[aria-pressed="true"] { background: #38cddd !important; box-shadow: inset 0 0 0 2px #153e50; font-weight: 700; }
+.ov-calendar-weekday { color: #153e50; }
 #root .ov-photo-upload { background: var(--ov-primary) !important; color: var(--ov-ink) !important; border: 1px solid #136a80 !important; opacity: 1 !important; }
-#root .ov-photo-upload:disabled { background: #e3ecef !important; color: #476675 !important; border-color: #acbdc5 !important; }
+#root .ov-photo-upload:disabled { background: #e3ecef !important; color: #153e50 !important; border-color: #91b4c1 !important; }
 @media (max-width: 600px) { .ov-appointment-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ov-notification-dialog { padding: 18px; } }
 
 .ov-dialog-backdrop:has(.ov-notification-dialog) { position: fixed; inset: 0; z-index: 4000; display: flex; align-items: center; justify-content: center; padding: 16px; background: #153e5080; }
+
+.ov-calendar-legend { color: #153e50; font-size: 12px; margin: 12px 0 0; line-height: 1.5; }

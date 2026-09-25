@@ -1141,7 +1141,7 @@ function BookingPage() {
                               ? "var(--ov-ink)"
                               : isAvailable
                                 ? "#087F8C"
-                                : "#476675",
+                                : "#153e50",
                           }}
                          disabled={!isAvailable} aria-pressed={isSelected} aria-label={currentDayDate.toLocaleDateString("en-PH", { dateStyle: "full" })} type="button">
                           {i + 1}
@@ -1149,6 +1149,7 @@ function BookingPage() {
                       );
                     })}
                   </div>
+                  <p className="ov-calendar-legend">{bookingData.dentist ? 'Outlined dates are available. Aqua marks your selection.' : 'Choose a dentist to see available dates.'}</p>
                 </div>
               </div>
 
