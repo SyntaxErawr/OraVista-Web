@@ -473,7 +473,13 @@ function AdminAppointments() {
                         </div>
 
                         {/* Actions Footer */}
-                        {!isCanceled && !isLateNoShow ? (
+                        {String(app.status || '').trim().toLowerCase() === 'rescheduled' ? (
+                          <div style={styles.appActions} className="app-actions-container">
+                            <span style={{ fontSize: '13px', lineHeight: 1.5 }}>
+                              Replaced through the previous mobile booking flow. Review the separate replacement booking for approval.
+                            </span>
+                          </div>
+                        ) : !isCanceled && !isLateNoShow ? (
                           <div style={styles.appActions} className="app-actions-container">
                             <button
                               onClick={() => handleApprove(app)}
