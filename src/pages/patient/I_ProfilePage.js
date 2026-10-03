@@ -1,3 +1,4 @@
+import PatientAccount from '../../components/PatientAccount';
 import PatientDialog from "../../components/PatientDialog";
 import BrandWordmark from "../../components/BrandWordmark";
 import React, { useState, useEffect, useCallback, useRef } from "react";
@@ -155,6 +156,7 @@ function ProfilePage() {
         if (response.ok) {
           const updatedUser = { ...user, profile_picture: data.imagePath };
           localStorage.setItem("user", JSON.stringify(updatedUser));
+          window.dispatchEvent(new Event("patient-profile-updated"));
           setProfilePreview(
             `https://oravista-server-474976105474.asia-southeast1.run.app/${data.imagePath}`,
           );
@@ -220,6 +222,7 @@ function ProfilePage() {
       if (response.ok) {
         const updatedUser = { ...user, ...userData };
         localStorage.setItem("user", JSON.stringify(updatedUser));
+          window.dispatchEvent(new Event("patient-profile-updated"));
         setIsEditing(false);
         setShowConfirmModal(false);
         setShowSuccessModal(true);
@@ -582,7 +585,7 @@ function ProfilePage() {
       )}
 
       {/* Main Content */}
-      <div className="ov-workspace"
+      <div className="ov-workspace ov-patient-page ov-page-profile"
         style={{
           marginLeft: isMobile ? 0 : sidebarWidth,
           width: isMobile ? "100%" : `calc(100% - ${sidebarWidth})`,
@@ -593,7 +596,7 @@ function ProfilePage() {
           flexDirection: "column",
           boxSizing: "border-box",
         }}
-      >
+      ><PatientAccount />
         {/* Mobile Top Bar */}
         {isMobile && (
           <div className="ov-color-surface"

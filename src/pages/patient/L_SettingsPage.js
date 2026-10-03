@@ -1,3 +1,4 @@
+import PatientAccount from '../../components/PatientAccount';
 import PatientDialog from "../../components/PatientDialog";
 import BrandWordmark from "../../components/BrandWordmark";
 import React, { useState, useEffect, useCallback, useRef } from "react";
@@ -1258,7 +1259,7 @@ function SettingsPage() {
       )}
 
       {/* Main Content */}
-      <div className="ov-workspace"
+      <div className="ov-workspace ov-patient-page ov-page-settings"
         style={{
           marginLeft: isMobile ? 0 : sidebarWidth,
           width: isMobile ? "100%" : `calc(100% - ${sidebarWidth})`,
@@ -1267,7 +1268,7 @@ function SettingsPage() {
           minHeight: "100vh",
           boxSizing: "border-box",
         }}
-      >
+      ><PatientAccount />
         {/* Mobile Top Bar */}
         {isMobile && (
           <div className="ov-color-surface"

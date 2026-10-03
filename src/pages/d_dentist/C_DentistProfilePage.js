@@ -1,3 +1,4 @@
+import ClinicPageTitle from '../../components/ClinicPageTitle';
 import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTools';
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/AdminLayout';
@@ -142,7 +143,7 @@ function DentistProfile() {
 
       <div className="dp-container">
         {/* HEADER */}
-        <header className="dp-header">
+        <header className="dp-header"><ClinicPageTitle />
           <div className="dp-search-wrapper">
             <div className={`dp-search-box ${isSearchExpanded ? 'expanded' : ''}`}>
               <Search className="dp-search-icon" size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
@@ -173,10 +174,7 @@ function DentistProfile() {
 
         {/* CONTENT AREA */}
         <div className="dp-content">
-          <div className="dp-page-header">
-            <h1 className="dp-page-title">Dentist Profile</h1>
-            <p className="dp-page-subtitle">Detailed information and performance overview</p>
-          </div>
+
 
           {loading ? (
             <p style={{ color: '#087F8C' }}>Loading data from database...</p>

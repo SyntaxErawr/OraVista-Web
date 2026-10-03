@@ -4,12 +4,13 @@ import BrandWordmark from "../../components/BrandWordmark";
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom"; 
 import { MapPin, ShieldCheck, Menu, X, Stethoscope, Smile, SmilePlus } from "lucide-react";
-import serviceImage from '../../assets/dentimage.jpg'; 
+import serviceImage from '../../assets/dentimage.jpg';
+import patientCare from '../../assets/patient-care.jpg';
 
 function LandingPage() {
-  const [isOpen, setIsOpen] = useState(false);
+  const branchRef = useRef(null);
   const [isNavOpen, setIsNavOpen] = useState(false);
-  const [selectedBranch, setSelectedBranch] = useState("Select Branch");
+  const [selectedBranch, setSelectedBranch] = useState("");
   const navigate = useNavigate(); 
 
   // --- SCROLL REFERENCES ---
@@ -32,11 +33,17 @@ function LandingPage() {
     "Angeles, Pampanga",
   ];
 
-  const handleSelect = (branch) => {
-    setSelectedBranch(branch);
-    setIsOpen(false);
-    localStorage.setItem("tempBranch", branch);
-    navigate("/login");
+  const continueToAccount = (event, destination = "/login") => {
+    event.preventDefault();
+    if (!selectedBranch) { branchRef.current.reportValidity(); return; }
+    localStorage.setItem("tempBranch", selectedBranch);
+    navigate(destination);
+  };
+
+  const focusPatientAccess = () => {
+    setIsNavOpen(false);
+    branchRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    branchRef.current.focus({ preventScroll: true });
   };
 
   // --- Management Portal Navigation Handler ---
@@ -157,12 +164,12 @@ function LandingPage() {
 
   return (
     <div className="ov-home" style={{ width: "100%", overflowX: "hidden", backgroundColor: "#fafafa" }}>
-      
+
       {/* --- RESPONSIVE CSS INJECTION --- */}
       <style>
         {`
           .mobile-nav-toggle { display: none; }
-          
+
           @media (max-width: 900px) {
             .landing-nav { padding: 0 5% !important; }
             .mobile-nav-toggle { 
@@ -189,7 +196,7 @@ function LandingPage() {
               z-index: 999;
             }
             .nav-links-container.open { left: 0; }
-            
+
             .hero-section {
               align-items: center !important;
               text-align: center !important;
@@ -210,13 +217,13 @@ function LandingPage() {
             }
 
             .responsive-container { padding: 0 20px !important; }
-            
+
             .about-top { flex-direction: column !important; gap: 30px !important; }
             .about-img { height: 300px !important; }
             .about-bottom-grid { grid-template-columns: 1fr !important; gap: 30px !important; }
             .ratings-card { flex-direction: column !important; padding: 30px !important; text-align: center !important; }
             .reviews-section { padding-left: 0 !important; text-align: center !important; }
-            
+
             .services-grid { grid-template-columns: 1fr !important; }
             .services-title { font-size: 32px !important; white-space: normal !important; text-align: center !important; }
             .booking-banner { flex-direction: column !important; }
@@ -239,7 +246,7 @@ function LandingPage() {
         boxSizing: "border-box", fontFamily: "'Manrope', sans-serif"
       }}>
         <button className="ov-ui-button" style={{ color: brandBlue, fontWeight: "800", fontSize: "28px", margin: 0, cursor: "pointer", zIndex: 1001 }} onClick={() => scrollToSection(homeRef)} type="button" aria-label="OraVista home"><BrandWordmark /></button>
-        
+
         <button aria-label={isNavOpen ? "Close navigation" : "Open navigation"} aria-expanded={isNavOpen} className="mobile-nav-toggle" onClick={() => setIsNavOpen(!isNavOpen)}>
           {isNavOpen ? <X size={30} /> : <Menu size={30} />}
         </button>
@@ -249,6 +256,7 @@ function LandingPage() {
           <button className="ov-ui-button" style={navLinkStyle} onClick={() => scrollToSection(aboutRef)} type="button">About Us</button>
           <button className="ov-ui-button" style={navLinkStyle} onClick={() => scrollToSection(servicesRef)} type="button">Services</button>
           <button className="ov-ui-button" style={navLinkStyle} onClick={() => scrollToSection(contactRef)} type="button">Contact</button>
+          <button type="button" onClick={focusPatientAccess} className="ov-nav-signin">Patient sign in</button>
           <button 
             style={portalBtnStyle} 
             onClick={handlePortalClick}
@@ -256,7 +264,7 @@ function LandingPage() {
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = brandBlue)}
           >
             <ShieldCheck size={18} />
-            Portal
+            Clinic portal
           </button>
         </div>
       </nav>
@@ -268,53 +276,47 @@ function LandingPage() {
           Your smile,<br />in good hands.
         </h1>
         <p className="hero-subtitle" style={{ fontSize: "26px", color: "#087F8C", marginTop: "10px", marginBottom: "30px", whiteSpace: "nowrap", maxWidth: "none", fontFamily: "'Manrope', sans-serif" }}>
-          Feel at home with dental care made personal. Let's take the next step toward a healthier, happier smile.
+          Book your next visit, check appointments, and keep your dental records in one place. Start with your preferred clinic.
         </p>
 
-        <div style={{ position: "relative", display: "inline-block", fontFamily: "'Manrope', sans-serif", zIndex: 10 }}>
-          <button 
-            style={{ "--ov-on-color": "var(--ov-ink)", padding: "12px 24px", backgroundColor: "var(--ov-primary)", color: "var(--ov-on-color, #fff)", border: "none", borderRadius: "8px", fontSize: "18px", cursor: "pointer", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", minWidth: "220px", justifyContent: "space-between" }}
-            onClick={() => setIsOpen(!isOpen)}
-          >
-            {selectedBranch} <span>{isOpen ? "▲" : "▼"}</span>
-          </button>
-
-          {isOpen && (
-            <div className="ov-color-surface" style={{ "--ov-on-color": "var(--ov-ink)", position: "absolute", top: "100%", left: 0, backgroundColor: "var(--ov-primary)", borderRadius: "8px", marginTop: "5px", width: "100%", overflow: "hidden", boxShadow: "0 8px 16px rgba(0,0,0,0.2)" }}>
-              {branches.map((branch) => (
-                <button type="button" className="ov-ui-button"
-                  key={branch}
-                  style={{ display: "block", width: "100%", padding: "12px 20px", color: "var(--ov-on-color, #fff)", cursor: "pointer", fontSize: "16px", fontFamily: "'Manrope', sans-serif", borderBottom: "1px solid var(--ov-on-line, rgba(255,255,255,0.1))", transition: "background 0.2s" }}
-                  onClick={() => handleSelect(branch)}
-                  onMouseEnter={(e) => (e.target.style.backgroundColor = "#25BED0")}
-                  onMouseLeave={(e) => (e.target.style.backgroundColor = "transparent")}
-                >
-                  {branch}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <p className="ov-branch-hint">Choose your preferred clinic to book a visit.</p>
-        <div className="ov-hero-visual">
-          <img src={serviceImage} alt="A welcoming aqua dental treatment room" />
-          <div className="ov-hero-caption">
-            <ShieldCheck size={30} />
-            <div><strong>Care that feels personal.</strong><span>Three locations. One commitment to your smile.</span></div>
+        <form className="ov-patient-entry" onSubmit={continueToAccount}>
+          <div className="ov-entry-heading"><strong>Your patient account</strong><span>Choose a clinic to get started</span></div>
+          <label htmlFor="patient-branch">Preferred clinic</label>
+          <select id="patient-branch" ref={branchRef} required value={selectedBranch} onChange={event => setSelectedBranch(event.target.value)}>
+            <option value="" disabled>Select your branch</option>
+            {branches.map(branch => <option key={branch} value={branch}>{branch}</option>)}
+          </select>
+          <div className="ov-entry-actions">
+            <button type="submit" value="login">Sign in</button>
+            <button type="button" onClick={event => continueToAccount(event, "/signup")}>Create account</button>
           </div>
+          <p>Already registered? Sign in. First visit? Create a patient account.</p>
+        </form>
+        <div className="ov-hero-visual">
+          <img src={patientCare} alt="A patient receiving dental care" width="1200" height="1800" fetchPriority="high" />
+          <div className="ov-hero-caption">
+            <ShieldCheck size={26} />
+            <div><strong>Your next visit starts here.</strong><span>Choose your clinic. Sign in. Find a time that works.</span></div>
+          </div>
+          <a className="ov-photo-credit" href="https://www.pexels.com/photo/patient-having-an-appointment-with-a-dentist-5355890/" target="_blank" rel="noreferrer">Illustrative photo: Tima Miroshnichenko / Pexels</a>
         </div>
 
         {/* MOBILE PROMO */}
         <div className="hero-promo" style={{ marginTop: "60px", display: "flex", flexDirection: "row", alignItems: "flex-start", gap: "30px", fontFamily: "'Manrope', sans-serif", maxWidth: "800px" }}>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "15px", flex: 1 }}>
             <p style={{ fontSize: "19px", color: "#087F8C", margin: 0, fontWeight: "600", lineHeight: "1.4" }}>
-              Your care, wherever you are. Manage appointments and dental records from your phone using this website.
+              Use this website on your phone. No app download needed.
             </p>
             <StorePlaceholders />
           </div>
         </div>
       </div>
+
+      <section className="ov-start-guide" aria-label="How to book your visit">
+        <div><span>01</span><p><strong>Choose your clinic</strong>Select Pasay, Manila, or Pampanga.</p></div>
+        <div><span>02</span><p><strong>Sign in or create an account</strong>Access your appointments and records.</p></div>
+        <div><span>03</span><p><strong>Plan your visit</strong>Choose a service, dentist, and available time.</p></div>
+      </section>
 
       {/* ----------------- ABOUT US SECTION ----------------- */}
       <section className="ov-home-section" ref={aboutRef} style={{ width: '100%', paddingTop: '100px', paddingBottom: '60px', backgroundColor: 'white' }}>
@@ -381,7 +383,7 @@ function LandingPage() {
             <h1 className="services-title" style={servicesStyles.title}>Our Services</h1>
             <div style={servicesStyles.blueLine}></div>
           </div>
-          
+
           <p style={servicesStyles.subtitle}>
             We offer a wide range of dental care to keep your smile healthy and beautiful
           </p>
@@ -416,14 +418,14 @@ function LandingPage() {
             <div className="booking-text" style={servicesStyles.bookingText}>
               <h3 style={servicesStyles.bookingTitle}>Book an Appointment</h3>
               <p style={servicesStyles.bookingPara}>
-                Scheduling your dental visit is quick and easy. At King Epres Dental Clinic, we offer flexible appointment times to fit your schedule. Whether it's a routine check-up, orthodontic consultation, or restorative treatment, you can book online or call us directly. Our friendly staff will guide you through the process and ensure your visit is smooth, efficient, and comfortable.
+                Start by choosing your clinic and signing in or creating an account. In Book an Appointment, select a treatment, dentist, and available time. You can track the appointment status from My Appointments.
               </p>
               <h4 style={servicesStyles.stepsTitle}>Steps to Book:</h4>
               <ol style={servicesStyles.stepsList}>
-                <li>Choose your preferred date and time.</li>
-                <li>Select the service you need.</li>
-                <li>Confirm your appointment online or over the phone.</li>
-                <li>Receive a reminder before your visit.</li>
+                <li>Choose a clinic, then sign in or create an account.</li>
+                <li>Select a service and available dentist.</li>
+                <li>Choose an available date and time, then confirm.</li>
+                <li>Check My Appointments for updates.</li>
               </ol>
               <button style={servicesStyles.bookBtn} onClick={() => scrollToSection(homeRef)}>
                 Book Now →

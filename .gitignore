@@ -27,3 +27,6 @@ yarn-error.log*
 
 .vercel
 .env*.local
+
+# Local UI working backups and one-off maintenance scripts
+.ui-followup/

@@ -1,3 +1,4 @@
+import ClinicPageTitle from '../../components/ClinicPageTitle';
 import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTools';
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/AdminLayout';
@@ -117,7 +118,7 @@ function StaffSettings() {
     <AdminLayout>
       <div style={styles.container}>
         {/* HEADER - Staff Profile */}
-        <header style={styles.header} className="dashboard-page-header ov-header">
+        <header style={styles.header} className="dashboard-page-header ov-header"><ClinicPageTitle />
           <div style={styles.searchBox} className="header-search-box">
             <Search size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
             <PortalSearch style={styles.searchInput} />
@@ -137,10 +138,7 @@ function StaffSettings() {
 
         {/* CONTENT AREA */}
         <div style={styles.content} className="settings-content ov-workspace-content">
-          <div style={styles.titleSection}>
-            <h1 style={styles.pageTitle}>Settings</h1>
-            <p style={styles.pageSubtitle}>Manage your profile and account security</p>
-          </div>
+
 
           <div style={styles.mainGrid} className="settings-grid">
             {/* LEFT COLUMN: Profile & Password */}

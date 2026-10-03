@@ -1,3 +1,4 @@
+import ClinicPageTitle from '../../components/ClinicPageTitle';
 import { readClinicUser } from '../../utils/clinicAppointments';
 import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTools';
 import React, { useState, useEffect, useCallback, useRef } from "react";
@@ -284,7 +285,7 @@ function StaffBookingPage() {
     <AdminLayout>
       <div style={styles.container}>
         {/* HEADER */}
-        <header className="ov-header" style={styles.header}>
+        <header className="ov-header" style={styles.header}><ClinicPageTitle />
           <div style={styles.searchBox}>
             <Search size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
             <PortalSearch style={styles.searchInput} />
@@ -304,10 +305,7 @@ function StaffBookingPage() {
 
         {/* CONTENT */}
         <div className="ov-workspace-content" style={styles.content}>
-          <div style={styles.titleSection}>
-            <h1 style={styles.pageTitle}>Book Appointment</h1>
-            <p style={styles.pageSubtitle}>Schedule a new visit on behalf of a patient</p>
-          </div>
+
 
           <div style={{ backgroundColor: "#EAF5F6", borderRadius: "20px", padding: "clamp(16px, 3vw, 40px)" }}>
 

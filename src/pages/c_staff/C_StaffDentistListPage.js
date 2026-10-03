@@ -1,11 +1,13 @@
+import DentistDirectoryActions from '../../components/DentistDirectoryActions';
+import PaginatedList from '../../components/PaginatedList';
+import ClinicPageTitle from '../../components/ClinicPageTitle';
 import { RoleNotifications } from '../../components/ClinicPortalTools';
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/AdminLayout';
-import { Search, User, Eye, Edit, Plus, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, User } from 'lucide-react';
 
 function StaffDentistList() {
   // UPDATED: Added state management to mirror Admin functionality
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [dentists, setDentists] = useState([]);
   const [filteredDentists, setFilteredDentists] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -177,25 +179,11 @@ function StaffDentistList() {
 
       <div style={styles.container}>
         {/* TOP NAV HEADER - Staff Profile */}
-        <header style={styles.header} className="dashboard-page-header ov-header">
-          <div style={styles.searchBox} className="header-search-box">
-            <ChevronDown size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
-            <input
-              type="text"
-              placeholder="Search header..."
-              style={styles.searchInput}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+        <header style={styles.header} className="dashboard-page-header ov-header"><ClinicPageTitle />
+
           <div style={styles.headerActions} className="header-actions">
             {/* Mobile Search Toggle */}
-            <button 
-              className="mobile-search-toggle-btn"
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
-            >
-              {isSearchOpen ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
-            </button>
+
 
             <RoleNotifications />
 
@@ -210,29 +198,30 @@ function StaffDentistList() {
         </header>
 
         {/* Mobile Collapsible Search Drawer */}
-        {isSearchOpen && (
-          <div className="mobile-search-collapsible">
-            <div style={{ ...styles.searchBox, width: "100%", boxSizing: 'border-box' }}>
-              <Search size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
-              <input
-                type="text"
-                placeholder="Search dentists..."
-                style={styles.searchInput}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </div>
-        )}
+
 
         {/* PAGE CONTENT */}
         <div style={styles.content} className="settings-content ov-workspace-content">
-          <div style={styles.titleSection}>
-            <h1 style={styles.pageTitle} className="page-title">Dentist List</h1>
-            <p style={styles.pageSubtitle}>View and manage dental staff information</p>
-          </div>
 
-          <div style={styles.tableControls} className="table-controls-row">
+
+          <div style={styles.summaryGrid} className="summary-grid">
+            <div style={styles.summaryCard} className="summary-card ov-panel">
+              <p style={styles.summaryLabel} className="summary-label">Total Dentists</p>
+              <h2 style={styles.summaryValue} className="summary-value">{summary.total}</h2>
+            </div>
+            <div style={styles.summaryCard} className="summary-card ov-panel">
+              <p style={styles.summaryLabel} className="summary-label">Currently Available</p>
+              <h2 style={styles.summaryValue} className="summary-value">{summary.available}</h2>
+            </div>
+            <div style={styles.summaryCard} className="summary-card ov-panel">
+              <p style={styles.summaryLabel} className="summary-label">Busy</p>
+              <h2 style={styles.summaryValue} className="summary-value">{summary.busy}</h2>
+            </div>
+            <div style={styles.summaryCard} className="summary-card ov-panel">
+              <p style={styles.summaryLabel} className="summary-label">Off Duty</p>
+              <h2 style={styles.summaryValue} className="summary-value">{summary.offDuty}</h2>
+            </div>
+          </div><div style={styles.tableControls} className="table-controls-row">
             <div style={styles.innerSearch} className="inner-search-container">
               <Search size={16} color="#999" style={styles.innerSearchIcon} />
               <input
@@ -243,10 +232,7 @@ function StaffDentistList() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <button style={styles.addButton} className="add-dentist-btn">
-              <Plus size={18} style={{ marginRight: '8px' }} />
-              Add New Dentist
-            </button>
+
           </div>
 
           {/* DENTIST TABLE - Navy Blue Theme mirrored from Admin */}
@@ -265,7 +251,7 @@ function StaffDentistList() {
                     <th style={styles.th}>Actions</th>
                   </tr>
                 </thead>
-                <tbody>
+                <PaginatedList table pageSize={20} resetKey={searchQuery} label="Directory pages">
                   {filteredDentists.length > 0 ? filteredDentists.map((dentist) => (
                     <tr key={dentist.id} style={styles.tbodyRow}>
                       <td style={styles.td}>{dentist.id}</td>
@@ -283,10 +269,7 @@ function StaffDentistList() {
                         </span>
                       </td>
                       <td style={styles.td}>
-                        <div style={styles.actionButtons}>
-                          <Eye size={18} style={styles.iconBtn} />
-                          <Edit size={18} style={styles.iconBtn} />
-                        </div>
+                        <DentistDirectoryActions dentist={dentist} role="staff" />
                       </td>
                     </tr>
                   )) : (
@@ -296,30 +279,13 @@ function StaffDentistList() {
                       </td>
                     </tr>
                   )}
-                </tbody>
+                </PaginatedList>
               </table>
             )}
           </div>
 
           {/* SUMMARY CARDS - Mirrored dynamic values */}
-          <div style={styles.summaryGrid} className="summary-grid">
-            <div style={styles.summaryCard} className="summary-card ov-panel">
-              <p style={styles.summaryLabel} className="summary-label">Total Dentists</p>
-              <h2 style={styles.summaryValue} className="summary-value">{summary.total}</h2>
-            </div>
-            <div style={styles.summaryCard} className="summary-card ov-panel">
-              <p style={styles.summaryLabel} className="summary-label">Currently Available</p>
-              <h2 style={styles.summaryValue} className="summary-value">{summary.available}</h2>
-            </div>
-            <div style={styles.summaryCard} className="summary-card ov-panel">
-              <p style={styles.summaryLabel} className="summary-label">Busy</p>
-              <h2 style={styles.summaryValue} className="summary-value">{summary.busy}</h2>
-            </div>
-            <div style={styles.summaryCard} className="summary-card ov-panel">
-              <p style={styles.summaryLabel} className="summary-label">Off Duty</p>
-              <h2 style={styles.summaryValue} className="summary-value">{summary.offDuty}</h2>
-            </div>
-          </div>
+
         </div>
       </div>
     </AdminLayout>

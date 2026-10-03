@@ -1,3 +1,4 @@
+import ClinicPageTitle from '../../components/ClinicPageTitle';
 import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTools';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
@@ -223,7 +224,7 @@ function AdminPatientProfile() {
       <div style={styles.container}>
 
         {/* ── HEADER ── */}
-        <header style={styles.header} className="profile-header-bar ov-header">
+        <header style={styles.header} className="profile-header-bar ov-header"><ClinicPageTitle />
           {/* Desktop search — hidden on mobile via CSS */}
           <div className="desktop-search">
             <Search size={16} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
@@ -267,10 +268,7 @@ function AdminPatientProfile() {
         {/* ── MAIN CONTENT ── */}
         <div style={styles.content} className="profile-content-pad ov-workspace-content">
           <div style={styles.topRow} className="top-row-wrap">
-            <div>
-              <h1 style={styles.pageTitle}>Patient Profile</h1>
-              <p style={styles.pageSubtitle}>View detailed patient information and history</p>
-            </div>
+
             <button style={styles.editProfileBtn} onClick={() => setShowEditModal(true)}>
               <Edit size={14} style={{ marginRight: '7px' }} /> Edit Profile
             </button>

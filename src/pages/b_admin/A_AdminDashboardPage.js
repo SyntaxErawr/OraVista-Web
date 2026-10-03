@@ -1,3 +1,5 @@
+import PaginatedList from '../../components/PaginatedList';
+import ClinicPageTitle from '../../components/ClinicPageTitle';
 import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTools';
 import React, { useState, useEffect } from "react";
 import AdminLayout from "../../components/AdminLayout";
@@ -61,7 +63,7 @@ function AdminDashboard() {
     <AdminLayout>
       <div style={styles.container}>
         {/* HEADER */}
-        <header style={styles.header} className="dashboard-page-header ov-header">
+        <header style={styles.header} className="dashboard-page-header ov-header"><ClinicPageTitle />
           <div style={styles.headerActions} className="header-actions">
             <div style={styles.searchBox} className="header-search-box">
               <Search size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
@@ -112,7 +114,7 @@ function AdminDashboard() {
 
         {/* DASHBOARD CONTENT */}
         <div style={styles.content} className="settings-content ov-workspace-content">
-          <div className="ov-page-intro"><span className="ov-eyebrow">Your workspace</span><h1>Clinic overview</h1><p>A clear view of your appointments, patients, and everyday care.</p></div>
+
           <div style={styles.gridTop} className="dashboard-grid-top">
             {/* CARD 1: TOTAL APPOINTMENTS */}
             <div className="ov-panel" style={styles.card}>
@@ -192,7 +194,7 @@ function AdminDashboard() {
             <div className="ov-panel" style={styles.listCard}>
               <p style={styles.sectionTitle}>Recent Patient Visits</p>
               {recentVisits.length > 0 ? (
-                recentVisits.slice(0, 5).map((visit, idx) => (
+                <PaginatedList pageSize={10} label="Dashboard list pages">{recentVisits.map((visit, idx) => (
                   <div key={visit.id || idx} style={styles.patientRow}>
                     <div style={styles.pAvatar}>
                       <User size={18} color="var(--ov-on-color, #fff)" />
@@ -206,7 +208,7 @@ function AdminDashboard() {
                       <p style={styles.pTime}>{visit.time || "Completed"}</p>
                     </div>
                   </div>
-                ))
+                ))}</PaginatedList>
               ) : (
                 <div style={styles.emptyState}>
                   <p style={styles.emptyText}>No recent patient visits recorded.</p>
@@ -221,7 +223,7 @@ function AdminDashboard() {
               {stats.loading ? (
                 <p style={styles.emptyText}>Loading schedule...</p>
               ) : appointments.length > 0 ? (
-                appointments.slice(0, 5).map((item, idx) => (
+                <PaginatedList pageSize={10} label="Dashboard list pages">{appointments.map((item, idx) => (
                   <div key={idx} style={styles.scheduleRow}>
                     <div style={styles.scheduleInfo}>
                       <span style={styles.scheduleTime}>🕒 {item.time}</span>
@@ -235,7 +237,7 @@ function AdminDashboard() {
                       {item.status}
                     </span>
                   </div>
-                ))
+                ))}</PaginatedList>
               ) : (
                 <div style={styles.emptyState}>
                   <p style={styles.emptyText}>No appointments scheduled.</p>

@@ -8,8 +8,8 @@ afterEach(() => { localStorage.clear(); mockNavigate.mockClear(); });
 
 test('the public entry page offers a working branch selection and labels unavailable app downloads', () => {
   render(<LandingPage />);
-  fireEvent.click(screen.getByRole('button', { name: /Select Branch/ }));
-  fireEvent.click(screen.getByRole('button', { name: 'Gil Puyat, Pasay' }));
+  fireEvent.change(screen.getByLabelText('Preferred clinic'), { target: { value: 'Gil Puyat, Pasay' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Sign in', exact: true }));
   expect(localStorage.getItem('tempBranch')).toBe('Gil Puyat, Pasay');
   expect(mockNavigate).toHaveBeenCalledWith('/login');
   expect(screen.getByRole('button', { name: /Google Play/ })).toHaveAttribute('aria-disabled', 'true');

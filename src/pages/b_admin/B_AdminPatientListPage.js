@@ -1,3 +1,5 @@
+import PaginatedList from '../../components/PaginatedList';
+import ClinicPageTitle from '../../components/ClinicPageTitle';
 import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTools';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -164,7 +166,7 @@ function AdminPatientList() {
                         <th style={styles.recordTh}>Action</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <PaginatedList table pageSize={20} resetKey={searchQuery} label="Directory pages">
                       {patientRecords.map((rec, idx) => (
                         <tr key={rec.file_path || idx}>
                           <td style={styles.recordTd}><FileText size={16} style={{ marginRight: '8px' }} />{rec.file_name}</td>
@@ -191,7 +193,7 @@ function AdminPatientList() {
                           </td>
                         </tr>
                       ))}
-                    </tbody>
+                    </PaginatedList>
                   </table>
                 ) : (
                   <p style={{ textAlign: 'center', color: '#666', padding: '20px' }}>No uploaded records found for this patient.</p>
@@ -201,7 +203,7 @@ function AdminPatientList() {
           </div>
         )}
 
-        <header style={styles.header} className="dashboard-page-header ov-header">
+        <header style={styles.header} className="dashboard-page-header ov-header"><ClinicPageTitle />
           <div style={styles.headerActions} className="header-actions">
             <div style={styles.searchBox} className="header-search-box">
               <Search size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
@@ -239,12 +241,7 @@ function AdminPatientList() {
         )}
 
         <div style={styles.content} className="settings-content ov-workspace-content">
-          <div style={styles.titleSection}>
-            <div>
-              <h1 style={styles.pageTitle}>Patients List</h1>
-              <p style={styles.pageSubtitle}>Manage and view all patient records</p>
-            </div>
-          </div>
+
 
           <div style={styles.tableControls} className="table-controls-row">
             <div style={styles.innerSearch}>
@@ -278,7 +275,7 @@ function AdminPatientList() {
                     <th style={styles.th}>Actions</th>
                   </tr>
                 </thead>
-                <tbody>
+                <PaginatedList table pageSize={20} resetKey={searchQuery} label="Directory pages">
                   {filteredPatients.length > 0 ? filteredPatients.map((patient) => (
                     <tr
                       key={patient.dbId}
@@ -307,7 +304,7 @@ function AdminPatientList() {
                       <td colSpan="6" style={{ padding: '20px', textAlign: 'center', color: "var(--ov-on-color, #fff)" }}>No results found for "{searchQuery}"</td>
                     </tr>
                   )}
-                </tbody>
+                </PaginatedList>
               </table>
             )}
           </div>

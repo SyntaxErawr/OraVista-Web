@@ -221,3 +221,20 @@ test('records preserve a successful section when the other fails, and retry clea
  await screen.findByRole('cell', { name: 'Low' });
  expect(screen.queryByRole('alert')).toBeNull();
 });
+
+test("dashboard history paginates ten entries and links to appointment management", async () => {
+  global.fetch.mockImplementation(async url => reply(url.includes("user-appointments") ? Array.from({ length: 12 }, (_, i) => ({
+    id: i + 1, service_type: "Visit " + (i + 1), dentist_name: "Dr. Test", status: "Completed",
+    appointment_date: "2026-01-01", appointment_time: "10:00 AM",
+  })) : []));
+  render(<DashboardPage />);
+  await screen.findByRole("link", { name: "Visit 1" });
+  expect(screen.getByRole("link", { name: "Visit 10" })).toHaveAttribute("href", "/appointments");
+  expect(screen.queryByRole("link", { name: "Visit 11" })).not.toBeInTheDocument();
+  const pagination = screen.getByRole("navigation", { name: "Appointment history pages" });
+  fireEvent.click(within(pagination).getByRole("button", { name: "Next" }));
+  expect(screen.getByRole("link", { name: "Visit 11" })).toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: "Visit 1" })).not.toBeInTheDocument();
+  fireEvent.change(screen.getByRole("searchbox", { name: "Search appointment history" }), { target: { value: "Visit 1" } });
+  expect(screen.getByRole("link", { name: "Visit 1" })).toBeInTheDocument();
+});

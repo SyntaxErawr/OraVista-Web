@@ -1,3 +1,4 @@
+import PatientAccount from '../../components/PatientAccount';
 import PatientDialog from "../../components/PatientDialog";
 import BrandWordmark from "../../components/BrandWordmark";
 import React, { useState, useEffect, useCallback, useRef } from "react";
@@ -496,7 +497,7 @@ function BookingPage() {
   };
 
   const labelStyle = {
-    color: isMobile ? "#087F8C" : "#fff",
+    color: "#285c6a",
     fontWeight: "700",
     marginBottom: "10px",
     display: "block",
@@ -792,7 +793,7 @@ function BookingPage() {
       )}
 
       {/* Main Content */}
-      <div className="ov-workspace"
+      <div className="ov-workspace ov-patient-page ov-page-booking"
         style={{
           marginLeft: isMobile ? 0 : sidebarWidth,
           width: isMobile ? "100%" : `calc(100% - ${sidebarWidth})`,
@@ -800,7 +801,7 @@ function BookingPage() {
           backgroundColor: "white",
           boxSizing: "border-box",
         }}
-      >
+      ><PatientAccount />
         {/* Mobile Top Bar */}
         {isMobile && (
           <div className="ov-color-surface"
@@ -849,24 +850,7 @@ function BookingPage() {
               : `Welcome, ${userData.firstName}! (${selectedBranch || "Branch not set"})`}
           </p>
 
-          <div
-            style={{ "--ov-on-color": "var(--ov-ink)",
-              backgroundColor: isMobile ? "#EAF5F6" : "var(--ov-primary)",
-              borderRadius: isMobile ? "20px" : "40px",
-              padding: isMobile ? "20px 16px" : "50px",
-              marginTop: "24px",
-            }}
-          >
-            {/* Top Row: Services, Dentist, Date */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr",
-                gap: isMobile ? "16px" : "30px",
-                marginBottom: isMobile ? "20px" : "40px",
-              }}
-            >
-              <div>
+          <div className="ov-booking-layout"><section className="ov-booking-treatment"><header><span>01</span><h2>Treatment &amp; dentist</h2></header><div>
                 <label style={labelStyle}>Services</label>
                 <select aria-label="Select Service"
                   style={selectStyle}
@@ -890,78 +874,7 @@ function BookingPage() {
                     </option>
                   ))}
                 </select>
-              </div>
-
-              <div>
-                <label style={labelStyle}>Available Dentist</label>
-                <select aria-label="Select Dentist"
-                  style={{
-                    ...selectStyle,
-                    cursor: bookingData.mainService ? "pointer" : "not-allowed",
-                    opacity: bookingData.mainService ? 1 : 0.6,
-                  }}
-                  value={bookingData.dentist}
-                  onChange={(e) =>
-                    setBookingData({
-                      ...bookingData,
-                      dentist: e.target.value,
-                      date: "",
-                      time: "",
-                    })
-                  }
-                  disabled={!bookingData.mainService || isReschedule}
-                >
-                  <option value="">Select Dentist</option>
-                  {filteredDentists.length > 0 ? (
-                    filteredDentists.map((d) => (
-                      <option
-                        key={d.name}
-                        value={d.name}
-                        disabled={!d.available}
-                      >
-                        {d.name}
-                      </option>
-                    ))
-                  ) : (
-                    <option disabled>No dentists for your branch</option>
-                  )}
-                </select>
-              </div>
-
-              <div>
-                <label style={labelStyle}>Available Slot</label>
-                <select aria-label="Select Date"
-                  style={selectStyle}
-                  value={bookingData.date}
-                  onChange={(e) =>
-                    setBookingData({
-                      ...bookingData,
-                      date: e.target.value,
-                      time: "",
-                    })
-                  }
-                  disabled={!bookingData.dentist}
-                >
-                  <option value="">Select Date</option>
-                  {currentDentist?.schedule.map((date) => (
-                    <option key={date} value={date}>
-                      {date}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Bottom Row: Choose Type, Calendar, Time */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr",
-                gap: isMobile ? "20px" : "30px",
-              }}
-            >
-              {/* Choose Type */}
-              <div>
+              </div><div>
                 <label style={labelStyle}>Choose Type</label>
                 <div
                   style={{
@@ -1017,17 +930,69 @@ function BookingPage() {
                     <p
                       style={{
                         fontSize: "13px",
-                        color: isMobile ? "#888" : "#C2E6E6",
+                        color: "#526c77",
                       }}
                     >
                       Please select a service category first.
                     </p>
                   )}
                 </div>
-              </div>
-
-              {/* Calendar */}
-              <div>
+              </div><div>
+                <label style={labelStyle}>Available Dentist</label>
+                <select aria-label="Select Dentist"
+                  style={{
+                    ...selectStyle,
+                    cursor: bookingData.mainService ? "pointer" : "not-allowed",
+                    opacity: bookingData.mainService ? 1 : 0.6,
+                  }}
+                  value={bookingData.dentist}
+                  onChange={(e) =>
+                    setBookingData({
+                      ...bookingData,
+                      dentist: e.target.value,
+                      date: "",
+                      time: "",
+                    })
+                  }
+                  disabled={!bookingData.mainService || isReschedule}
+                >
+                  <option value="">Select Dentist</option>
+                  {filteredDentists.length > 0 ? (
+                    filteredDentists.map((d) => (
+                      <option
+                        key={d.name}
+                        value={d.name}
+                        disabled={!d.available}
+                      >
+                        {d.name}
+                      </option>
+                    ))
+                  ) : (
+                    <option disabled>No dentists for your branch</option>
+                  )}
+                </select>
+              </div></section><section className="ov-booking-schedule"><header><span>02</span><h2>Date &amp; time</h2></header><div className="ov-booking-date-select"><div>
+                <label style={labelStyle}>Available Slot</label>
+                <select aria-label="Select Date"
+                  style={selectStyle}
+                  value={bookingData.date}
+                  onChange={(e) =>
+                    setBookingData({
+                      ...bookingData,
+                      date: e.target.value,
+                      time: "",
+                    })
+                  }
+                  disabled={!bookingData.dentist}
+                >
+                  <option value="">Select Date</option>
+                  {currentDentist?.schedule.map((date) => (
+                    <option key={date} value={date}>
+                      {date}
+                    </option>
+                  ))}
+                </select>
+              </div></div>{availabilityError && <p className="ov-inline-error" role="alert">{availabilityError}</p>}<div className="ov-booking-schedule-grid"><div>
                 <label style={labelStyle}>Dentist Schedule</label>
                 <div
                   style={{
@@ -1151,11 +1116,7 @@ function BookingPage() {
                   </div>
                   <p className="ov-calendar-legend">{bookingData.dentist ? 'Outlined dates are available. Aqua marks your selection.' : 'Choose a dentist to see available dates.'}</p>
                 </div>
-              </div>
-
-              {/* Time Slots */}
-              {availabilityError && <p className="ov-inline-error" role="alert">{availabilityError}</p>}
-              <div>
+              </div><div>
                 <div
                   style={{
                     display: "flex",
@@ -1179,7 +1140,7 @@ function BookingPage() {
                       display: "flex",
                       alignItems: "center",
                       gap: "5px",
-                      color: isMobile ? "#087F8C" : "#fff",
+                      color: "#285c6a",
                       fontSize: "12px",
                       fontWeight: "600",
                       fontFamily: "'Manrope', sans-serif",
@@ -1241,7 +1202,7 @@ function BookingPage() {
                     <p
                       style={{
                         fontSize: "12px",
-                        color: isMobile ? "#666" : "#C2E6E6",
+                        color: "#526c77",
                         gridColumn: "span 2",
                       }}
                     >
@@ -1249,11 +1210,7 @@ function BookingPage() {
                     </p>
                   )}
                 </div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div
+              </div></div></section><section className="ov-booking-review"><div><h2>Review your visit</h2><p>{bookingData.specificService || 'Select a treatment'} <span aria-hidden="true"> &middot; </span> {bookingData.date || 'Choose a date'} <span aria-hidden="true"> &middot; </span> {bookingData.time || 'Choose a time'}</p></div><div className="ov-booking-actions"
               style={{
                 display: "flex",
                 flexDirection: isMobile ? "column" : "row",
@@ -1312,8 +1269,7 @@ function BookingPage() {
                   {rescheduleError}
                 </p>
               )}
-            </div>
-          </div>
+            </div></section></div>
         </div>
       </div>
 

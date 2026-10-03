@@ -1,3 +1,4 @@
+import PatientAccount from '../../components/PatientAccount';
 import BrandWordmark from "../../components/BrandWordmark";
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -44,7 +45,7 @@ function BillingsPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  
+
   const [userData, setUserData] = useState({
     id: null,
     firstName: "User",
@@ -363,7 +364,7 @@ function BillingsPage() {
       )}
 
       {/* Main Content */}
-      <div className="ov-workspace"
+      <div className="ov-workspace ov-patient-page ov-page-billings"
         style={{
           marginLeft: isMobile ? 0 : sidebarWidth,
           width: isMobile ? "100%" : `calc(100% - ${sidebarWidth})`,
@@ -372,7 +373,7 @@ function BillingsPage() {
           flexDirection: "column",
           boxSizing: "border-box",
         }}
-      >
+      ><PatientAccount />
         {/* Mobile Top Bar */}
         {isMobile && (
           <div className="ov-color-surface"
@@ -645,7 +646,7 @@ function BillingsPage() {
                       ₱{parseFloat(item.amount || 0).toLocaleString()}
                     </div>
                     <div data-label="Status" style={{ textAlign: "center" }}>
-                      <span
+                      <span data-status={getBillingStatus(item)}
                         style={{
                           padding: "6px 15px",
                           borderRadius: "20px",

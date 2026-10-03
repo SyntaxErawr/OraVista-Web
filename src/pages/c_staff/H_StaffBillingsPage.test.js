@@ -1,0 +1,48 @@
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import StaffBillingsPage from './H_StaffBillingsPage';
+jest.mock('../../components/AdminLayout', () => ({children}) => <div>{children}</div>);
+jest.mock('../../components/ClinicPageTitle', () => () => <h1>Billing</h1>);
+jest.mock('../../components/ClinicPortalTools', () => ({RoleNotifications: () => <button>Notifications</button>}));
+const rows = Array.from({length:22}, (_,i)=>({id:i+1,first_name:'Patient',last_name:String(i+1),service_type:'Cleaning',amount:1000,billing_status:i===21?'Paid':'Pending',receipt_details:{}}));
+beforeEach(() => { global.fetch = jest.fn(async () => ({ok:true,json:async()=>rows})); });
+afterEach(() => jest.restoreAllMocks());
+test('billing queue paginates twenty rows and search and status filters reset its page', async () => {
+ render(<StaffBillingsPage />);
+ await screen.findByText('Patient 1');
+ expect(screen.queryByText('Patient 21')).not.toBeInTheDocument();
+ fireEvent.click(screen.getByRole('button',{name:'Next'}));
+ expect(screen.getByText('Patient 21')).toBeInTheDocument();
+ fireEvent.change(screen.getByLabelText('Search bills'),{target:{value:'Patient 1'}});
+ expect(screen.getByText('Patient 1')).toBeInTheDocument();
+ fireEvent.change(screen.getByLabelText('Search bills'),{target:{value:''}});
+ fireEvent.change(screen.getByLabelText('Status'),{target:{value:'Paid'}});
+ expect(screen.getByText('Patient 22')).toBeInTheDocument();
+ expect(screen.queryByText('Patient 1')).not.toBeInTheDocument();
+});
+test('receipt tracks its bill, calculates balance and confirms discarding changes', async () => {
+ render(<StaffBillingsPage />);
+ fireEvent.click(await screen.findByText('Patient 1'));
+ fireEvent.change(screen.getByLabelText('Paid (PHP)'),{target:{value:'250'}});
+ expect(screen.getByLabelText('Balance (PHP)')).toHaveValue(750);
+ const confirm = jest.spyOn(window,'confirm').mockReturnValue(false);
+ fireEvent.click(screen.getByText('Patient 2'));
+ expect(screen.getByLabelText('Paid (PHP)')).toHaveValue(250);
+ confirm.mockReturnValue(true);
+ fireEvent.click(screen.getByText('Patient 2'));
+ expect(screen.getByLabelText('Paid (PHP)')).toHaveValue(null);
+});
+test('payment save uses the selected bill and prevents duplicate writes', async () => {
+ let finish;
+ global.fetch.mockImplementation((url,options)=>options?.method==='PUT'?new Promise(resolve=>{finish=resolve;}):Promise.resolve({ok:true,json:async()=>rows}));
+ render(<StaffBillingsPage />);
+ fireEvent.click(await screen.findByText('Patient 1'));
+ fireEvent.change(screen.getByLabelText('Paid (PHP)'),{target:{value:'1000'}});
+ const save=screen.getByRole('button',{name:'Mark as Paid'});
+ fireEvent.click(save); fireEvent.click(save);
+ expect(global.fetch.mock.calls.filter(([,init])=>init?.method==='PUT')).toHaveLength(1);
+ expect(save).toBeDisabled();
+ expect(JSON.parse(global.fetch.mock.calls.find(([,init])=>init?.method==='PUT')[1].body).receipt_details.balance).toBe('0.00');
+ finish({ok:true,json:async()=>({})});
+ await waitFor(()=>expect(save).not.toBeDisabled());
+ expect(screen.getByText(/Payment recorded/)).toBeInTheDocument();
+});

@@ -52,7 +52,7 @@ async function openEditor(width = 1440) {
 
 test.each([1440, 390])("explicit cancellation stages, then saves the existing request at width %s", async width => {
   await openEditor(width);
-  expect(screen.getAllByRole("button", { name: /^Cancel / })).toHaveLength(3);
+  expect(screen.getAllByRole("button", { name: /^Cancel Cleaning on / })).toHaveLength(3);
   expect(within(status("Completed").parentElement).queryByRole("button")).toBeNull();
   expect(within(status("Cancelled").parentElement).queryByRole("button")).toBeNull();
   fireEvent.click(status("Pending"));
@@ -102,4 +102,34 @@ test("a failed save restores the appointment and shows the existing failure feed
   await screen.findByText(/Cancellation could not be saved/);
   await waitFor(() => expect(status("Pending")).toBeTruthy());
   expect(writes()).toHaveLength(1);
+});
+
+test("compact desktop appointments show ten visits per page", async () => {
+  window.innerWidth = 1440;
+  appointments = Array.from({ length: 12 }, (_, index) => ({ ...appointments[0], id: index + 1, service_type: `Visit ${index + 1}` }));
+  render(<AppointmentsPage />);
+  await screen.findByText("Visit 10");
+  expect(screen.getAllByLabelText("Appointment status: Pending")).toHaveLength(10);
+  expect(screen.queryByText("Visit 11")).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Next" }));
+  expect(screen.getAllByLabelText("Appointment status: Pending")).toHaveLength(2);
+  expect(screen.getByText("Visit 12")).toBeTruthy();
+  expect(writes()).toHaveLength(0);
+});
+
+test.each([1440, 390])("editing reveals reschedule icons and Cancel editing restores staged changes at width %s", async width => {
+  window.innerWidth = width;
+  render(<AppointmentsPage />);
+  await screen.findByLabelText("Appointment status: Confirmed");
+  expect(screen.queryByRole("button", { name: /Reschedule Cleaning/ })).toBeNull();
+  expect(status("Confirmed").tagName).toBe("SPAN");
+  expect(status("Confirmed").style.backgroundColor).toBe("");
+  fireEvent.click(screen.getByRole("button", { name: "Edit Appointments" }));
+  expect(screen.getByRole("button", { name: /Reschedule Cleaning/ })).toBeTruthy();
+  fireEvent.click(cancelButton("Pending"));
+  fireEvent.click(screen.getByRole("button", { name: "Yes, cancel" }));
+  fireEvent.click(screen.getByRole("button", { name: "Cancel editing" }));
+  expect(status("Pending")).toBeTruthy();
+  expect(screen.queryByRole("button", { name: /Reschedule Cleaning/ })).toBeNull();
+  expect(writes()).toHaveLength(0);
 });

@@ -1,3 +1,4 @@
+import ClinicPageTitle from '../../components/ClinicPageTitle';
 import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTools';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
@@ -229,7 +230,7 @@ function DentistPatientProfile() {
       <div style={styles.container}>
 
         {/* ── HEADER ── */}
-        <header style={styles.header} className="dentist-header-bar ov-header">
+        <header style={styles.header} className="dentist-header-bar ov-header"><ClinicPageTitle />
           {/* Desktop search */}
           <div className="dentist-desktop-search">
             <Search size={16} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
@@ -273,10 +274,7 @@ function DentistPatientProfile() {
         {/* ── MAIN CONTENT ── */}
         <div style={styles.content} className="dentist-content-pad ov-workspace-content">
           <div style={styles.topRow} className="dentist-top-row">
-            <div>
-              <h1 style={styles.pageTitle}>Patient Profile</h1>
-              <p style={styles.pageSubtitle}>Clinical review of patient information and history</p>
-            </div>
+
             <button style={styles.editProfileBtn} onClick={() => setShowEditModal(true)}>
               <Edit size={14} style={{ marginRight: '7px' }} /> Edit Clinical Info
             </button>

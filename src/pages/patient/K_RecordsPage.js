@@ -1,3 +1,4 @@
+import PatientAccount from '../../components/PatientAccount';
 import { fetchPatientHealth } from '../../utils/patientHealth';
 import BrandWordmark from "../../components/BrandWordmark";
 import React, { useState, useEffect, useCallback, useRef } from "react";
@@ -545,7 +546,7 @@ function RecordsPage() {
       )}
 
       {/* Main Content */}
-      <div className="ov-workspace"
+      <div className="ov-workspace ov-patient-page ov-page-records"
         style={{
           marginLeft: isMobile ? 0 : sidebarWidth,
           width: isMobile ? "100%" : `calc(100% - ${sidebarWidth})`,
@@ -556,7 +557,7 @@ function RecordsPage() {
           flexDirection: "column",
           boxSizing: "border-box",
         }}
-      >
+      ><PatientAccount />
         {/* Mobile Top Bar */}
         {isMobile && (
           <div className="ov-color-surface"
@@ -603,27 +604,11 @@ function RecordsPage() {
             >
               Records
             </h1>
-            <p
-              style={{
-                color: "#087F8C",
-                fontSize: "14px",
-                fontWeight: "600",
-                margin: 0,
-              }}
-            >
-              Active User: {userData.firstName}
-            </p>
+
           </div>
 
           {/* Analytics & Risk Tables */}
-          <div
-            style={{
-              backgroundColor: "#f0f2f5",
-              borderRadius: "20px",
-              padding: isMobile ? "20px 16px" : "30px",
-              marginBottom: "24px",
-            }}
-          >
+          <div className="ov-records-panel">
             <h2
               style={{
                 color: "#087F8C",
@@ -648,13 +633,7 @@ function RecordsPage() {
                 Loading data...
               </p>
             ) : (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "28px",
-                }}
-              >
+              <div className="ov-record-tables">
                 {/* Table 1: Analytics */}
                 <div>
                   <h3

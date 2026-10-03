@@ -1,3 +1,4 @@
+import ClinicPageTitle from '../../components/ClinicPageTitle';
 import AppointmentCalendar from '../../components/AppointmentCalendar';
 import AppointmentFilters from '../../components/AppointmentFilters';
 import { matchesAppointment, todaySummary, scopeAppointments, readClinicUser } from '../../utils/clinicAppointments';
@@ -35,9 +36,9 @@ function formatAppointmentTime(value) {
 function StaffAppointments() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [filters, setFilters] = useState({ query: searchParams.get('q') || '', appointment: searchParams.get('appointment') || '', dentist: '', status: '', fromTime: '', toTime: '' });
+  const [filters, setFilters] = useState({ query: searchParams.get('q') || '', appointment: searchParams.get('appointment') || '', dentist: searchParams.get('dentist') || '', status: '', fromTime: '', toTime: '' });
   const [loadError, setLoadError] = useState('');
-  useEffect(() => { setFilters(current => ({ ...current, query: searchParams.get('q') || '', appointment: searchParams.get('appointment') || '' })); setSelectedDate(null); }, [searchParams]);
+  useEffect(() => { setFilters(current => ({ ...current, query: searchParams.get('q') || '', appointment: searchParams.get('appointment') || '', dentist: searchParams.get('dentist') || '' })); setSelectedDate(null); }, [searchParams]);
   const clearFilters = () => { setFilters({ query: '', appointment: '', dentist: '', status: '', fromTime: '', toTime: '' }); setSelectedDate(null); };
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [appointments, setAppointments] = useState([]);
@@ -62,7 +63,7 @@ function StaffAppointments() {
   // --- Calendar & Filter States ---
   const [selectedDate, setSelectedDate] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const appointmentsPerPage = 5;
+  const appointmentsPerPage = 10;
 
   const formatDisplayDate = (dbDate) => {
     if (!dbDate) return "No date";
@@ -324,7 +325,7 @@ function StaffAppointments() {
         )}
 
         {/* HEADER */}
-        <header style={styles.header} className="dashboard-page-header ov-header">
+        <header style={styles.header} className="dashboard-page-header ov-header"><ClinicPageTitle />
           <div style={styles.headerActions} className="header-actions">
             <div style={styles.searchBox} className="header-search-box">
               <Search size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
@@ -369,12 +370,7 @@ function StaffAppointments() {
 
         {/* CONTENT */}
         <div style={styles.content} className="settings-content ov-workspace-content">
-          <div style={styles.titleSection}>
-            <h1 style={styles.pageTitle}>Master Schedule</h1>
-            <p style={styles.pageSubtitle}>
-              Daily appointment management and patient check-in
-            </p>
-          </div>
+
 
           <div style={styles.mainGrid} className="appointment-main-grid">
             {/* LEFT COLUMN: Calendar & Summary */}

@@ -1,3 +1,5 @@
+import PaginatedList from '../../components/PaginatedList';
+import ClinicPageTitle from '../../components/ClinicPageTitle';
 import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTools';
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -73,7 +75,7 @@ function StaffDashboard() {
     <AdminLayout>
       <div style={styles.container}>
         {/* HEADER */}
-        <header style={styles.header} className="dashboard-page-header ov-header">
+        <header style={styles.header} className="dashboard-page-header ov-header"><ClinicPageTitle />
           <div style={styles.headerActions} className="header-actions">
             <div style={styles.searchBox} className="header-search-box">
               <Search size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
@@ -114,7 +116,7 @@ function StaffDashboard() {
 
         {/* DASHBOARD CONTENT */}
         <div style={styles.content} className="settings-content ov-workspace-content">
-          <div className="ov-page-intro"><span className="ov-eyebrow">Your workspace</span><h1>Ready for the day</h1><p>Keep appointments and patient visits moving smoothly.</p></div>
+
           <div style={styles.gridTop} className="dashboard-grid-top">
             {/* CARD 1: TODAY'S APPOINTMENTS */}
             <div className="ov-panel" style={styles.card}>
@@ -195,7 +197,7 @@ function StaffDashboard() {
             <div className="ov-panel" style={styles.listCard}>
               <p style={styles.sectionTitle}>Recent Patient Visits</p>
               {recentVisits.length > 0 ? (
-                recentVisits.slice(0, 5).map((visit, idx) => (
+                <PaginatedList pageSize={10} label="Dashboard list pages">{recentVisits.map((visit, idx) => (
                   <div key={visit.id || idx} style={styles.patientRow}>
                     <div style={styles.pAvatar}>
                       <User size={18} color="var(--ov-on-color, #fff)" />
@@ -209,7 +211,7 @@ function StaffDashboard() {
                       <p style={styles.pTime}>{visit.time || "Completed"}</p>
                     </div>
                   </div>
-                ))
+                ))}</PaginatedList>
               ) : (
                 <div style={styles.emptyState}>
                   <p style={styles.emptyText}>No recent patient visits recorded.</p>
@@ -224,7 +226,7 @@ function StaffDashboard() {
               {stats.loading ? (
                 <p style={styles.emptyText}>Loading schedule...</p>
               ) : appointments.length > 0 ? (
-                appointments.map((item, idx) => (
+                <PaginatedList pageSize={10}>{appointments.map((item, idx) => (
                   <div key={idx} style={styles.scheduleRow}>
                     <div style={styles.scheduleInfo}>
                       <span style={styles.scheduleTime}>🕒 {item.time}</span>
@@ -238,7 +240,7 @@ function StaffDashboard() {
                       {item.status}
                     </span>
                   </div>
-                ))
+                ))}</PaginatedList>
               ) : (
                 <div style={styles.emptyState}>
                   <p style={styles.emptyText}>No appointments scheduled for today.</p>

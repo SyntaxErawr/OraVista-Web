@@ -1,3 +1,5 @@
+import PaginatedList from '../../components/PaginatedList';
+import ClinicPageTitle from '../../components/ClinicPageTitle';
 import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTools';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -58,7 +60,7 @@ function DentistPatientList() {
     <AdminLayout>
       <div style={styles.container}>
         {/* HEADER - Dentist Profile */}
-        <header style={styles.header} className="dashboard-page-header ov-header">
+        <header style={styles.header} className="dashboard-page-header ov-header"><ClinicPageTitle />
           <div style={styles.headerActions} className="header-actions">
             <div style={styles.searchBox} className="header-search-box">
               <Search size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
@@ -97,10 +99,7 @@ function DentistPatientList() {
 
         {/* CONTENT */}
         <div style={styles.content} className="settings-content ov-workspace-content">
-          <div style={styles.titleSection}>
-            <h1 style={styles.pageTitle}>My Patient List</h1>
-            <p style={styles.pageSubtitle}>Review clinical records and procedure history</p>
-          </div>
+
 
           <div style={styles.tableControls} className="table-controls-row">
             <div style={styles.innerSearch}>
@@ -131,7 +130,7 @@ function DentistPatientList() {
                     <th style={styles.th}>Actions</th>
                   </tr>
                 </thead>
-                <tbody>
+                <PaginatedList table pageSize={20} resetKey={searchQuery} label="Directory pages">
                   {filteredPatients.length > 0 ? filteredPatients.map((patient) => (
                     <tr
                       key={patient.dbId}
@@ -163,7 +162,7 @@ function DentistPatientList() {
                       <td colSpan="6" style={{ padding: '20px', textAlign: 'center', color: "var(--ov-on-color, #fff)" }}>No results found for "{searchQuery}"</td>
                     </tr>
                   )}
-                </tbody>
+                </PaginatedList>
               </table>
             )}
           </div>

@@ -1,3 +1,5 @@
+import PaginatedList from '../../components/PaginatedList';
+import ClinicPageTitle from '../../components/ClinicPageTitle';
 import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTools';
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/AdminLayout';
@@ -45,7 +47,7 @@ function DentistDashboard() {
     <AdminLayout>
       <div style={styles.container}>
         {/* HEADER */}
-        <header style={styles.header} className="dashboard-page-header ov-header">
+        <header style={styles.header} className="dashboard-page-header ov-header"><ClinicPageTitle />
           <div style={styles.headerActions} className="header-actions">
             <div style={styles.searchBox} className="header-search-box">
               <Search size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
@@ -84,7 +86,7 @@ function DentistDashboard() {
 
         {/* CONTENT AREA */}
         <div style={styles.content} className="settings-content ov-workspace-content">
-          <div className="ov-page-intro"><span className="ov-eyebrow">Your workspace</span><h1>Your day in focus</h1><p>Your schedule and patient care, together in one place.</p></div>
+
           {/* TOP STAT CARDS */}
           <div style={styles.gridTop} className="dashboard-grid-top">
             <div className="ov-panel" style={styles.card}>
@@ -131,7 +133,7 @@ function DentistDashboard() {
             <div className="ov-panel" style={styles.listCard}>
               <p style={styles.sectionTitle}>Recent Patient Visits</p>
               {recentVisits.length > 0 ? (
-                recentVisits.slice(0, 5).map((visit, idx) => (
+                <PaginatedList pageSize={10} label="Dashboard list pages">{recentVisits.map((visit, idx) => (
                   <div key={visit.id || idx} style={styles.patientRow}>
                     <div style={styles.pAvatar}>
                       <User size={18} color="var(--ov-on-color, #fff)" />
@@ -145,7 +147,7 @@ function DentistDashboard() {
                       <p style={styles.pTime}>{visit.time || 'Completed'}</p>
                     </div>
                   </div>
-                ))
+                ))}</PaginatedList>
               ) : (
                 <div style={styles.emptyState}>
                   <p style={styles.emptyText}>No recent patient visits recorded.</p>
@@ -159,7 +161,7 @@ function DentistDashboard() {
               {loading ? (
                 <p style={styles.emptyText}>Loading schedule...</p>
               ) : stats.schedule.length > 0 ? (
-                stats.schedule.slice(0, 5).map((item, idx) => (
+                <PaginatedList pageSize={10} label="Dashboard list pages">{stats.schedule.map((item, idx) => (
                   <div key={idx} style={styles.scheduleRow}>
                     <div style={styles.scheduleInfo}>
                       <span style={styles.scheduleTime}>🕒 {item.time}</span>
@@ -173,7 +175,7 @@ function DentistDashboard() {
                       {item.status || 'Pending'}
                     </span>
                   </div>
-                ))
+                ))}</PaginatedList>
               ) : (
                 <div style={styles.emptyState}>
                   <p style={styles.emptyText}>No appointments assigned.</p>

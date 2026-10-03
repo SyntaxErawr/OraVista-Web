@@ -1,3 +1,4 @@
+import PatientAccount from '../../components/PatientAccount';
 import PatientDialog from "../../components/PatientDialog";
 import BrandWordmark from "../../components/BrandWordmark";
 import React, { useState, useEffect, useCallback, useRef } from "react";
@@ -8,6 +9,7 @@ import {
   LayoutDashboard,
   User,
   CalendarHeart,
+  CalendarClock,
   History,
   FileText,
   Settings,
@@ -73,7 +75,7 @@ function AppointmentsPage() {
   const [selectedDentist, setSelectedDentist] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const appointmentsPerPage = 5;
+  const appointmentsPerPage = 10;
 
   useEffect(() => {
     setCurrentPage(1);
@@ -279,50 +281,26 @@ function AppointmentsPage() {
   const canCancelStatus = (status) =>
     isEditing && ["Pending", "Approved", "Confirmed"].includes(status);
 
-  const getStatusStyle = (status) => {
-    const base = {
-      padding: "6px 14px",
-      borderRadius: "20px",
-      fontSize: "12px",
-      fontWeight: "700",
-      color: "var(--ov-on-color, #fff)",
-      display: "inline-block",
-      textAlign: "center",
-      cursor: "default",
-      whiteSpace: "nowrap",
-      border: "2px solid transparent",
-    };
-    switch (status) {
-      case "Approved":
-      case "Confirmed":
-        return { ...base, backgroundColor: "#10b981" };
-      case "Pending":
-        return { ...base, backgroundColor: "#ffc107" };
-      case "Reschedule Requested":
-        return { ...base, backgroundColor: "#007bff" };
-      case "Completed":
-        return { ...base, backgroundColor: "var(--ov-completed, #2864c5)", color: "#fff" };
-      case "Cancelled":
-        return { ...base, backgroundColor: "#ff4444" };
-      default:
-        return { ...base, backgroundColor: "#ffc107" };
-    }
-  };
+  const getStatusStyle = status => ({
+    color: ({ Confirmed: '#087357', Approved: '#087357', Pending: '#926000', Completed: '#285cab', Cancelled: '#b52e48', 'Reschedule Requested': '#6050a0' })[status] || '#526773',
+    fontSize: '13px', fontWeight: 700, lineHeight: 1.4,
+  });
 
   const renderAppointmentStatus = (appt) => (
     <div className="appointment-status-actions">
       <span style={getStatusStyle(appt.status)} aria-label={`Appointment status: ${appt.status}`}>
         {appt.status}
       </span>
+      {isEditing && appt.status === "Confirmed" && <button type="button" className="ov-reschedule-action" title="Reschedule appointment" disabled={isSavingChanges} onClick={() => handleReschedule(appt)} aria-label={`Reschedule ${appt.service_type || 'appointment'}`}><CalendarClock size={16} aria-hidden="true" /><span>Reschedule</span></button>}
       {canCancelStatus(appt.status) && (
         <button
           type="button"
-          className="appointment-cancel-button"
+          className="appointment-cancel-button" title="Cancel appointment"
           onClick={() => handleCancelClick(appt)}
           disabled={isSavingChanges}
           aria-label={`Cancel ${appt.service_type || "appointment"} on ${new Date(appt.appointment_date).toLocaleDateString("en-PH")}`}
         >
-          <XCircle size={14} aria-hidden="true" /> Cancel
+          <XCircle size={16} aria-hidden="true" /><span>Cancel</span>
         </button>
       )}
     </div>
@@ -801,14 +779,14 @@ function AppointmentsPage() {
       )}
 
       {/* Main Content */}
-      <div className="ov-workspace"
+      <div className="ov-workspace ov-patient-page ov-page-appointments"
         style={{
           marginLeft: isMobile ? 0 : sidebarWidth,
           width: isMobile ? "100%" : `calc(100% - ${sidebarWidth})`,
           transition: "margin-left 0.3s ease",
           boxSizing: "border-box",
         }}
-      >
+      ><PatientAccount />
         {/* Mobile Top Bar */}
         {isMobile && (
           <div className="ov-color-surface"
@@ -986,29 +964,11 @@ function AppointmentsPage() {
               />
             </div>
 
-            {/* Edit/Apply button */}
             {isEditing ? (
-              <button
-                onClick={handleApplyClick}
-                style={{
-                  backgroundColor: "#28a745",
-                  border: "none",
-                  padding: "12px 28px",
-                  borderRadius: "10px",
-                  color: "var(--ov-on-color, #fff)",
-                  fontWeight: "700",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  fontFamily: "'Manrope', sans-serif",
-                  marginLeft: isMobile ? 0 : "auto",
-                  width: isMobile ? "100%" : "auto",
-                  justifyContent: "center",
-                }}
-              >
-                <Save size={16} /> Apply
-              </button>
+              <div className="ov-edit-controls">
+                <button type="button" onClick={handleDiscardChanges} disabled={isSavingChanges}>Cancel editing</button>
+                <button type="button" onClick={handleApplyClick} disabled={isSavingChanges}><Save size={16} /> Apply</button>
+              </div>
             ) : (
               <button
                 onClick={handleEditClick}
@@ -1034,15 +994,16 @@ function AppointmentsPage() {
             )}
           </div>
 
+          {!isEditing && <p className="appointment-edit-hint">Need to cancel or reschedule? Select <strong>Edit Appointments</strong> to see your options.</p>}
           {isEditing && (
             <p className="appointment-edit-hint" role="status">
-              Choose Cancel beside an appointment, then Apply to save your changes.
+              Changes are saved only when you select Apply.
             </p>
           )}
 
           {appointmentsError && <div className="ov-inline-error" role="alert">{appointmentsError} <button type="button" className="ov-ui-button ov-text-link" onClick={() => fetchAppointments(userData.id)}>Retry</button></div>}
           {/* Appointments Table */}
-          <div
+          <div className="ov-appointments-surface"
             style={{ "--ov-on-color": "var(--ov-ink)",
               backgroundColor: isMobile ? "#EAF5F6" : "var(--ov-primary)",
               borderRadius: "24px",
@@ -1052,7 +1013,7 @@ function AppointmentsPage() {
             <div style={{ overflowX: isMobile ? "visible" : "auto" }}>
             {/* Desktop Table Header */}
             {!isMobile && (
-              <div
+              <div className="ov-appointments-head"
                 style={{
                   display: "grid",
                   gridTemplateColumns: "minmax(170px, 1.4fr) minmax(180px, 1.4fr) minmax(180px, 1.5fr) minmax(180px, 1.5fr) minmax(110px, 1fr) minmax(210px, 1.4fr)",
@@ -1075,7 +1036,7 @@ function AppointmentsPage() {
               </div>
             )}
 
-            <div
+            <div className="ov-appointments-rows"
               style={{
                 display: "flex",
                 flexDirection: "column",
@@ -1087,7 +1048,7 @@ function AppointmentsPage() {
                 displayedAppointments.map((appt) =>
                   isMobile ? (
                     /* Mobile Card Layout */
-                    <div
+                    <div className="ov-appointment-row is-mobile"
                       key={appt.id}
                       style={{
                         backgroundColor: "white",
@@ -1155,26 +1116,7 @@ function AppointmentsPage() {
                           }}
                         >
                         {renderAppointmentStatus(appt)}
-                        {appt.status === "Confirmed" && (
-                          <button
-                            type="button"
-                            onClick={() => handleReschedule(appt)}
-                            style={{
-                              marginTop: "8px",
-                              padding: "5px 10px",
-                              borderRadius: "8px",
-                              border: "1px solid #087F8C",
-                              backgroundColor: "#C2E6E6",
-                              color: "#087F8C",
-                              fontSize: "11px",
-                              fontWeight: "700",
-                              cursor: "pointer",
-                              fontFamily: "'Manrope', sans-serif",
-                            }}
-                          >
-                            Reschedule
-                          </button>
-                        )}
+
                         </div>
                       </div>
                       <div
@@ -1203,7 +1145,7 @@ function AppointmentsPage() {
                     </div>
                   ) : (
                     /* Desktop Row Layout */
-                    <div
+                    <div className="ov-appointment-row is-desktop"
                       key={appt.id}
                       style={{
                         display: "grid",
@@ -1267,26 +1209,7 @@ function AppointmentsPage() {
                         }}
                       >
                         {renderAppointmentStatus(appt)}
-                        {appt.status === "Confirmed" && (
-                          <button
-                            type="button"
-                            onClick={() => handleReschedule(appt)}
-                            style={{
-                              marginTop: "8px",
-                              padding: "5px 10px",
-                              borderRadius: "8px",
-                              border: "1px solid #087F8C",
-                              backgroundColor: "#C2E6E6",
-                              color: "#087F8C",
-                              fontSize: "11px",
-                              fontWeight: "700",
-                              cursor: "pointer",
-                              fontFamily: "'Manrope', sans-serif",
-                            }}
-                          >
-                            Reschedule
-                          </button>
-                        )}
+
                       </div>
                     </div>
                   ),

@@ -1,3 +1,5 @@
+import ClinicPageTitle from '../../components/ClinicPageTitle';
+import PaginatedList from '../../components/PaginatedList';
 import React, { useState, useEffect, useCallback } from 'react';
 import AdminLayout from '../../components/AdminLayout';
 import {
@@ -274,7 +276,7 @@ styleSheet.innerText = `
       gap: 15px;
       margin-bottom: 20px !important;
     }
-    
+
     .responsive-title {
       font-size: 24px !important;
       line-height: 1.2;
@@ -343,16 +345,13 @@ styleSheet.innerText = `
 `;
 document.head.appendChild(styleSheet);
   return (
-    <AdminLayout>
+    <AdminLayout><header className="ov-header ov-generated-header"><ClinicPageTitle /></header>
       <div style={styles.container}>
         {/* ... HEADER CODE REMAINS SAME ... */}
 
         <div className="ov-workspace-content" style={styles.content}>
  <div className="dashboard-header-row" style={styles.topRow}>
-            <div>
-              <h1 className="responsive-title" style={styles.pageTitle}>Preventative & Predictive Analytics</h1>
-              <p style={styles.pageSubtitle}>Machine Learning forecasts for clinical outcomes and clinic operations</p>
-            </div>
+
             <div style={styles.aiBadge}>
               <BrainCircuit size={18} style={{ flexShrink: 0 }} />
               <span style={{ whiteSpace: 'nowrap' }}>OraVista ML Engine Active</span>
@@ -544,7 +543,7 @@ document.head.appendChild(styleSheet);
                   <p style={{ textAlign: 'center', color: '#666', padding: '20px' }}>Loading Schedule...</p>
                 ) : noShowPredictions.length > 0 ? (
                   <div className="no-show-list-scroll" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                    {noShowPredictions.map((appt) => (
+                    {<PaginatedList pageSize={10}>{noShowPredictions.map((appt) => (
                       <div key={appt.appointment_id} style={styles.noShowItem}>
                         <div style={{ flex: 1 }}>
                           <p style={styles.noShowName}>{appt.patient}</p>
@@ -582,7 +581,7 @@ document.head.appendChild(styleSheet);
                           )}
                         </div>
                       </div>
-                    ))}
+                    ))}</PaginatedList>}
                   </div>
                 ) : (
                   <p style={{ textAlign: 'center', color: '#666', padding: '20px' }}>No upcoming appointments found.</p>
@@ -604,7 +603,7 @@ document.head.appendChild(styleSheet);
                 <p style={{ textAlign: 'center', color: '#666', marginTop: '20px' }}>Loading Diagnostic Findings...</p>
               ) : diagnosticFindings ? (
                 <div className="diagnostic-internal-grid">
-                  
+
                   {/* Left Column: Detected Pathologies / Annotations */}
                   <div className="col-left">
                     <span style={styles.actionLabel}>Detected Pathologies / Annotations:</span>
@@ -613,11 +612,11 @@ document.head.appendChild(styleSheet);
                         ? diagnosticFindings.ai_findings.annotations
                         : (diagnosticFindings.ai_findings?.predictions || []);
                       const humanVerified = diagnosticFindings.ai_findings?.human_verified;
-                      
+
                       if (findings.length === 0) {
                         return <p style={{ fontSize: '13px', color: '#666', margin: '5px 0 0 0' }}>No findings detected.</p>;
                       }
-                      
+
                       return (
                         <div className="annotations-list-scroll" style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
                           {findings.map((item, idx) => {

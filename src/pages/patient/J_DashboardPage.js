@@ -1,3 +1,4 @@
+import PatientAccount from '../../components/PatientAccount';
 import BrandWordmark from "../../components/BrandWordmark";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -48,6 +49,7 @@ function DashboardPage() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [historySearch, setHistorySearch] = useState("");
+  const [historyPage, setHistoryPage] = useState(1);
   const [showNotifications, setShowNotifications] = useState(false);
   const [appLanguage] = useState(localStorage.getItem("language") || "English");
   const [userData, setUserData] = useState({
@@ -63,6 +65,9 @@ function DashboardPage() {
     [appt.service_type, appt.dentist_name, appt.status, appt.appointment_date]
       .join(" ").toLowerCase().includes(historySearch.trim().toLowerCase())
   );
+  const historyPageCount = Math.max(1, Math.ceil(historyAppointments.length / 10));
+  const currentHistoryPage = Math.min(historyPage, historyPageCount);
+  const visibleHistory = historyAppointments.slice((currentHistoryPage - 1) * 10, currentHistoryPage * 10);
   const [notifications, setNotifications] = useState([]);
   const [notificationPage, setNotificationPage] = useState(1);
   const [notificationChoices, setNotificationChoices] = useState({});
@@ -667,7 +672,7 @@ function DashboardPage() {
         )}
 
         {/* Main Content */}
-        <div className="ov-workspace"
+        <div className="ov-workspace ov-patient-page ov-page-dashboard"
           style={{
             marginLeft: isMobile ? 0 : sidebarWidth,
             width: isMobile ? "100%" : `calc(100% - ${sidebarWidth})`,
@@ -749,7 +754,8 @@ function DashboardPage() {
                 style={{ display: "flex", alignItems: "center", gap: "25px" }}
                 className="patient-header-actions"
               >
-                {/* Mobile search toggle */}
+                <PatientAccount />
+                {/* Notifications */}
                 <div style={{ position: "relative", flexShrink: 0 }}>
                   <button className="ov-ui-button"
                     style={{ cursor: "pointer", position: "relative" }}
@@ -898,7 +904,8 @@ function DashboardPage() {
               }}
               className="patient-dashboard-grid"
             >
-              <div style={cardStyle} className="dashboard-card ov-panel">
+              <div className="ov-dashboard-overview">
+              <div style={cardStyle} className="dashboard-card ov-panel ov-upcoming-card">
                 <h3 style={{ margin: 0, fontSize: "20px" }}>
                   Upcoming Appointments
                 </h3>
@@ -939,7 +946,7 @@ function DashboardPage() {
                               margin: "0 0 5px 0",
                               fontSize: "22px",
                               fontWeight: "700",
-                              color: "#10b981",
+                              color: "#087357",
                             }}
                           >
                             {new Date(
@@ -970,7 +977,7 @@ function DashboardPage() {
                             margin: "12px 0 0 0",
                             fontSize: "13px",
                             fontWeight: "700",
-                            color: "#10b981",
+                            color: "#087357",
                           }}
                         >
                           +{additionalUpcomingCount} more
@@ -981,9 +988,10 @@ function DashboardPage() {
                     <p style={{ opacity: 0.8 }}>No upcoming appointments</p>
                   )}
                 </div>
+                <a className="ov-dashboard-shortcut" href="/appointments">Manage appointments &rarr;</a>
               </div>
 
-              <div style={cardStyle} className="dashboard-card ov-panel">
+              <div style={cardStyle} className="dashboard-card ov-panel ov-fact-card">
                 <h3 style={{ margin: 0, fontSize: "20px" }}>
                   Today's Fun Fact
                 </h3>
@@ -1008,7 +1016,7 @@ function DashboardPage() {
                 </div>
               </div>
 
-              <div style={cardStyle} className="dashboard-card ov-panel">
+              <div style={cardStyle} className="dashboard-card ov-panel ov-summary-card">
                 <h3 style={{ margin: 0, fontSize: "20px" }}>
                   Dental Summary
                 </h3>
@@ -1026,9 +1034,11 @@ function DashboardPage() {
                     dental summary.
                   </p>
                 </div>
+                <a className="ov-dashboard-shortcut" href="/records">View dental records &rarr;</a>
               </div>
 
-              {/* Full-width appointment history */}
+              </div>
+              {/* Appointment history */}
               <div
                 style={{
                   ...cardStyle,
@@ -1037,7 +1047,7 @@ function DashboardPage() {
                   marginTop: "10px",
                   justifyContent: "flex-start",
                 }}
-                className="dashboard-card grid-span-3 ov-panel"
+                className="dashboard-card grid-span-3 ov-panel ov-history-card"
               >
                 <div
                   style={{
@@ -1072,13 +1082,13 @@ function DashboardPage() {
                 <label className="ov-field-label" htmlFor="history-search">Search appointment history</label>
                 <div className="ov-search-field">
                   <Search size={18} aria-hidden="true" />
-                  <input id="history-search" type="search" value={historySearch} onChange={event => setHistorySearch(event.target.value)} placeholder="Search service, dentist, status or date" />
+                  <input id="history-search" type="search" value={historySearch} onChange={event => { setHistorySearch(event.target.value); setHistoryPage(1); }} placeholder="Search service, dentist, status or date" />
                 </div>
                 <div
                   style={{
                     overflowX: "auto",
                     overflowY: "auto",
-                    maxHeight: "180px",
+                    maxHeight: "550px",
                   }}
                 >
                   {historyAppointments.length > 0 ? (
@@ -1137,9 +1147,10 @@ function DashboardPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {historyAppointments.map((appt) => (
+                        {visibleHistory.map((appt) => (
                           <tr
                             key={appt.id}
+                            onClick={() => navigate("/appointments")}
                             style={{
                               borderBottom: "1px solid var(--ov-on-line, rgba(255,255,255,0.1))",
                             }}
@@ -1162,7 +1173,7 @@ function DashboardPage() {
                               </div>
                             </td>
                             <td style={{ padding: "10px 0" }}>
-                              {appt.service_type}
+                              <a href="/appointments" className="ov-history-link">{appt.service_type}</a>
                             </td>
                             <td
                               style={{
@@ -1180,12 +1191,12 @@ function DashboardPage() {
                                 whiteSpace: "nowrap",
                                 color:
                                   appt.status === "Pending"
-                                    ? "#ffc107"
+                                    ? "#926000"
                                     : appt.status === "Cancelled"
                                     ? "#ff4d4d"
                                     : appt.status === "Completed"
                                     ? "var(--ov-completed, #2864c5)"
-                                    : "#10b981",
+                                    : "#087357",
                               }}
                             >
                               {appt.status || "Pending"}
@@ -1210,6 +1221,13 @@ function DashboardPage() {
                     </div>
                   )}
                 </div>
+                {historyAppointments.length > 0 && <nav className="ov-history-pagination" aria-label="Appointment history pages">
+                  <span>{(currentHistoryPage - 1) * 10 + 1}&ndash;{Math.min(currentHistoryPage * 10, historyAppointments.length)} of {historyAppointments.length}</span>
+                  <button type="button" disabled={currentHistoryPage === 1} onClick={() => setHistoryPage(currentHistoryPage - 1)}>Previous</button>
+                  <span aria-live="polite">Page {currentHistoryPage} of {historyPageCount}</span>
+                  <button type="button" disabled={currentHistoryPage === historyPageCount} onClick={() => setHistoryPage(currentHistoryPage + 1)}>Next</button>
+                </nav>}
+
               </div>
             </div>
           </div>

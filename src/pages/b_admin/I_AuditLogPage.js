@@ -1,3 +1,5 @@
+import ClinicPageTitle from '../../components/ClinicPageTitle';
+import PaginatedList from '../../components/PaginatedList';
 import React, { useCallback, useEffect, useState } from "react";
 import { ClipboardList, Search, Activity, Clock } from "lucide-react";
 import AdminLayout from "../../components/AdminLayout";
@@ -18,13 +20,13 @@ function I_AuditLogPage() {
       // If it doesn't exist yet, this will catch the error and you can use mock data for testing.
       const response = await fetch(`${API_BASE}/api/admin/audit-logs`);
       if (!response.ok) throw new Error("Unable to load audit logs.");
-      
+
       const records = await response.json();
       setAuditLogs(records);
     } catch (error) {
       console.error("Audit log fetch error:", error);
       setError("Unable to connect to the audit log database. Showing placeholder data for preview.");
-      
+
       // Placeholder data to preview the UI if the endpoint isn't ready
       setAuditLogs([
         { id: 1, timestamp: new Date().toISOString(), action: "Approved", details: "Approved billing for patient John Doe - Procedure: Cleaning", amount: "1500.00", user: "Staff" },
@@ -51,13 +53,10 @@ function I_AuditLogPage() {
   });
 
   return (
-    <AdminLayout>
+    <AdminLayout><header className="ov-header ov-generated-header"><ClinicPageTitle /></header>
       <div style={styles.page}>
         <div style={styles.header}>
-          <div>
-            <h1 style={styles.title}>Action Audit Log</h1>
-            <p style={styles.subtitle}>Monitor staff actions, billing updates, and system records.</p>
-          </div>
+
           <ClipboardList size={38} color="#087F8C" />
         </div>
 
@@ -67,7 +66,7 @@ function I_AuditLogPage() {
               <Activity size={24} color="#087F8C" />
               <h2 style={styles.sectionTitle}>System Activity</h2>
             </div>
-            
+
             <div style={styles.searchContainer}>
               <Search size={18} color="#65738a" style={styles.searchIcon} />
               <input
@@ -99,7 +98,7 @@ function I_AuditLogPage() {
                       <th style={styles.th}>Amount (PHP)</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <PaginatedList table columns={6} pageSize={20} resetKey={searchTerm}>
                     {filteredLogs.map((log) => (
                       <tr key={log.id} style={styles.tr}>
                         <td style={styles.td}>
@@ -123,7 +122,7 @@ function I_AuditLogPage() {
                         </td>
                       </tr>
                     ))}
-                  </tbody>
+                  </PaginatedList>
                 </table>
               </div>
             )}

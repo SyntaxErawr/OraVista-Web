@@ -1,3 +1,5 @@
+import PaginatedList from '../../components/PaginatedList';
+import ClinicPageTitle from '../../components/ClinicPageTitle';
 import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTools';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -59,7 +61,7 @@ function StaffPatientList() {
     <AdminLayout>
       <div style={styles.container}>
         {/* TOP NAV HEADER - Staff Profile */}
-        <header style={styles.header} className="dashboard-page-header ov-header">
+        <header style={styles.header} className="dashboard-page-header ov-header"><ClinicPageTitle />
           <div style={styles.headerActions} className="header-actions">
             <div style={styles.searchBox} className="header-search-box">
               <Search size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
@@ -100,10 +102,7 @@ function StaffPatientList() {
 
         {/* PAGE CONTENT */}
         <div style={styles.content} className="settings-content ov-workspace-content">
-          <div style={styles.titleSection}>
-            <h1 style={styles.pageTitle}>Patients List</h1>
-            <p style={styles.pageSubtitle}>Manage and view all patient records</p>
-          </div>
+
 
           <div style={styles.tableControls} className="table-controls-row">
             <div style={styles.innerSearch}>
@@ -138,7 +137,7 @@ function StaffPatientList() {
                     <th style={styles.th}>Actions</th>
                   </tr>
                 </thead>
-                <tbody>
+                <PaginatedList table pageSize={20} resetKey={searchQuery} label="Directory pages">
                   {filteredPatients.length > 0 ? filteredPatients.map((patient) => (
                     <tr
                       key={patient.id}
@@ -169,7 +168,7 @@ function StaffPatientList() {
                       </td>
                     </tr>
                   )}
-                </tbody>
+                </PaginatedList>
               </table>
             )}
           </div>

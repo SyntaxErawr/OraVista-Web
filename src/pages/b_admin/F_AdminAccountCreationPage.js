@@ -1,3 +1,4 @@
+import ClinicPageTitle from '../../components/ClinicPageTitle';
 import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTools';
 import React, { useState } from 'react';
 import AdminLayout from '../../components/AdminLayout';
@@ -188,7 +189,7 @@ function AdminAccountCreation() {
           </div>
         )}
 
-        <header className="aac-header">
+        <header className="aac-header"><ClinicPageTitle />
           <div className="aac-search-wrapper">
             <div className={`aac-search-box ${isSearchExpanded ? 'expanded' : ''}`}>
               <Search className="aac-search-icon" size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
@@ -216,10 +217,7 @@ function AdminAccountCreation() {
         </header>
 
         <div className="aac-content">
-          <div className="aac-title-section">
-            <h1 className="aac-page-title">Account Creation</h1>
-            <p className="aac-page-subtitle">Create new accounts for dentists or staff members</p>
-          </div>
+
 
           <form className="aac-form-card" onSubmit={handleSubmit}>
             <p className="aac-field-label">Account Type <span>*</span></p>

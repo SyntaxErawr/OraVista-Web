@@ -1,5 +1,8 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { CreditCard, ReceiptText, Save, CheckCircle2 } from "lucide-react";
+import { RoleNotifications } from '../../components/ClinicPortalTools';
+import ClinicPageTitle from '../../components/ClinicPageTitle';
+import PaginatedList from '../../components/PaginatedList';
+import React, { useCallback, useEffect, useState, useRef } from "react";
+import { User, ReceiptText, Save, CheckCircle2 } from "lucide-react";
 import AdminLayout from "../../components/AdminLayout";
 
 const API_BASE = "https://oravista-server-474976105474.asia-southeast1.run.app";
@@ -8,13 +11,20 @@ const parseReceiptDetails = (details) => {
   if (!details) return {};
   if (typeof details === "object") return details;
   try {
-    return JSON.parse(details);
+    return JSON.parse(details) || {};
   } catch {
     return {};
   }
 };
 
 function StaffBillingsPage() {
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [loadError, setLoadError] = useState("");
+  const [dirty, setDirty] = useState(false);
+  const savingRef = useRef(false);
+  const receiptForm = useRef(null);
+  const clinicUser = JSON.parse(localStorage.getItem("user") || "{}");
   const [billings, setBillings] = useState([]);
   const [selectedBilling, setSelectedBilling] = useState(null);
   const [receipt, setReceipt] = useState({
@@ -30,14 +40,15 @@ function StaffBillingsPage() {
 
   const fetchBillings = useCallback(async () => {
     setIsLoading(true);
+    setLoadError("");
     try {
       const response = await fetch(`${API_BASE}/api/staff/billings`);
       if (!response.ok) throw new Error("Unable to load billing records.");
       const records = await response.json();
-      setBillings(records);
+      setBillings(Array.isArray(records) ? records : []);
     } catch (error) {
       console.error("Staff billing fetch error:", error);
-      setMessage("Unable to load billing records. Please try again.");
+      setLoadError("Unable to load billing records. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -48,20 +59,27 @@ function StaffBillingsPage() {
   }, [fetchBillings]);
 
   const selectBilling = (billing) => {
+    if (savingRef.current) return;
+    if (dirty && !window.confirm("Discard unsaved receipt changes and open this bill?")) return;
+    setDirty(false);
     const savedDetails = parseReceiptDetails(billing.receipt_details);
     setSelectedBilling(billing);
     setReceipt({
       procedure: savedDetails.procedure || billing.service_type || "",
-      charge: savedDetails.charge || String(billing.amount || ""),
-      paid: savedDetails.paid || (billing.billing_status === "Paid" ? String(billing.amount || "") : ""),
-      balance: savedDetails.balance || (billing.billing_status === "Paid" ? "0.00" : String(billing.amount || "0.00")),
+      charge: savedDetails.charge ?? String(billing.amount || ""),
+      paid: savedDetails.paid ?? (billing.billing_status === "Paid" ? String(billing.amount || "") : ""),
+      balance: savedDetails.balance ?? (billing.billing_status === "Paid" ? "0.00" : String(billing.amount || "0.00")),
       nextVisit: savedDetails.nextVisit || "",
     });
     setMessage("");
   };
 
   const saveBilling = async (billingStatus) => {
-    if (!selectedBilling) return;
+    if (!selectedBilling || savingRef.current) return;
+    if (!receiptForm.current.reportValidity()) return;
+    if (Number(receipt.paid) > Number(receipt.charge)) { setMessage("Paid amount cannot exceed the charge."); return; }
+    if (billingStatus === "Paid" && Number(receipt.paid) < Number(receipt.charge)) { setMessage("Enter the full payment amount before marking this bill as paid."); return; }
+    savingRef.current = true;
     setIsSaving(true);
     setMessage("");
     try {
@@ -78,7 +96,8 @@ function StaffBillingsPage() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Unable to save billing.");
 
-      const updatedBilling = { ...selectedBilling, ...data.appointment, receipt_details: receipt };
+      const updatedBilling = { ...selectedBilling, billing_status: billingStatus, amount: receipt.charge, service_type: receipt.procedure, ...data.appointment, receipt_details: receipt };
+      setDirty(false);
       setSelectedBilling(updatedBilling);
       setBillings((current) => current.map((billing) => (
         billing.id === updatedBilling.id ? { ...billing, ...updatedBilling } : billing
@@ -92,44 +111,70 @@ function StaffBillingsPage() {
       console.error("Staff billing update error:", error);
       setMessage(error.message || "Unable to save billing.");
     } finally {
+      savingRef.current = false;
       setIsSaving(false);
     }
   };
 
+  const filteredBillings = billings.filter(billing => {
+    const text = [billing.first_name, billing.last_name, billing.service_type, billing.booking_ref, billing.id, billing.appointment_date].join(" ").toLowerCase();
+    return text.includes(search.trim().toLowerCase()) && (!statusFilter || (billing.billing_status || "Awaiting billing approval") === statusFilter);
+  });
+  const updateReceipt = (field, value) => {
+    setDirty(true);
+    setMessage("");
+    setReceipt(current => {
+      const next = { ...current, [field]: value };
+      if (field === "charge" || field === "paid") next.balance = Math.max(0, Number(next.charge || 0) - Number(next.paid || 0)).toFixed(2);
+      return next;
+    });
+  };
+
   return (
     <AdminLayout>
-      <div style={styles.page}>
-        <div style={styles.header}>
-          <div>
-            <h1 style={styles.title}>Billing & Receipts</h1>
-            <p style={styles.subtitle}>Approve patient bills and prepare the treatment-record receipt.</p>
-          </div>
-          <CreditCard size={38} color="#087F8C" />
-        </div>
-
-        <div style={styles.layout}>
-          <section style={styles.recordsCard}>
+      <header className="dashboard-page-header ov-header">
+        <ClinicPageTitle />
+        <div className="header-actions"><RoleNotifications /><div className="header-profile">
+          <div className="header-profile-text"><strong>{clinicUser.firstName || clinicUser.first_name || "Staff"} {clinicUser.lastName || clinicUser.last_name || ""}</strong><small style={{display:"block"}}>Staff</small></div>
+          <User size={24} aria-hidden="true" />
+        </div></div>
+      </header>
+      <div className="ov-workspace-content ov-clinic-billing">
+        <div className="ov-clinic-billing-layout">
+          <section className="ov-billing-queue" aria-label="Patient billing queue">
             <h2 style={styles.sectionTitle}>Patient billing queue</h2>
-            {isLoading ? <p>Loading billing records...</p> : billings.length === 0 ? (
-              <p style={styles.muted}>No billable appointments found.</p>
-            ) : billings.map((billing) => (
+            <div className="ov-billing-filters">
+              <label>Search bills<input type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Patient, service or reference" /></label>
+              <label>Status<select value={statusFilter} onChange={event => setStatusFilter(event.target.value)}>
+                <option value="">All statuses</option>
+                {[...new Set(billings.map(bill => bill.billing_status || "Awaiting billing approval"))].sort().map(status => <option key={status}>{status}</option>)}
+              </select></label>
+            </div>
+            <p className="ov-billing-count" role="status">{filteredBillings.length} bills ? Select a row to view its receipt.</p>
+            {loadError && <div role="alert" className="ov-inline-error">{loadError} <button type="button" onClick={fetchBillings}>Retry</button></div>}
+            {isLoading ? <p>Loading billing records...</p> : filteredBillings.length === 0 ? (
+              <p style={styles.muted}>{search || statusFilter ? "No bills match your filters." : "No billable appointments found."}</p>
+            ) : <PaginatedList pageSize={20} resetKey={search + "|" + statusFilter} label="Billing pages">{filteredBillings.map((billing) => (
               <button
                 type="button"
                 key={billing.id}
+                className="ov-billing-row"
+                disabled={isSaving}
+                aria-pressed={selectedBilling?.id === billing.id}
                 onClick={() => selectBilling(billing)}
-                style={{ ...styles.billingRow, ...(selectedBilling?.id === billing.id ? styles.selectedRow : {}) }}
+                style={styles.billingRow}
               >
-                <span style={styles.patientName}>{billing.first_name} {billing.last_name}</span>
-                <span style={styles.service}>{billing.service_type}</span>
+                <span className="ov-billing-patient" style={styles.patientName}>{billing.first_name} {billing.last_name}</span>
+                <span className="ov-billing-service" style={styles.service}>{billing.service_type}<small>{billing.booking_ref || "Bill #" + billing.id}</small></span>
                 <span style={styles.amount}>PHP {Number(billing.amount || 0).toLocaleString()}</span>
-                <span style={{ ...styles.status, ...(billing.billing_status === "Paid" ? styles.paid : styles.pending) }}>
+                <span className="ov-billing-status" style={{ ...styles.status, ...(billing.billing_status === "Paid" ? styles.paid : styles.pending) }}>
                   {billing.billing_status || "Awaiting billing approval"}
                 </span>
               </button>
-            ))}
+            ))}</PaginatedList>}
           </section>
 
-          <section style={styles.receiptCard}>
+          <section className="ov-billing-receipt" aria-label="Selected receipt">
             <div style={styles.receiptHeader}>
               <ReceiptText size={28} color="#087F8C" />
               <div>
@@ -139,7 +184,8 @@ function StaffBillingsPage() {
             </div>
 
             {selectedBilling ? (
-              <>
+              <form ref={receiptForm} onSubmit={event => event.preventDefault()}>
+                <fieldset disabled={isSaving}>
                 <div style={styles.patientLine}>
                   <strong>Name:</strong> {selectedBilling.first_name} {selectedBilling.last_name}
                   <span><strong>Age:</strong> {selectedBilling.age || "—"}</span>
@@ -148,29 +194,30 @@ function StaffBillingsPage() {
                 <div style={styles.recordTitle}>TREATMENT RECORD</div>
                 <div style={styles.formGrid}>
                   <label style={styles.label}>Procedure / service
-                    <input style={styles.input} value={receipt.procedure} onChange={(event) => setReceipt({ ...receipt, procedure: event.target.value })} />
+                    <input style={styles.input} required value={receipt.procedure} onChange={(event) => updateReceipt("procedure", event.target.value)} />
                   </label>
                   <label style={styles.label}>Charge (PHP)
-                    <input style={styles.input} type="number" min="0" step="0.01" value={receipt.charge} onChange={(event) => setReceipt({ ...receipt, charge: event.target.value })} />
+                    <input style={styles.input} type="number" min="0" step="0.01" required value={receipt.charge} onChange={(event) => updateReceipt("charge", event.target.value)} />
                   </label>
                   <label style={styles.label}>Paid (PHP)
-                    <input style={styles.input} type="number" min="0" step="0.01" value={receipt.paid} onChange={(event) => setReceipt({ ...receipt, paid: event.target.value })} />
+                    <input style={styles.input} type="number" min="0" step="0.01" value={receipt.paid} onChange={(event) => updateReceipt("paid", event.target.value)} />
                   </label>
                   <label style={styles.label}>Balance (PHP)
-                    <input style={styles.input} type="number" min="0" step="0.01" value={receipt.balance} onChange={(event) => setReceipt({ ...receipt, balance: event.target.value })} />
+                    <input style={styles.input} type="number" min="0" step="0.01" value={receipt.balance} readOnly />
                   </label>
                   <label style={styles.label}>Next visit
-                    <input style={styles.input} type="date" value={receipt.nextVisit} onChange={(event) => setReceipt({ ...receipt, nextVisit: event.target.value })} />
+                    <input style={styles.input} type="date" value={receipt.nextVisit} onChange={(event) => updateReceipt("nextVisit", event.target.value)} />
                   </label>
                 </div>
-                <div style={styles.previewRow}>
+                <div className="ov-receipt-totals">
                   <span>{selectedBilling.appointment_date ? new Date(selectedBilling.appointment_date).toLocaleDateString() : "—"}</span>
                   <span>{receipt.procedure || "Procedure / service"}</span>
-                  <span>PHP {receipt.charge || "0.00"}</span>
-                  <span>PHP {receipt.paid || "0.00"}</span>
-                  <span>PHP {receipt.balance || "0.00"}</span>
+                  <span>Charge: PHP {receipt.charge || "0.00"}</span>
+                  <span>Paid: PHP {receipt.paid || "0.00"}</span>
+                  <span>Balance: PHP {receipt.balance || "0.00"}</span>
                 </div>
-                {message && <p style={styles.message}>{message}</p>}
+                {dirty && <p className="ov-billing-count">Unsaved receipt changes</p>}
+                {message && <p role="status" style={styles.message}>{message}</p>}
                 <div style={styles.actions}>
                   <button type="button" disabled={isSaving} onClick={() => saveBilling("Approved")} style={styles.secondaryButton}>
                     <Save size={17} /> Approve Billing
@@ -182,7 +229,8 @@ function StaffBillingsPage() {
                     <CheckCircle2 size={17} /> Mark as Paid
                   </button>
                 </div>
-              </>
+                </fieldset>
+              </form>
             ) : <p style={styles.muted}>Select a billing record to edit its receipt.</p>}
           </section>
         </div>

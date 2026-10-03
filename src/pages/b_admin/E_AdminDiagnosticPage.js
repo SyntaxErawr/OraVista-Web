@@ -1,3 +1,4 @@
+import ClinicPageTitle from '../../components/ClinicPageTitle';
 import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTools';
 import React from 'react';
 import AdminLayout from '../../components/AdminLayout';
@@ -15,7 +16,7 @@ function AdminDiagnostics() {
     <AdminLayout>
       <div style={styles.container}>
         {/* HEADER */}
-        <header className="ov-header" style={styles.header}>
+        <header className="ov-header" style={styles.header}><ClinicPageTitle />
           <div style={styles.searchBox}>
             <Search size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
             <PortalSearch style={styles.searchInput} />
@@ -35,10 +36,7 @@ function AdminDiagnostics() {
 
         {/* CONTENT AREA */}
         <div className="ov-workspace-content" style={styles.content}>
-          <div style={styles.titleSection}>
-            <h1 style={styles.pageTitle}>Diagnostics</h1>
-            <p style={styles.pageSubtitle}>AI-Assisted Imaging & Clinical Insights</p>
-          </div>
+
 
           {/* PATIENT SELECTION DROPDOWN */}
           <div className="ov-panel" style={styles.selectionCard}>

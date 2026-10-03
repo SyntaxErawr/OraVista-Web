@@ -106,8 +106,8 @@ p { line-height: 1.65; }
 .ov-page-intro p { margin: 0; color: var(--ov-muted); font-size: 14px; }
 .ov-brand-mark { width: 40px; height: 40px; display: block; flex-shrink: 0; }
 .ov-logo { display: block; max-width: 100%; flex-shrink: 0; overflow: hidden; }
-.ov-logo--horizontal { width: 178px; height: auto; aspect-ratio: 2591 / 952; }
-.ov-logo--stacked { width: 174px; height: auto; aspect-ratio: 1534 / 1675; }
+.ov-logo--horizontal { width: 178px; height: auto; aspect-ratio: 2792 / 1084; }
+.ov-logo--stacked { width: 174px; height: auto; aspect-ratio: 1614 / 1740; }
 .mobile-top-bar .ov-logo--horizontal { width: 140px; }
 .ov-clinic-brand { margin: 0 0 20px; line-height: 1; }
 .ov-wordmark { display: block; }
@@ -403,3 +403,423 @@ p { line-height: 1.65; }
 .ov-dialog-backdrop:has(.ov-notification-dialog) { position: fixed; inset: 0; z-index: 4000; display: flex; align-items: center; justify-content: center; padding: 16px; background: #153e5080; }
 
 .ov-calendar-legend { color: #153e50; font-size: 12px; margin: 12px 0 0; line-height: 1.5; }
+
+/* Focused adjustments on the last pushed UI: preserve its palette and navigation. */
+#root button { border-radius: 18px !important; }
+#root .ov-booking-day, #root .ov-calendar-day { border-radius: 10px !important; }
+.ov-patient-page .ov-panel,
+.ov-patient-page .table-wrap,
+.ov-patient-page .table-row,
+.ov-patient-page div:has(> h2):has(table),
+.ov-patient-page div:has(> h2):has(article),
+.ov-patient-page article,
+.ov-patient-page tr.ov-color-surface { background-color: #fff !important; }
+
+/* Compact appointments retain every column and existing action. */
+.ov-appointments-surface { background: #fff !important; padding: 18px !important; border: 1px solid #9ec5cf; border-radius: 20px !important; }
+.ov-appointments-head, .ov-appointment-row.is-desktop {
+  grid-template-columns: minmax(125px,1.1fr) minmax(120px,1fr) minmax(120px,1fr) minmax(120px,1fr) minmax(70px,.6fr) minmax(180px,1.3fr) !important;
+  column-gap: 14px !important; min-width: 830px !important;
+}
+.ov-appointments-head { padding: 0 14px 12px !important; margin-bottom: 0 !important; border-bottom: 1px solid #abc8d0 !important; font-size: 12px; color: #275562 !important; }
+.ov-appointments-rows { min-width: 830px !important; gap: 0 !important; }
+.ov-appointment-row.is-desktop { padding: 11px 14px !important; border-radius: 0 !important; background: #fff !important; border-bottom: 1px solid #d0e0e5; font-size: 13px; }
+.ov-appointment-row > div { min-width: 0; overflow-wrap: anywhere; }
+.ov-appointment-row button { padding: 7px 13px !important; min-height: 34px; }
+.ov-appointment-row .appointment-status-actions { gap: 6px; }
+.ov-appointment-row.is-mobile { padding: 12px 14px !important; background: #fff !important; border: 1px solid #c3d9df; }
+.ov-appointment-row.is-mobile > div:first-child { margin-bottom: 8px !important; }
+
+/* Booking: treatment rail beside scheduling, followed by a full-width review bar. */
+.ov-booking-layout { --ov-on-color: var(--ov-ink); display: grid; grid-template-columns: minmax(240px,.8fr) minmax(0,1.7fr); gap: 18px; margin-top: 22px; align-items: start; }
+.ov-booking-layout > section { background: #fff; border: 1px solid #a6c9d3; border-radius: 22px; padding: 22px; min-width: 0; }
+.ov-booking-layout section > header { display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #d2e3e8; padding-bottom: 14px; margin-bottom: 18px; }
+.ov-booking-layout section > header > span { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 12px; background: #c7edf1; color: #17677a; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+.ov-booking-layout h2 { font-size: 19px; color: #174858; margin: 0; }
+.ov-booking-treatment > div { margin-bottom: 18px; }
+.ov-booking-treatment > div:last-child { margin-bottom: 0; }
+.ov-booking-layout label { color: #285c6a !important; font-size: 13px !important; }
+.ov-booking-layout select { width: 100%; min-height: 44px; padding: 11px 14px !important; border: 1px solid #9cbdc8 !important; background: #eff8fa !important; color: #174858 !important; border-radius: 14px !important; }
+.ov-booking-treatment button { width: 100%; padding: 12px 16px !important; }
+.ov-booking-date-select { max-width: 360px; margin-bottom: 18px; }
+.ov-booking-schedule-grid { display: grid; grid-template-columns: minmax(0,1.15fr) minmax(0,1fr); gap: 18px; }
+.ov-booking-schedule-grid > div { min-width: 0; }
+.ov-booking-review { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+.ov-booking-review p { margin: 8px 0 0; color: #446d79; font-size: 13px; overflow-wrap: anywhere; }
+.ov-booking-actions { margin-top: 0 !important; flex-wrap: wrap; }
+.ov-booking-actions button { padding: 12px 20px !important; min-height: 44px; }
+
+/* Small app tiles retain visible names and availability, not oversized store banners. */
+.ov-store-placeholders { flex-direction: row; flex-wrap: wrap; gap: 12px; }
+#root .hero-promo button.ov-store-placeholder {
+  width: 96px !important; height: 96px !important; min-width: 0; box-sizing: border-box;
+  padding: 10px 8px !important; border-radius: 20px !important; display: flex;
+  flex-direction: column; align-items: center; justify-content: center; gap: 5px; text-align: center;
+}
+.ov-store-placeholder strong { font-size: 11px; line-height: 1.2; }
+.ov-store-placeholder small { font-size: 10px; margin-top: 3px; line-height: 1.2; }
+.ov-store-placeholder img, .ov-store-placeholder > svg { width: 23px; height: 23px; flex-shrink: 0; }
+@media (max-width: 1100px) {
+  .ov-booking-layout { grid-template-columns: minmax(220px,.85fr) minmax(0,1.2fr); }
+  .ov-booking-schedule-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 767px) {
+  .ov-appointments-surface { padding: 12px !important; }
+  .ov-appointments-rows { min-width: 0 !important; gap: 8px !important; }
+  .ov-appointment-row button { min-height: 44px; }
+  .ov-booking-layout { grid-template-columns: 1fr; gap: 14px; }
+  .ov-booking-layout > section { padding: 18px 16px; }
+  .ov-booking-review { align-items: stretch; }
+  .ov-booking-actions { width: 100%; flex-direction: column-reverse !important; gap: 10px !important; }
+  .ov-booking-actions button { width: 100%; }
+}
+
+/* Patient density pass: preserve the aqua canvas, reclaim space inside it. */
+.ov-patient-page { position: relative; }
+.ov-patient-page > div:last-child { padding: 22px 26px !important; }
+.ov-patient-page h1 { font-size: 30px !important; margin: 0 160px 14px 0 !important; line-height: 1.2; }
+.ov-patient-page > div:last-child > p { margin: 0 0 16px !important; font-size: 13px !important; }
+.ov-patient-account { position: absolute; right: 26px; top: 19px; display: flex; gap: 9px; align-items: center; color: #194b60; text-decoration: none; font-size: 13px; font-weight: 650; z-index: 2; }
+.ov-patient-account small { display: block; font-size: 10px; font-weight: 400; margin-top: 2px; }
+.ov-account-photo { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: white; border: 1px solid #82b1c0; color: #087f8c; }
+.ov-account-photo img { width: 100%; height: 100%; object-fit: cover; }
+.ov-patient-account:hover { color: #087f8c; }
+.ov-page-dashboard .patient-header-row { padding-right: 155px; margin-bottom: 16px !important; }
+.ov-page-dashboard .dashboard-card { min-height: 125px !important; padding: 18px !important; }
+.ov-page-dashboard .dashboard-card h3 { font-size: 18px !important; }
+.ov-page-dashboard .patient-dashboard-grid { gap: 16px !important; }
+.ov-page-dashboard .dashboard-card:has(table) { min-height: 0 !important; }
+.ov-patient-page .ov-search-field { min-height: 40px; padding: 0 12px; margin-bottom: 12px; }
+.ov-patient-page .ov-search-field input { background: transparent !important; border: 0 !important; min-height: 38px; padding: 8px 0 !important; }
+.ov-page-appointments > div:last-child > p { display: none; }
+.ov-page-appointments .appointment-edit-hint { display: block !important; font-size: 12px; margin: 8px 0 !important; color: #436475; }
+.ov-edit-controls { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.ov-edit-controls button { padding: 10px 16px; min-height: 40px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 1px solid #8ab4c3; font: inherit; font-size: 13px; cursor: pointer; background: white; color: #275a6b; }
+.ov-edit-controls button:last-child { background: #30c7d6; border-color: #087f8c; color: #153e50; }
+.ov-appointments-surface { padding: 12px !important; }
+.ov-appointments-head { padding: 0 10px 9px !important; }
+.ov-appointment-row.is-desktop { padding: 8px 10px !important; }
+.ov-appointment-row .appointment-status-actions { display: flex; flex-wrap: nowrap; gap: 6px; width: 100%; justify-content: flex-end; align-items: center; }
+.ov-appointment-row .appointment-status-actions > span { margin-right: auto; text-align: left; overflow-wrap: anywhere; }
+#root .ov-appointment-row :is(.appointment-cancel-button,.ov-reschedule-action) { width: 34px; height: 34px; min-height: 34px; padding: 0 !important; display: inline-flex; align-items: center; justify-content: center; border-radius: 11px !important; flex-shrink: 0; cursor: pointer; }
+.ov-reschedule-action { background: #edf6fa; border: 1px solid #95b9cb; color: #226781; }
+.ov-reschedule-action:hover { background: #dceff6; }
+.ov-appointment-row.is-desktop > div:last-child { width: 100%; }
+.ov-appointments-head > div:last-child { text-align: left !important; }
+.ov-booking-layout { grid-template-columns: minmax(230px,.8fr) minmax(0,1.5fr); gap: 14px; margin-top: 14px; }
+.ov-booking-layout > section { padding: 16px; border-radius: 18px; }
+.ov-booking-layout section > header { padding-bottom: 10px; margin-bottom: 12px; gap: 9px; }
+.ov-booking-layout h2 { font-size: 17px; }
+.ov-booking-treatment > div { margin-bottom: 12px; }
+.ov-booking-treatment > div > div { gap: 6px !important; }
+.ov-booking-layout label { margin-bottom: 6px !important; }
+.ov-booking-layout select { min-height: 40px; padding: 9px 12px !important; opacity: 1 !important; }
+.ov-booking-layout select:disabled { color: #526c77 !important; background: #edf3f5 !important; }
+.ov-booking-layout p { font-size: 13px; }
+.ov-booking-date-select { max-width: none; margin-bottom: 12px; }
+.ov-booking-schedule-grid { grid-template-columns: minmax(240px,1fr) minmax(150px,.8fr); gap: 14px; }
+.ov-booking-review { gap: 12px; }
+.ov-booking-review p { margin-top: 5px; }
+.ov-booking-actions button { padding: 10px 16px !important; min-height: 40px; }
+.ov-record-tables { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 22px; align-items: start; }
+.ov-record-tables > div { min-width: 0; }
+.ov-record-tables table { table-layout: fixed; }
+.ov-record-tables th, .ov-record-tables td { padding: 8px 10px !important; font-size: 13px !important; overflow-wrap: anywhere; }
+.ov-record-tables th:first-child { width: 50%; }
+.ov-page-records > div:last-child > div:has(>h2), .ov-page-records > div:last-child > section { padding: 18px !important; margin-bottom: 16px !important; background: white !important; }
+.ov-page-records h2 { font-size: 20px !important; margin-bottom: 14px !important; }
+.ov-page-records article { padding: 14px !important; }
+.ov-page-records article h4 { margin: 10px 0 6px !important; }
+.ov-page-records article p, .ov-page-records article ul { margin-block: 6px !important; line-height: 1.5 !important; }
+.ov-page-billings .summary-grid { gap: 14px !important; margin-bottom: 18px !important; }
+.ov-page-billings .summary-card { padding: 16px 20px !important; gap: 14px !important; min-height: 0 !important; }
+.ov-page-billings .summary-card > div:first-child { padding: 10px !important; }
+.ov-page-billings .summary-card svg { width: 24px; height: 24px; }
+.ov-page-billings .summary-amt { font-size: 26px !important; margin: 4px 0 0 !important; }
+.ov-page-billings div:has(>.tab-btn) { margin-bottom: 14px !important; gap: 10px !important; }
+.ov-page-billings .table-wrap { padding: 14px !important; border-radius: 18px !important; }
+.ov-page-billings .table-head { padding: 4px 12px 10px !important; margin-bottom: 0 !important; font-size: 13px; border-bottom: 1px solid #b9d0d8 !important; }
+.ov-page-billings .table-wrap > div:last-child { gap: 0 !important; }
+.ov-page-billings .table-row { padding: 10px 12px !important; border-bottom: 1px solid #dae5ea; border-radius: 0 !important; gap: 12px; font-size: 13px; }
+.ov-page-billings .table-row > div { min-width: 0; overflow-wrap: anywhere; }
+.ov-page-profile .ov-panel { padding: 22px !important; }
+.ov-page-profile .ov-panel > div { margin: 0 0 16px !important; gap: 16px !important; }
+.ov-page-profile .ov-panel > div > div { min-height: 0 !important; }
+.ov-page-profile .ov-panel h2 { font-size: 23px !important; }
+.ov-page-profile [role=img] { width: 72px !important; height: 72px !important; }
+.ov-page-profile .ov-panel > div:first-child > div:first-child { flex-direction: row !important; flex-wrap: wrap; max-width: 350px; }
+.ov-page-profile input, .ov-page-profile select { min-height: 40px; padding: 10px 12px !important; }
+@media (max-width: 1150px) {
+  .ov-booking-schedule-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 900px) {
+  .ov-record-tables { grid-template-columns: 1fr; gap: 18px; }
+}
+@media (max-width: 767px) {
+  .ov-patient-page > div:last-child { padding: 16px !important; }
+  .ov-patient-page h1 { font-size: 26px !important; margin-right: 52px !important; }
+  .ov-patient-account { right: 16px; top: 15px; }
+  .ov-patient-account > span:last-child { display: none; }
+  .ov-page-dashboard .patient-header-row { padding-right: 45px; }
+  .ov-booking-layout { grid-template-columns: 1fr; }
+  .ov-booking-schedule-grid { grid-template-columns: 1fr; }
+  .ov-edit-controls { width: 100%; margin-left: 0; }
+  .ov-edit-controls button { flex: 1; min-height: 44px; }
+  #root .ov-appointment-row :is(.appointment-cancel-button,.ov-reschedule-action) { width: 44px; height: 44px; min-height: 44px; }
+  .ov-appointment-row.is-mobile .appointment-status-actions { flex-wrap: wrap; }
+  .ov-page-profile .ov-panel { padding: 16px !important; }
+  .ov-page-profile .ov-panel > div:first-child > div:first-child { max-width: 100%; justify-content: center; }
+  .ov-page-billings .summary-card { padding: 14px !important; }
+  .ov-page-billings .summary-amt { font-size: 23px !important; }
+}
+.ov-records-panel { padding: 18px; background: #fff; border: 1px solid #bad1da; border-radius: 18px; margin-bottom: 16px; }
+.ov-page-records .ov-records-panel > h2 { margin-top: 0; }
+.ov-appointment-row.is-mobile > div:first-child { flex-direction: row !important; flex-wrap: wrap; gap: 8px !important; }
+.ov-page-billings [data-label="Status"] > span { background: none !important; border: 0 !important; padding: 0 !important; border-radius: 0 !important; color: #526773; }
+.ov-page-billings [data-status="Paid"] { color: #087357 !important; }
+.ov-page-billings :is([data-status="Pending"],[data-status="Unpaid"]) { color: #926000 !important; }
+.ov-page-dashboard .patient-dashboard-grid > .dashboard-card:has(table),
+.ov-page-dashboard .patient-dashboard-grid > .dashboard-card:first-child { background: white !important; }
+@media (min-width: 1400px) {
+  .ov-booking-layout { grid-template-columns: minmax(220px,.85fr) minmax(0,1.65fr) minmax(220px,.7fr); }
+  .ov-booking-review { grid-column: auto; flex-direction: column; align-items: stretch; position: sticky; top: 18px; }
+  .ov-booking-actions { flex-direction: column-reverse !important; }
+  .ov-booking-actions button { width: 100%; }
+  .ov-booking-schedule-grid { grid-template-columns: minmax(220px,1fr) minmax(130px,.7fr); }
+}
+
+/* Clear patient entry and compact public landing layout. */
+#root .ov-home .landing-nav { height: 72px !important; padding-inline: 6% !important; }
+#root .ov-home .landing-nav button { background: transparent !important; box-shadow: none !important; border: 0 !important; border-radius: 0 !important; color: #164d5b !important; padding: 10px 4px !important; min-height: 44px; }
+#root .ov-home .landing-nav .nav-links-container { gap: 22px !important; }
+#root .ov-home .landing-nav .nav-links-container button { font-size: 14px; font-family: inherit; }
+#root .ov-home .landing-nav .nav-links-container button:hover { text-decoration: underline; text-underline-offset: 7px; color: #076d79 !important; }
+#root .ov-home .landing-nav .ov-nav-signin { font-weight: 800; border-left: 1px solid #8dbfc9 !important; padding-left: 20px !important; }
+.ov-home .hero-section { padding: 106px 6% 30px !important; min-height: 0 !important; }
+.ov-home .hero-title { font-size: clamp(36px,3.6vw,54px) !important; margin: 12px 0 14px !important; letter-spacing: -.045em; }
+.ov-home .hero-subtitle { font-size: 15px !important; line-height: 1.65; margin-bottom: 16px !important; max-width: 540px !important; }
+.ov-patient-entry { width: 44%; max-width: 540px; box-sizing: border-box; padding: 18px; background: #f5fcfd; border: 1px solid #91bdc9; border-radius: 18px; color: #194b60; }
+.ov-entry-heading { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 5px 12px; margin-bottom: 12px; }
+.ov-entry-heading strong { font-size: 16px; }
+.ov-entry-heading span { font-size: 12px; align-self: center; color: #476777; }
+.ov-patient-entry label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; }
+.ov-patient-entry select { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid #8cb7c4; border-radius: 10px; background: white; color: #194b60; font: inherit; font-size: 14px; }
+.ov-entry-actions { display: flex; gap: 10px; margin-top: 12px; }
+#root .ov-entry-actions button { flex: 1; min-height: 44px; padding: 10px 16px; border: 1px solid #087f8c; border-radius: 14px !important; background: #30c7d6; color: #143e4a; font: inherit; font-size: 14px; font-weight: 750; cursor: pointer; }
+#root .ov-entry-actions button:last-child { background: white; color: #086e7a; }
+#root .ov-entry-actions button:hover { background: #bceef2; }
+.ov-patient-entry p { font-size: 12px; line-height: 1.5; margin: 10px 0 0; color: #476777; }
+.ov-home .ov-hero-visual { top: 106px; width: 43%; height: 480px; }
+.ov-home .ov-hero-visual img { object-position: 50% 48%; border-radius: 46px 20px 46px 20px; filter: none; }
+.ov-home .ov-hero-visual::before { border-radius: 46px 20px 46px 20px; inset: 12px -12px -12px 12px; }
+.ov-home .ov-hero-caption { left: 16px; right: 16px; bottom: 16px; padding: 14px 16px; border-radius: 16px; background: #eef9fa; }
+.ov-photo-credit { position: absolute; right: 0; bottom: -32px; color: #305563; font-size: 10px; text-underline-offset: 3px; }
+.ov-home .hero-promo { width: 44%; max-width: 540px !important; margin-top: 16px !important; padding-top: 12px; }
+.ov-home .hero-promo > div { flex-direction: row !important; align-items: center !important; gap: 12px !important; }
+.ov-home .hero-promo p { flex: 1; }
+
+.ov-start-guide { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 22px; padding: 20px 6%; background: #d6edf0; border-block: 1px solid #9fcbd3; }
+.ov-start-guide > div { display: flex; align-items: center; gap: 12px; }
+.ov-start-guide > div > span { color: #6a5791; font-weight: 800; font-size: 23px; }
+.ov-start-guide p { margin: 0; color: #436271; font-size: 12px; line-height: 1.6; }
+.ov-start-guide strong { display: block; color: #194b60; font-size: 14px; }
+.ov-home .ov-home-section { padding-top: 42px !important; padding-bottom: 32px !important; }
+.ov-home .about-img { height: 340px !important; }
+.ov-home .services-grid { gap: 18px !important; margin-bottom: 28px !important; }
+.ov-home .ov-service-card { min-height: 230px !important; padding: 24px !important; }
+.ov-home .ov-service-card h2 { font-size: 23px !important; margin-bottom: 12px !important; }
+.ov-home .booking-text { padding: 28px !important; }
+@media (max-width: 1100px) and (min-width: 901px) {
+  #root .ov-home .landing-nav .nav-links-container { gap: 12px !important; }
+  .ov-home .ov-hero-visual { height: 500px; }
+}
+@media (max-width: 900px) {
+  #root .ov-home .landing-nav .nav-links-container { top: 72px; height: calc(100dvh - 72px); gap: 12px !important; padding-top: 18px; overflow-y: auto; }
+  #root .ov-home .landing-nav .ov-nav-signin { border-left: 0 !important; padding-left: 4px !important; }
+  .ov-home .hero-section { padding-top: 94px !important; align-items: flex-start !important; text-align: left !important; }
+  .ov-home .hero-title, .ov-home .hero-subtitle, .ov-patient-entry, .ov-home .hero-promo { width: 100%; max-width: none !important; }
+  .ov-home .ov-hero-visual { position: relative; top: auto; right: auto; width: 100%; height: 290px; margin: 22px 0 36px; order: 5; }
+  .ov-home .ov-hero-visual img { object-position: 50% 44%; }
+  .ov-home .hero-promo { margin-top: 14px !important; }
+  .ov-start-guide { grid-template-columns: 1fr; gap: 14px; padding-block: 20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ov-home *, .ov-home *::before { scroll-behavior: auto !important; transition: none !important; }
+}
+
+/* Dashboard overview, readable appointment actions and shared clinic density. */
+.ov-page-dashboard .patient-dashboard-grid { grid-template-columns: minmax(240px, .85fr) minmax(0, 2.5fr) !important; grid-template-rows: auto auto auto; align-items: start; }
+.ov-page-dashboard .ov-upcoming-card { grid-column: 1; grid-row: 1; }
+.ov-page-dashboard .ov-summary-card { grid-column: 1; grid-row: 2; }
+.ov-page-dashboard .ov-fact-card { grid-column: 1; grid-row: 3; }
+.ov-page-dashboard .ov-history-card { grid-column: 2 !important; grid-row: 1 / 4; margin-top: 0 !important; min-width: 0; }
+.ov-page-dashboard .ov-fact-card p { font-size: 17px !important; line-height: 1.65; font-style: normal !important; padding: 0 !important; text-align: left; }
+.ov-dashboard-shortcut { display: inline-block; margin-top: 10px; color: #086b79; font-size: 13px; font-weight: 700; text-underline-offset: 3px; }
+.ov-page-dashboard .history-table th { position: sticky; top: 0; z-index: 1; background: #eaf4f6; padding: 10px !important; }
+.ov-page-dashboard .history-table td { padding: 8px 10px !important; font-size: 13px !important; }
+.ov-history-link { color: #086b79; text-underline-offset: 3px; }
+.ov-page-dashboard .history-table tbody tr { cursor: pointer; }
+.ov-history-pagination { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 10px; padding-top: 14px; font-size: 12px; }
+.ov-history-pagination > span:first-child { margin-right: auto; }
+.ov-history-pagination button { min-height: 40px; padding: 8px 12px; border: 1px solid #9bbdc8; background: #edf7f9; color: #194b60; cursor: pointer; }
+.ov-history-pagination button:disabled { opacity: .5; cursor: default; }
+#root .ov-appointment-row :is(.appointment-cancel-button,.ov-reschedule-action) { width: auto; padding: 7px 9px !important; gap: 5px; font-size: 12px; }
+.ov-appointment-row .appointment-status-actions { flex-wrap: wrap; }
+.ov-page-appointments .appointment-edit-hint { padding: 10px 12px; border-left: 3px solid #087f8c; background: #eaf7f9; border-radius: 8px; }
+#root .ov-booking-actions button:first-child { background: #f7dadd !important; color: #893345 !important; border: 1px solid #dfa7af; }
+#root .ov-booking-actions button:nth-child(2) { background: #bce6ce !important; color: #195a3c !important; border: 1px solid #87bca0; }
+#root .ov-store-placeholders { display: flex; flex-wrap: wrap; gap: 10px; }
+#root .hero-promo button.ov-store-placeholder { width: 142px !important; height: 56px !important; min-height: 56px !important; flex-direction: row !important; justify-content: flex-start !important; gap: 10px !important; padding: 9px 12px !important; border-radius: 12px !important; text-align: left; font-size: 11px !important; }
+#root .ov-store-placeholder img, #root .ov-store-placeholder svg { width: 22px; height: 22px; flex-shrink: 0; object-fit: contain; }
+#root .ov-store-placeholder span { display: block; }
+#root .ov-store-placeholder small { display: block; margin-top: 3px; font-size: 10px; }
+.ov-home .hero-promo > div { flex-wrap: wrap; }
+.ov-home .hero-promo p { flex-basis: 100%; }
+.ov-workspace-content { padding: 22px !important; }
+.ov-workspace-content .ov-panel:has(table), .ov-workspace-content .ov-panel:has(.table-row) { background: white !important; color: #194b60; padding: 16px !important; }
+.ov-workspace-content table th { padding: 10px 12px !important; background: #eaf4f6; color: #194b60; }
+.ov-workspace-content table td { padding: 9px 12px !important; font-size: 13px; }
+.ov-workspace-content .ov-panel button { border-radius: 14px !important; }
+.ov-workspace-content .dashboard-grid-top { gap: 16px !important; }
+.ov-workspace-content .dashboard-grid-top > .ov-panel { padding: 18px !important; }
+.ov-workspace-content .ov-page-intro { margin-bottom: 18px; }
+@media (max-width: 1000px) {
+  .ov-page-dashboard .patient-dashboard-grid { grid-template-columns: 1fr !important; }
+  .ov-page-dashboard .patient-dashboard-grid > .dashboard-card { grid-column: 1 !important; grid-row: auto; }
+  .ov-page-dashboard .ov-history-card { order: 4; }
+  .ov-page-dashboard .ov-summary-card { order: 2; }
+  .ov-page-dashboard .ov-fact-card { order: 3; }
+}
+@media (max-width: 767px) {
+  .ov-workspace-content { padding: 16px !important; }
+  .ov-history-pagination button { min-height: 44px; }
+  #root .ov-appointment-row :is(.appointment-cancel-button,.ov-reschedule-action) { min-height: 44px; height: auto; }
+}
+
+/* Let the landing photo fill the space beside the patient entry panel. */
+@media (min-width: 901px) {
+  .ov-home .hero-title { max-width: 540px; width: 44%; }
+  .ov-home .ov-hero-visual {
+    left: calc(6% + min(38.72vw, 540px) + 36px);
+    right: 6%;
+    width: auto;
+    height: auto;
+    bottom: 62px;
+  }
+}
+
+/* Keep summary cards in their own stack, independent of the history height. */
+.ov-page-dashboard .patient-dashboard-grid { grid-template-rows: auto; }
+.ov-dashboard-overview { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.ov-dashboard-overview .ov-summary-card { order: 2; background: #eddfd4 !important; border-color: #d8c0b2 !important; }
+.ov-dashboard-overview .ov-fact-card { order: 3; background: #dedcf0 !important; border-color: #bcb7de !important; }
+.ov-dashboard-overview .ov-upcoming-card { background: white !important; }
+.ov-page-dashboard .ov-history-card { grid-row: auto; }
+.ov-page-dashboard .patient-header-row { padding-right: 0; gap: 16px; align-items: center !important; }
+.ov-page-dashboard .patient-header-text { min-width: 0; }
+.ov-page-dashboard .patient-header-text h1 { margin-right: 0 !important; }
+.ov-page-dashboard .patient-header-actions { gap: 12px !important; flex-shrink: 0; }
+.ov-page-dashboard .patient-header-actions .ov-patient-account { position: static; order: 2; }
+.ov-page-dashboard button[aria-label="Notifications"] { width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid #9fc6d1; background: #eef9fb; border-radius: 12px !important; padding: 0; }
+.ov-page-dashboard .notif-dropdown { right: 0 !important; box-sizing: border-box; max-width: calc(100vw - 32px); }
+.admin-main-content .ov-header { padding: 14px 22px !important; min-height: 68px; height: auto !important; }
+.admin-main-content .header-actions { display: flex; align-items: center; gap: 12px !important; flex-wrap: wrap; }
+.admin-main-content .header-profile { display: flex; align-items: center; gap: 10px !important; margin-left: 0 !important; padding-left: 12px; border-left: 1px solid #9fc6d1; }
+.admin-main-content .ov-notification-trigger { width: 40px; height: 40px; flex-shrink: 0; display: grid; place-items: center; border: 1px solid #9fc6d1; background: #eef9fb; color: #087f8c; border-radius: 12px !important; }
+.admin-main-content :is(.dashboard-grid-top,.dashboard-grid-mid,.dashboard-grid-bottom) { gap: 14px !important; margin-bottom: 16px !important; align-items: start; }
+.admin-main-content .ov-panel:has(table) { background: white !important; color: #194b60; padding: 16px !important; min-width: 0; }
+.admin-main-content .ov-panel table th { position: sticky; top: 0; background: #eaf4f6; padding: 10px 12px !important; z-index: 1; }
+.admin-main-content .ov-panel table td { padding: 9px 12px !important; font-size: 13px; }
+@media (max-width: 767px) {
+  .ov-page-dashboard .patient-header-row { align-items: flex-start !important; }
+  .ov-page-dashboard .patient-header-actions { gap: 8px !important; }
+  .ov-page-dashboard .patient-header-actions .ov-patient-account { display: flex !important; }
+  .ov-page-dashboard .notif-dropdown { position: fixed !important; top: 112px !important; right: 16px !important; max-height: calc(100dvh - 140px); overflow-y: auto; }
+  .admin-main-content .ov-header { padding: 12px 16px !important; }
+}
+
+/* One clinic header pattern; compact, list-first workspaces for every role. */
+.admin-main-content header:has(>.ov-clinic-page-title) { display: flex !important; align-items: center !important; justify-content: space-between !important; flex-wrap: wrap; gap: 12px 20px; height: auto !important; min-height: 88px; padding: 14px 22px !important; }
+.ov-clinic-page-title { margin-right: auto; min-width: 200px; color: #194b60; }
+.ov-clinic-page-title > span { display: block; text-transform: capitalize; font-size: 11px; color: #426574; }
+.ov-clinic-page-title h1 { font-size: 25px; line-height: 1.2; margin: 3px 0 4px; color: #164d5b; }
+.ov-clinic-page-title p { font-size: 12px; margin: 0; color: #426574; }
+.admin-main-content .ov-workspace-content { padding: 16px 22px !important; }
+.admin-main-content :is(.aac-title-section,.dp-page-header) { display: none; }
+.admin-main-content .summary-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px !important; margin: 0 0 14px !important; }
+.admin-main-content .summary-grid .summary-card { padding: 12px 16px !important; min-height: 0 !important; }
+.admin-main-content .summary-value { font-size: 25px !important; margin: 5px 0 0 !important; }
+.admin-main-content .summary-label { margin: 0 !important; font-size: 12px !important; }
+.admin-main-content .table-controls-row { margin-bottom: 12px !important; gap: 12px; flex-wrap: wrap; }
+.admin-main-content .dashboard-grid-top { align-items: stretch; }
+.admin-main-content .dashboard-grid-top > .ov-panel { min-height: 100px !important; padding: 14px 18px !important; }
+.admin-main-content .dashboard-grid-top h2 { font-size: 28px !important; margin: 8px 0 !important; }
+.admin-main-content .dashboard-grid-mid { align-items: stretch; }
+.admin-main-content .dashboard-grid-mid > .ov-panel { padding: 16px !important; }
+.admin-main-content .dashboard-grid-bottom { align-items: start; }
+.admin-main-content .dashboard-grid-bottom > .ov-panel { padding: 16px !important; min-width: 0; }
+.ov-list-pagination { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-top: 12px; font-size: 12px; color: #426574; }
+.ov-list-pagination > span:first-child { margin-right: auto; }
+.ov-list-pagination button, .ov-directory-actions button, .ov-directory-add { min-height: 36px; border: 1px solid #96bfca; border-radius: 12px !important; background: #edf8fa; color: #176176; padding: 8px 12px; font: inherit; font-size: 12px; cursor: pointer; }
+.ov-list-pagination button:disabled { opacity: .5; cursor: default; }
+.ov-directory-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.ov-directory-actions button { display: inline-flex; align-items: center; gap: 5px; }
+.ov-directory-add { text-decoration: none; }
+.ov-dentist-details { width: min(460px,calc(100vw - 32px)); background: white; color: #194b60; border-radius: 18px; padding: 22px; }
+.ov-dentist-details dl { display: grid; grid-template-columns: 110px 1fr; gap: 12px; font-size: 14px; }
+.ov-dentist-details dd { margin: 0; }
+.admin-main-content .appointment-main-grid { display: grid; grid-template-columns: minmax(220px,260px) minmax(0,1fr) !important; gap: 16px !important; align-items: start; }
+.admin-main-content .appointment-main-grid > div { min-width: 0; gap: 12px !important; }
+.admin-main-content .ov-appointment-calendar { padding: 12px !important; }
+.admin-main-content .ov-appointment-calendar h2 { font-size: 15px; }
+.admin-main-content .ov-appointment-filters { grid-template-columns: minmax(180px,2fr) repeat(3,minmax(110px,1fr)); gap: 8px; padding: 12px; margin-bottom: 12px; border-radius: 14px; }
+.admin-main-content .ov-appointment-query { grid-column: auto; }
+.admin-main-content .ov-appointment-filters :is(input,select) { min-height: 36px; padding: 7px 9px; font-size: 12px; }
+.admin-main-content .appointment-list-scrollable { max-height: none !important; overflow: visible !important; }
+.admin-main-content .appointment-list-scrollable > .ov-panel { padding: 12px 14px !important; margin-bottom: 10px !important; background: white !important; border-radius: 14px !important; }
+.admin-main-content .appointment-time-row { margin-bottom: 8px !important; gap: 8px !important; }
+.admin-main-content .appointment-info-grid { gap: 10px !important; margin-bottom: 8px !important; }
+.admin-main-content .appointment-info-item p { margin: 2px 0 !important; font-size: 13px !important; }
+@media(max-width:1100px) {
+ .admin-main-content .ov-appointment-filters { grid-template-columns: repeat(2,minmax(0,1fr)); }
+ .admin-main-content .appointment-main-grid { grid-template-columns: 1fr !important; }
+ .admin-main-content .appointment-main-grid > div:first-child { display: grid; grid-template-columns: minmax(220px,1fr) minmax(180px,1fr); }
+}
+@media(max-width:767px) {
+ .admin-main-content header:has(>.ov-clinic-page-title) { padding: 12px 16px !important; }
+ .ov-clinic-page-title { flex-basis: 100%; }
+ .ov-clinic-page-title h1 { font-size: 23px; }
+ .admin-main-content .summary-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+ .admin-main-content .appointment-main-grid > div:first-child { grid-template-columns: 1fr; }
+ .ov-directory-actions button,.ov-list-pagination button { min-height: 44px; }
+}
+.ov-dialog-backdrop:has(.ov-dentist-details) { position: fixed; inset: 0; z-index: 4500; display: grid; place-items: center; padding: 16px; background: #153e5080; }
+.ov-dentist-details { max-height: calc(100dvh - 32px); overflow: auto; }
+@media(max-width:1100px) {
+ .admin-main-content .appointment-main-grid > div:first-child { order: 2; }
+ .admin-main-content .appointment-main-grid > div:last-child { order: 1; }
+}
+
+/* Keep metric cards aligned even when the date card has fewer lines. */
+.admin-main-content .dashboard-grid-top { grid-auto-rows: 1fr; align-items: stretch !important; }
+.admin-main-content .dashboard-grid-top > .ov-panel { height: 100%; box-sizing: border-box; align-self: stretch; }
+
+/* Clinic billing: a compact queue with a separate receipt workspace. */
+.ov-clinic-billing-layout { display: grid; grid-template-columns: minmax(320px,1fr) minmax(360px,1.1fr); gap: 16px; align-items: start; }
+.ov-billing-queue, .ov-billing-receipt { min-width: 0; padding: 18px; background: white; border: 1px solid #b3cfd8; border-radius: 18px; }
+.ov-billing-filters { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(0,1fr); gap: 10px; margin-top: 14px; }
+.ov-billing-filters label { display: grid; gap: 5px; font-size: 12px; color: #315b6b; }
+.ov-billing-filters :is(input,select) { width: 100%; min-width: 0; min-height: 40px; padding: 8px 10px; background: #f4fafb; color: #194b60; border: 1px solid #9dbfca; border-radius: 10px; }
+.ov-billing-count { margin: 10px 0; color: #526b78; font-size: 12px; }
+#root .ov-billing-row { grid-template-columns: minmax(0,1fr) auto; gap: 4px 12px !important; margin: 0 !important; padding: 10px 12px !important; border: 0 !important; border-bottom: 1px solid #d5e3e8 !important; border-radius: 0 !important; color: #194b60; }
+#root .ov-billing-row[aria-pressed="true"] { background: #e0f3f6 !important; box-shadow: inset 3px 0 #087f8c; }
+.ov-billing-patient { grid-column: 1; overflow-wrap: anywhere; font-size: 13px; }
+.ov-billing-service { grid-column: 1; grid-row: 2; overflow-wrap: anywhere; }
+.ov-billing-service small { display: block; margin-top: 3px; color: #526b78; font-size: 10px; }
+.ov-billing-row > span:nth-child(3) { grid-column: 2; grid-row: 1; text-align: right; }
+.ov-billing-status { grid-column: 2; grid-row: 2; padding: 0 !important; background: none !important; text-align: right; justify-self: end; }
+.ov-billing-receipt fieldset { padding: 0; border: 0; margin: 0; min-width: 0; }
+.ov-billing-receipt input { min-width: 0; width: 100%; box-sizing: border-box; }
+.ov-receipt-totals { display: flex; flex-wrap: wrap; gap: 10px 16px; padding: 12px; margin-top: 16px; background: #edf7f9; color: #194b60; font-size: 12px; border-radius: 10px; overflow-wrap: anywhere; }
+@media(max-width:1100px) { .ov-clinic-billing-layout { grid-template-columns: 1fr; } }
+@media(max-width:500px) { .ov-billing-filters { grid-template-columns: 1fr; } .ov-billing-queue,.ov-billing-receipt { padding: 14px; } }

@@ -1,3 +1,4 @@
+import ClinicPageTitle from '../../components/ClinicPageTitle';
 import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTools';
 import React, { useState, useRef, useEffect } from 'react';
 
@@ -1055,7 +1056,7 @@ function DentistDiagnostics() {
 
         {/* HEADER */}
 
-        <header className="dd-header">
+        <header className="dd-header"><ClinicPageTitle />
 
           <div className="dd-search-wrapper">
 
@@ -1105,13 +1106,7 @@ function DentistDiagnostics() {
 
         <div className="dd-content">
 
-          <div style={styles.titleSection}>
 
-            <h1 style={styles.pageTitle}>Diagnostics</h1>
-
-            <p style={styles.pageSubtitle}>AI-Assisted Imaging & Clinical Findings</p>
-
-          </div>
 
 
 
