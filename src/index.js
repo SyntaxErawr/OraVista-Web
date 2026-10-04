@@ -3,7 +3,10 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import './styles/theme.css';
 import App from './App';
+import { installAuthFetch } from './utils/auth';
 import reportWebVitals from './reportWebVitals';
+
+installAuthFetch();
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

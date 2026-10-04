@@ -1,3 +1,4 @@
+import { verifyCode, saveSession } from "../../utils/auth";
 import AuthIntro from "../../components/AuthIntro";
 import BrandMark from "../../components/BrandMark";
 import React, { useState, useEffect } from 'react';
@@ -17,6 +18,7 @@ function LoginPage() {
   const [showResetModal, setShowResetModal] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [otpSent, setOtpSent] = useState("");
+  const [recoveryToken,setRecoveryToken]=useState("");
   const [otpInput, setOtpInput] = useState("");
   const [otpStep, setOtpStep] = useState("email");
   const [otpMessage, setOtpMessage] = useState("");
@@ -90,7 +92,7 @@ function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
-        setOtpSent(String(data.generatedOtp || ""));
+        setOtpSent(data.challengeId || "");
         setOtpStep("verify");
         setOtpMessage("Code sent! Check your email.");
       } else {
@@ -103,15 +105,14 @@ function LoginPage() {
     }
   };
 
-  const verifyOTP = () => {
-    if (!isOtpLoading && /^\d{6}$/.test(otpInput) && otpInput === otpSent) {
-      setShowForgotModal(false);
-      setShowResetModal(true);
-      setOtpMessage("");
-      setOtpInput("");
-    } else {
-      setOtpMessage("Invalid code. Please try again.");
-    }
+  const verifyOTP = async () => {
+    if(isOtpLoading || !/^\d{6}$/.test(otpInput) || !otpSent) return;
+    setIsOtpLoading(true);
+    try {
+      const data=await verifyCode(forgotEmail,otpSent,otpInput);
+      if(!data.verificationToken) throw new Error('Please request another code.');
+      setRecoveryToken(data.verificationToken);setShowForgotModal(false);setShowResetModal(true);setOtpMessage('');setOtpInput('');
+    } catch(e) {setOtpMessage(e.message);} finally {setIsOtpLoading(false);}
   };
 
   const handlePasswordReset = async () => {
@@ -128,7 +129,7 @@ function LoginPage() {
       const response = await fetch("https://oravista-server-474976105474.asia-southeast1.run.app/api/reset-password-by-email", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: forgotEmail, newPassword: newPassword }),
+        body: JSON.stringify({ email: forgotEmail, newPassword: newPassword, verificationToken: recoveryToken }),
       });
 
       if (response.ok) {
@@ -175,7 +176,7 @@ function LoginPage() {
       });
 
       const data = await response.json();
-      console.log("2. Server Response:", data);
+
 
       if (response.ok) {
         if (!data.user.role) {
@@ -189,6 +190,8 @@ function LoginPage() {
         console.log(`3. Checking Role: Database says '${dbRole}', You selected '${selectedRole}'`);
 
         if (dbRole === selectedRole) {
+          if(!data.token) throw new Error('Please sign in again.');
+          saveSession(data.token);
           localStorage.setItem('user', JSON.stringify(data.user));
 
           if (dbRole === 'admin') window.location.href = '/admin/dashboard';

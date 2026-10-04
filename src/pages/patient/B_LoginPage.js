@@ -1,3 +1,4 @@
+import { verifyCode, saveSession } from "../../utils/auth";
 import PatientDialog from "../../components/PatientDialog";
 import AuthIntro from "../../components/AuthIntro";
 import React, { useState, useEffect } from "react";
@@ -16,7 +17,6 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [errors, setErrors] = useState({ email: "", password: "" });
-  const [attempts, setAttempts] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
   const [timer, setTimer] = useState(0);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -34,6 +34,7 @@ function LoginPage() {
   const [showResetModal, setShowResetModal] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [otpSent, setOtpSent] = useState("");
+  const [recoveryToken,setRecoveryToken]=useState("");
   const [otpInput, setOtpInput] = useState("");
   const [otpStep, setOtpStep] = useState("email");
   const [otpMessage, setOtpMessage] = useState("");
@@ -64,7 +65,6 @@ function LoginPage() {
       }, 1000);
     } else if (timer === 0 && isLocked) {
       setIsLocked(false);
-      setAttempts(0);
       setStatusMessage("");
       setErrors({ email: "", password: "" });
       clearInterval(interval);
@@ -104,7 +104,6 @@ function LoginPage() {
   // --- 2FA LOGIN OTP FUNCTIONS (NEW) ---
   const sendLoginOTP = async (userEmail) => {
     if (isLoginOtpLoading) return;
-    setLoginOtpSent("");
     setLoginOtpInput("");
     setIsLoginOtpLoading(true);
     setLoginOtpMessage("");
@@ -114,13 +113,13 @@ function LoginPage() {
       const response = await fetch(`${API_BASE_URL}/api/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: userEmail, action: "login" }) // <--- ADDED ACTION TAG HERE
+        body: JSON.stringify({ email: userEmail, action: "login", challengeId: loginOtpSent }) // <--- ADDED ACTION TAG HERE
       });
 
       const data = await response.json();
 
-      if (response.ok && /^\d{6}$/.test(String(data.generatedOtp || ""))) {
-        setLoginOtpSent(String(data.generatedOtp || ""));
+      if (response.ok && data.challengeId) {
+        setLoginOtpSent(data.challengeId);
         setLoginOtpMessage("Security code sent! Please check your email.");
       } else {
         setLoginOtpMessage(data.message || "Failed to send verification code.");
@@ -132,16 +131,14 @@ function LoginPage() {
     }
   };
 
-  const verifyLoginOTP = () => {
-    if (!isLoginOtpLoading && /^\d{6}$/.test(loginOtpInput) && loginOtpInput === loginOtpSent) {
-      // If correct, hide OTP modal and show the final Success modal
-      setShowLoginOtpModal(false);
-      setShowSuccessModal(true);
-      setLoginOtpMessage("");
-      setLoginOtpInput("");
-    } else {
-      setLoginOtpMessage("Invalid code. Please try again.");
-    }
+  const verifyLoginOTP = async () => {
+    if(isLoginOtpLoading || !/^\d{6}$/.test(loginOtpInput) || !loginOtpSent) return;
+    setIsLoginOtpLoading(true);
+    try {
+      const data=await verifyCode(email,loginOtpSent,loginOtpInput);
+      if(!data.token || data.user?.role !== 'patient') throw new Error('Please use a patient account.');
+      saveSession(data.token);setFullUser(data.user);setShowLoginOtpModal(false);setShowSuccessModal(true);setLoginOtpMessage('');setLoginOtpInput('');
+    } catch(e) {setLoginOtpMessage(e.message);} finally {setIsLoginOtpLoading(false);}
   };
 
   // --- LOGIN FUNCTION ---
@@ -176,18 +173,11 @@ function LoginPage() {
         // Credentials are correct! Save the user data, but DON'T log them in yet.
         setFullUser(data.user);
         // Trigger the 2FA OTP instead of showing success modal
-        sendLoginOTP(data.user.email);
+        if (!data.challengeId || data.user?.role !== 'patient') {setStatusMessage('Please use a patient account.');return;}
+        setLoginOtpSent(data.challengeId);setLoginOtpInput('');setShowLoginOtpModal(true);setLoginOtpMessage('Security code sent! Please check your email.');
       } else {
-        const newAttempts = attempts + 1;
-        setAttempts(newAttempts);
-
-        if (newAttempts >= 3) {
-          setIsLocked(true);
-          setTimer(60);
-          setStatusMessage("Too many failed attempts. Locked for 1 minute.");
-        } else {
-          setStatusMessage(`Incorrect information. ${3 - newAttempts} attempts remaining.`);
-        }
+        setStatusMessage(data.message || "Login failed.");
+        if(response.status === 429) {setIsLocked(true);setTimer(900);}
       }
     } catch (err) {
       setStatusMessage("Server error. Ensure your Node backend is running.");
@@ -232,7 +222,7 @@ function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
-        setOtpSent(String(data.generatedOtp || ""));
+        setOtpSent(data.challengeId || "");
         setOtpStep("verify");
         setOtpMessage("Code sent! Check your email.");
       } else {
@@ -245,15 +235,14 @@ function LoginPage() {
     }
   };
 
-  const verifyOTP = () => {
-    if (!isOtpLoading && /^\d{6}$/.test(otpInput) && otpInput === otpSent) {
-      setShowForgotModal(false);
-      setShowResetModal(true);
-      setOtpMessage("");
-      setOtpInput("");
-    } else {
-      setOtpMessage("Invalid code. Please try again.");
-    }
+  const verifyOTP = async () => {
+    if(isOtpLoading || !/^\d{6}$/.test(otpInput) || !otpSent) return;
+    setIsOtpLoading(true);
+    try {
+      const data=await verifyCode(forgotEmail,otpSent,otpInput);
+      if(!data.verificationToken) throw new Error('Please request another code.');
+      setRecoveryToken(data.verificationToken);setShowForgotModal(false);setShowResetModal(true);setOtpMessage('');setOtpInput('');
+    } catch(e) {setOtpMessage(e.message);} finally {setIsOtpLoading(false);}
   };
 
   const handlePasswordReset = async () => {
@@ -270,7 +259,7 @@ function LoginPage() {
       const response = await fetch(`${API_BASE_URL}/api/reset-password-by-email`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: forgotEmail, newPassword: newPassword }),
+        body: JSON.stringify({ email: forgotEmail, newPassword: newPassword, verificationToken: recoveryToken }),
       });
 
       if (response.ok) {
@@ -409,7 +398,7 @@ function LoginPage() {
               Resend Code
             </button>
 
-            {loginOtpMessage && <p role={loginOtpSent ? "status" : "alert"} style={{ color: loginOtpSent ? "green" : "red", fontSize: "12px", marginTop: "10px", fontWeight: "600" }}>{loginOtpMessage}</p>}
+            {loginOtpMessage && <p role={loginOtpMessage.startsWith("Security code sent") ? "status" : "alert"} style={{ color: loginOtpMessage.startsWith("Security code sent") ? "green" : "#a12632", fontSize: "12px", marginTop: "10px", fontWeight: "600" }}>{loginOtpMessage}</p>}
           </div>
         </PatientDialog>
       )}

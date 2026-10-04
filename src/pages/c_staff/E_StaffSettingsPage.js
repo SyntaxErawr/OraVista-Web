@@ -1,3 +1,4 @@
+import {saveSession} from "../../utils/auth";
 import ClinicPageTitle from '../../components/ClinicPageTitle';
 import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTools';
 import React, { useState, useEffect } from 'react';
@@ -102,6 +103,7 @@ function StaffSettings() {
       const data = await response.json();
 
       if (response.ok) {
+        saveSession(data.token);
         alert("Password changed successfully!");
         setCurrentPassword('');
         setNewPassword('');

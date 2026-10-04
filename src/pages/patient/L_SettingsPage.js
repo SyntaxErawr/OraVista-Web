@@ -1,3 +1,4 @@
+import {verifyCode,saveSession} from "../../utils/auth";
 import PatientAccount from '../../components/PatientAccount';
 import PatientDialog from "../../components/PatientDialog";
 import BrandWordmark from "../../components/BrandWordmark";
@@ -154,8 +155,8 @@ function SettingsPage() {
         },
       );
       const data = await response.json();
-      if (response.ok && /^\d{6}$/.test(String(data.generatedOtp || ""))) {
-        setOtpSent(String(data.generatedOtp));
+      if (response.ok && data.challengeId) {
+        setOtpSent(data.challengeId);
         setShowConfirmModal(false);
         setShowPasswordModal(false);
         setShowOtpModal(true);
@@ -173,7 +174,7 @@ function SettingsPage() {
 
   const verifyOTP = async () => {
     if (passwordRequest.current) return;
-    if (!/^\d{6}$/.test(otpInput) || !otpSent || otpInput !== otpSent) {
+    if (!/^\d{6}$/.test(otpInput) || !otpSent) {
       setOtpMessage("Invalid code. Please try again.");
       return;
     }
@@ -185,13 +186,15 @@ function SettingsPage() {
     setIsOtpLoading(true);
     setOtpMessage("");
     try {
+      const verified=await verifyCode(userData.email,otpSent,otpInput);
       const response = await fetch(`${API_BASE_URL}/api/update-password`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: userData.id, oldPassword: passwords.old, newPassword: passwords.next }),
+        body: JSON.stringify({ id: userData.id, oldPassword: passwords.old, newPassword: passwords.next, verificationToken: verified.verificationToken }),
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.message || "Password could not be updated. Please try again.");
+      saveSession(data.token);
       setShowOtpModal(false);
       setSuccessMessage("Your password has been updated.");
       setShowSuccessModal(true);

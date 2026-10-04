@@ -11,7 +11,7 @@ const originalFetch = global.fetch;
 const reply = (data, ok = true) => ({ ok, json: async () => data });
 beforeEach(() => {
   localStorage.setItem('user', JSON.stringify({ id: 7, firstName: 'Test', email: 'test@example.test' }));
-  global.fetch = jest.fn(async () => reply({ generatedOtp: '123456' }));
+  global.fetch = jest.fn(async () => reply({ challengeId: 'challenge-1' }));
 });
 afterEach(() => { localStorage.clear(); global.fetch = originalFetch; });
 
@@ -28,7 +28,7 @@ async function confirmPasswordChange() {
 test('password success waits for the existing update endpoint and prevents repeated requests', async () => {
   let finish;
   global.fetch.mockImplementation(async (url) => url.endsWith('/api/send-otp')
-    ? reply({ generatedOtp: '123456' }) : new Promise(resolve => { finish = resolve; }));
+    ? reply({ challengeId: 'challenge-1' }) : url.endsWith('/api/verify-otp') ? reply({verificationToken: 'proof-1'}) : new Promise(resolve => { finish = resolve; }));
   await confirmPasswordChange();
   const dialog = await screen.findByRole('dialog', { name: 'Verification Required' });
   expect(within(dialog).getByRole('button', { name: 'Verify Code' })).toBeDisabled();
@@ -37,17 +37,18 @@ test('password success waits for the existing update endpoint and prevents repea
   expect(screen.queryByText('Action Successful!')).not.toBeInTheDocument();
   expect(within(dialog).getByRole('button', { name: 'Please wait...' })).toBeDisabled();
   expect(within(dialog).getByRole('button', { name: 'Cancel Change' })).toBeDisabled();
+  await waitFor(() => expect(global.fetch.mock.calls.some(([url]) => url.endsWith('/api/update-password'))).toBe(true));
   const [, options] = global.fetch.mock.calls.find(([url]) => url.endsWith('/api/update-password'));
   expect(options.method).toBe('PUT');
-  expect(JSON.parse(options.body)).toEqual({ id: 7, oldPassword: 'OldPassword1!', newPassword: 'NewPassword2!' });
-  expect(global.fetch).toHaveBeenCalledTimes(2);
+  expect(JSON.parse(options.body)).toEqual({ id: 7, oldPassword: 'OldPassword1!', newPassword: 'NewPassword2!', verificationToken: 'proof-1' });
+  expect(global.fetch).toHaveBeenCalledTimes(3);
   finish(reply({ message: 'Password updated successfully!' }));
   await screen.findByText('Your password has been updated.');
 });
 
 test('password rejection stays in the dialog and does not show success', async () => {
   global.fetch.mockImplementation(async url => url.endsWith('/api/send-otp')
-    ? reply({ generatedOtp: '123456' }) : reply({ message: 'Incorrect old password.' }, false));
+    ? reply({ challengeId: 'challenge-1' }) : url.endsWith('/api/verify-otp') ? reply({verificationToken: 'proof-1'}) : reply({ message: 'Incorrect old password.' }, false));
   await confirmPasswordChange();
   await screen.findByRole('dialog', { name: 'Verification Required' });
   fireEvent.change(screen.getByLabelText('Enter 6-digit code'), { target: { value: '123456' } });
@@ -74,49 +75,36 @@ test('notification preferences clearly show unavailable controls instead of fake
   expect(global.fetch).not.toHaveBeenCalled();
 });
 
-test('login cannot accept an empty OTP after email delivery fails', async () => {
-  global.fetch.mockImplementation(async url => url.endsWith('/api/login')
-    ? reply({ user: { id: 7, email: 'test@example.test' } }) : reply({ message: 'Delivery failed.' }, false));
+test('login email failure does not open verification or create a session', async () => {
+  global.fetch.mockResolvedValue(reply({message:'Delivery failed.'},false));
   render(<LoginPage />);
-  fireEvent.change(screen.getByPlaceholderText(/email/i), { target: { value: 'test@example.test' } });
-  fireEvent.change(screen.getByPlaceholderText(/password/i), { target: { value: 'OldPassword1!' } });
-  fireEvent.click(screen.getByRole('button', { name: /^Log ?in$/i }));
+  fireEvent.change(screen.getByPlaceholderText(/email/i), {target:{value:'test@example.test'}});
+  fireEvent.change(screen.getByPlaceholderText(/password/i), {target:{value:'OldPassword1!'}});
+  fireEvent.click(screen.getByRole('button',{name:/^Log ?in$/i}));
   await screen.findByText('Delivery failed.');
-  fireEvent.click(screen.getByRole('button', { name: 'Verify & Login' }));
-  expect(screen.getByRole('button', { name: 'Verify & Login' })).toBeDisabled();
-  expect(screen.getByLabelText('Enter 6-digit code')).toBeDisabled();
-  expect(screen.getByRole('alert')).toHaveTextContent('Delivery failed.');
-  expect(screen.getByText(/We couldn't send your verification code/)).toBeInTheDocument();
-  expect(screen.queryByText(/Login Successful/i)).not.toBeInTheDocument();
+  expect(screen.queryByRole('button',{name:'Verify & Login'})).not.toBeInTheDocument();
+  expect(localStorage.getItem('userToken')).toBeNull();
 });
 
-test('OTP resend keeps the existing API contract and enables verification only after delivery succeeds', async () => {
-  let finishResend;
-  let requests = 0;
+test('resend sends the credential challenge; rejected code cannot create a session', async () => {
   global.fetch.mockImplementation(async url => {
-    if (url.endsWith('/api/login')) return reply({ user: { id: 7, email: 'test@example.test' } });
-    requests++;
-    return requests === 1 ? reply({ message: 'Failed to send email.' }, false)
-      : new Promise(resolve => { finishResend = resolve; });
+    if(url.endsWith('/api/login')) return reply({user:{id:7,email:'test@example.test',role:'patient'},challengeId:'challenge-1'});
+    if(url.endsWith('/api/send-otp')) return reply({challengeId:'challenge-2'});
+    return reply({message:'Invalid or expired code.'},false);
   });
   render(<LoginPage />);
-  fireEvent.change(screen.getByPlaceholderText(/email/i), { target: { value: 'test@example.test' } });
-  fireEvent.change(screen.getByPlaceholderText(/password/i), { target: { value: 'OldPassword1!' } });
-  fireEvent.click(screen.getByRole('button', { name: /^Log ?in$/i }));
-  await screen.findByText('Failed to send email.');
-  const resend = screen.getByRole('button', { name: 'Resend Code' });
-  fireEvent.click(resend);
-  expect(resend).toBeDisabled();
-  expect(screen.getByText('Requesting your verification code. Please wait.')).toBeInTheDocument();
-  const otpCalls = global.fetch.mock.calls.filter(([url]) => url.endsWith('/api/send-otp'));
-  expect(otpCalls).toHaveLength(2);
-  otpCalls.forEach(([, options]) => {
-    expect(options.method).toBe('POST');
-    expect(JSON.parse(options.body)).toEqual({ email: 'test@example.test', action: 'login' });
-  });
-  finishResend(reply({ generatedOtp: '123456' }));
-  await screen.findByText('Security code sent! Please check your email.');
-  expect(screen.getByRole('button', { name: 'Verify & Login' })).toBeDisabled();
-  fireEvent.change(screen.getByLabelText('Enter 6-digit code'), { target: { value: '123456' } });
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Verify & Login' })).toBeEnabled());
+  fireEvent.change(screen.getByPlaceholderText(/email/i), {target:{value:'test@example.test'}});
+  fireEvent.change(screen.getByPlaceholderText(/password/i), {target:{value:'OldPassword1!'}});
+  fireEvent.click(screen.getByRole('button',{name:/^Log ?in$/i}));
+  await screen.findByRole('button',{name:'Verify & Login'});
+  fireEvent.click(screen.getByRole('button',{name:'Resend Code'}));
+  await waitFor(() => expect(screen.getByRole('button',{name:'Resend Code'})).toBeEnabled());
+  const [,options]=global.fetch.mock.calls.find(([url])=>url.endsWith('/api/send-otp'));
+  expect(JSON.parse(options.body)).toEqual({email:'test@example.test',action:'login',challengeId:'challenge-1'});
+  fireEvent.change(screen.getByLabelText('Enter 6-digit code'),{target:{value:'123456'}});
+  fireEvent.click(screen.getByRole('button',{name:'Verify & Login'}));
+  await screen.findByText('Invalid or expired code.');
+  const [,verify]=global.fetch.mock.calls.find(([url])=>url.endsWith('/api/verify-otp'));
+  expect(JSON.parse(verify.body)).toEqual({email:'test@example.test',challengeId:'challenge-2',code:'123456'});
+  expect(localStorage.getItem('userToken')).toBeNull();
 });
