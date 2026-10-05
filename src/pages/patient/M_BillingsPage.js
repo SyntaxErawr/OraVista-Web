@@ -18,6 +18,7 @@ import {
   Download,
 } from "lucide-react";
 import { exportReceiptPDF } from "../../utils/exportReceiptPDF";
+import { billingAmounts } from "../../utils/billingAmounts";
 
 /* ─── Responsive styles injected once (Pruned for new sidebar layout) ──────── */
 const STYLES = `
@@ -138,7 +139,7 @@ function BillingsPage() {
     (billing) => billing.billing_status === "Paid",
   );
   const totalOutstanding = pendingTransactions.reduce(
-    (s, i) => s + (i.billing_status === "Approved" ? parseFloat(i.amount) || 0 : 0),
+    (s, i) => s + billingAmounts(i).balance,
     0,
   );
   const totalPaid = completedTransactions.reduce(

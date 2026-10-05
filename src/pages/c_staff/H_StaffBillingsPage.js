@@ -96,7 +96,7 @@ function StaffBillingsPage() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Unable to save billing.");
 
-      const updatedBilling = { ...selectedBilling, billing_status: billingStatus, amount: receipt.charge, service_type: receipt.procedure, ...data.appointment, receipt_details: receipt };
+      const updatedBilling = { ...selectedBilling, billing_status: billingStatus, amount: receipt.charge, service_type: receipt.procedure, receipt_details: receipt, ...data.appointment };
       setDirty(false);
       setSelectedBilling(updatedBilling);
       setBillings((current) => current.map((billing) => (
@@ -105,7 +105,7 @@ function StaffBillingsPage() {
       setMessage(billingStatus === "Paid"
         ? "Payment recorded. The receipt is now in the patient's Payment Records."
         : billingStatus === "Denied"
-          ? "Billing was not approved and will not appear in the patient's billings."
+          ? "Billing was not approved and is excluded from the patient's outstanding balance."
           : "Bill approved. It is now visible in the patient's Pending Transactions.");
     } catch (error) {
       console.error("Staff billing update error:", error);

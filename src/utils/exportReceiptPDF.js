@@ -1,4 +1,5 @@
 import jsPDF from "jspdf";
+import { billingAmounts } from './billingAmounts';
 
 const formatDate = (date) =>
   date
@@ -18,7 +19,7 @@ export const exportReceiptPDF = (patient, payment) => {
   const totalRows = 37;
   const columns = [
     { label: "DATE", width: 34 },
-    { label: "Procedure/s done", width: 77 },
+    { label: "Procedure/s done", width: 69 },
     { label: "Charge", width: 23 },
     { label: "Paid", width: 23 },
     { label: "Balance", width: 23 },
@@ -39,6 +40,7 @@ export const exportReceiptPDF = (patient, payment) => {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
+  const totals = billingAmounts(payment || {});
 
   // Clinic header
   doc.setFillColor(203, 184, 121);
@@ -106,9 +108,9 @@ export const exportReceiptPDF = (patient, payment) => {
   const values = [
     formatDate(payment?.appointment_date),
     receiptDetails.procedure || payment?.service_type || "Payment received",
-    `PHP ${receiptDetails.charge || amount}`,
-    `PHP ${receiptDetails.paid || amount}`,
-    `PHP ${receiptDetails.balance || "0.00"}`,
+    `PHP ${amount}`,
+    `PHP ${totals.paid.toFixed(2)}`,
+    `PHP ${totals.balance.toFixed(2)}`,
     receiptDetails.nextVisit || "",
   ];
   values.forEach((value, index) => {
