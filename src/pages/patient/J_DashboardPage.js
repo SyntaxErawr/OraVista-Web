@@ -61,10 +61,27 @@ function DashboardPage() {
   const [appointments, setAppointments] = useState([]);
   const [appointmentsError, setAppointmentsError] = useState("");
   const [notificationsError, setNotificationsError] = useState("");
-  const historyAppointments = appointments.filter(appt =>
-    [appt.service_type, appt.dentist_name, appt.status, appt.appointment_date]
-      .join(" ").toLowerCase().includes(historySearch.trim().toLowerCase())
-  );
+  const historyAppointments = appointments.filter(appt => {
+    const appointmentDate = String(appt.appointment_date || "");
+    const formattedAppointmentDate = appointmentDate
+      ? new Date(appointmentDate).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+      : "";
+
+    return [
+      appt.service_type,
+      appt.dentist_name,
+      appt.status,
+      appointmentDate,
+      formattedAppointmentDate,
+    ]
+      .join(" ")
+      .toLowerCase()
+      .includes(historySearch.trim().toLowerCase());
+  });
   const historyPageCount = Math.max(1, Math.ceil(historyAppointments.length / 10));
   const currentHistoryPage = Math.min(historyPage, historyPageCount);
   const visibleHistory = historyAppointments.slice((currentHistoryPage - 1) * 10, currentHistoryPage * 10);
@@ -754,7 +771,10 @@ function DashboardPage() {
                 style={{ display: "flex", alignItems: "center", gap: "25px" }}
                 className="patient-header-actions"
               >
-                <PatientAccount />
+                {/* ── UPDATED PROFILE RESIZE WRAPPER ── */}
+                <div style={{ transform: "scale(1.25)", transformOrigin: "right center", display: "flex" }}>
+                  <PatientAccount />
+                </div>
                 {/* Notifications */}
                 <div style={{ position: "relative", flexShrink: 0 }}>
                   <button className="ov-ui-button"

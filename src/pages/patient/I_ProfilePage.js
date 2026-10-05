@@ -271,7 +271,7 @@ function ProfilePage() {
     padding: "12px 15px",
     borderRadius: "8px",
     border: hasError ? "2px solid #ff4d4d" : "none",
-    backgroundColor: isEditing && !isReadOnly ? "white" : "#e0e0e0",
+    backgroundColor: isEditing && !isReadOnly ? "#f0f0f0" : "#e0e0e0",
     fontSize: "14px",
     fontFamily: "'Manrope', sans-serif",
     width: "100%",
