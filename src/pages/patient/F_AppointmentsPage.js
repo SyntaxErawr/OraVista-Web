@@ -1,3 +1,71 @@
+
+Loading older messages…
+what is next after the book appointment
+Next is My Appointments, following your sidebar order.
+
+Field	Name
+Module Name	Appointment and Scheduling Module
+Component Name	My Appointments
+Here, you’ll test interactions such as searching, filtering, viewing appointment details, pagination, rescheduling, and cancellation.
+
+Always give me the pre conditions, action description, and verification steps
+I’ll include those three fields for each component from now on.
+
+Field	Content
+Module Name	Appointment and Scheduling Module
+Component Name	My Appointments
+Pre-conditions	The patient is successfully logged in, the My Appointments page is open, and an internet connection is available. Prepare appointments with different statuses and enough records to test pagination.
+Action Description	Search and filter appointments, open appointment details, navigate between pages, and use the available rescheduling and cancellation controls.
+Verification Steps	Verify that searches and filters display matching appointments, opening an appointment shows its correct details, and pagination displays the correct records. Check that rescheduling opens the selected appointment’s booking form. Confirm that cancellation updates the appointment status after confirmation, while dismissing the cancellation dialog leaves it unchanged. Verify that actions are available only for eligible appointment statuses.
+User attachment
+test scenarios for this
+Field	Content
+Module Name	Appointment and Scheduling Module
+Component Name	My Appointments
+Pre-conditions	The patient is logged in, the My Appointments page is open, and an internet connection is available. Prepare more than 10 appointments with different dentists and statuses.
+Action Description	Search appointments, filter by dentist and status, navigate between pages, and click Edit Appointments to access available management actions.
+Verification Steps	Verify that searches and filters display matching records, clearing filters restores the list, and pagination displays the correct records and counts. Confirm that Edit Appointments reveals cancellation or rescheduling controls for eligible appointments.
+These scenarios match the controls visible in your screenshot:
+
+No.	Data (Input Values)	Expected Results
+1	Enter a known service name, such as Braces Adjustment, in the search field.	Only appointments matching the search term are displayed.
+2	Enter a search term that does not match any appointment.	No appointment rows are displayed, and a no-matching-results message appears.
+3	Clear the search field.	All appointments matching the currently selected filters are displayed again.
+4	Click the All Dentists dropdown.	The available dentist filter options are displayed.
+5	Select a specific dentist.	Only appointments assigned to the selected dentist are displayed.
+6	Select All Dentists after filtering by a specific dentist.	The dentist filter is removed while any active search and status filter remain applied.
+7	Click the All Statuses dropdown.	The available appointment-status options are displayed.
+8	Select Pending.	Only Pending appointments are displayed.
+9	Select Confirmed.	Only Confirmed appointments are displayed.
+10	Select Cancelled.	Only Cancelled appointments are displayed.
+11	Select Late / No Show.	Only Late / No Show appointments are displayed.
+12	Select All Statuses after applying a status filter.	The status filter is removed while any active search and dentist filter remain applied.
+13	Select a dentist and a status together.	Only appointments matching both selections are displayed.
+14	Enter a search term while dentist and status filters are applied.	Only appointments matching the search term and both filters are displayed.
+15	Choose a combination of filters with no matching appointments.	A no-matching-results message appears, and no unrelated appointments are displayed.
+16	Click Next when another page is available.	The next page of appointments appears, and the page number and displayed record range update correctly.
+17	Click Previous after moving to another page.	The previous page of appointments appears, and the page number and record range update correctly.
+18	Attempt to click Previous on the first page.	The Previous button is disabled, and the page remains unchanged.
+19	Attempt to click Next on the last page.	The Next button is disabled, and the page remains unchanged.
+20	Apply a search or filter while viewing a later page.	Pagination adjusts to a valid results page, with accurate record counts and no skipped matching records.
+21	Click Edit Appointments.	Appointment management controls appear, allowing cancellation or rescheduling where permitted by appointment status.
+The screenshot shows the page before Edit Appointments is activated. The specific cancellation and rescheduling button scenarios should follow the controls displayed after clicking it.
+
+
+F_AppointmentsPage.js
+Code
+Read and analyze this page, I want you to edit the search bar, make it include the date and time in the search bar. Read and analyze first before editing the code. Do not change or remove anything else.
+Updated the search to include appointment dates and times, such as December 2, 2026, 2026-12-02, and 2:30 PM.
+
+Only the search-matching logic changed. All other code is preserved. Passed 15 focused search checks.
+
+
+F_AppointmentsPage.js
+Code
+Put the code in a txt file
+
+F_AppointmentsPage.txt
+Document
 import PatientAccount from '../../components/PatientAccount';
 import PatientDialog from "../../components/PatientDialog";
 import BrandWordmark from "../../components/BrandWordmark";
@@ -310,7 +378,21 @@ function AppointmentsPage() {
     const service = (appt.service_type || "").toLowerCase();
     const dentist = (appt.dentist_name || "").toLowerCase();
     const search = searchTerm.toLowerCase();
-    const matchesSearch = service.includes(search) || dentist.includes(search);
+    const appointmentDate = String(appt.appointment_date || "");
+    const parsedDate = new Date(appointmentDate);
+    const dateSearchValues = !appointmentDate || Number.isNaN(parsedDate.getTime())
+      ? [appointmentDate]
+      : [
+          appointmentDate,
+          parsedDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+          parsedDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+        ];
+    const appointmentTime = String(appt.appointment_time || "");
+    const formattedTime = appointmentTime ? formatAppointmentTime(appointmentTime) : "";
+    const timeWithoutSeconds = formattedTime.replace(/:(\d{2}) (AM|PM)$/, " $2");
+    const matchesSearch = service.includes(search) || dentist.includes(search) ||
+      [...dateSearchValues, appointmentTime, formattedTime, timeWithoutSeconds]
+        .some((value) => value.toLowerCase().includes(search));
     const matchesDentist = selectedDentist
       ? appt.dentist_name === selectedDentist
       : true;
@@ -1284,3 +1366,5 @@ function AppointmentsPage() {
 }
 
 export default AppointmentsPage;
+
+
