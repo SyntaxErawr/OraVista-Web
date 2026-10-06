@@ -157,11 +157,64 @@ test("leaving rescheduling returns to appointments instead of clearing locked fi
 test("signup reports a non-email server failure", async () => {
   global.fetch.mockResolvedValue(reply({ message: "Registration is temporarily unavailable." }, false));
   render(<SignupPage />);
-  for (const [name, value] of Object.entries({ firstName: "Test", lastName: "Patient", email: "test@gmail.com", password: "Preview1!", confirmPassword: "Preview1!" })) {
+  for (const [name, value] of Object.entries({ firstName: "Test", lastName: "Patient", email: "test@gmail.com", phone: "09123456789", password: "Preview1!", confirmPassword: "Preview1!" })) {
     fireEvent.change(document.querySelector(`input[name="${name}"]`), { target: { value } });
   }
   fireEvent.click(screen.getByRole("button", { name: "CREATE ACCOUNT" }));
   expect(await screen.findByRole("alert")).toHaveTextContent("Registration is temporarily unavailable.");
+});
+
+const fillSignup = (overrides = {}) => {
+  const values = { firstName: "Test", lastName: "Patient", email: "test@example.com", phone: "09123456789", password: "Preview1!", confirmPassword: "Preview1!", ...overrides };
+  for (const [name, value] of Object.entries(values)) fireEvent.change(document.querySelector(`input[name="${name}"]`), { target: { value } });
+};
+
+test("signup includes phone, normalizes email and accepts a twenty-character name", async () => {
+  global.fetch.mockResolvedValue(reply({}, true));
+  localStorage.setItem("tempBranch", "Pasay");
+  render(<SignupPage />);
+  fillSignup({ firstName: "ABCDEFGHIJKLMNOPQRST", email: " Test@Example.com " });
+  fireEvent.click(screen.getByRole("button", { name: "CREATE ACCOUNT" }));
+  expect(await screen.findByText("Success!")).toBeInTheDocument();
+  expect(JSON.parse(global.fetch.mock.calls[0][1].body)).toEqual({ firstName: "ABCDEFGHIJKLMNOPQRST", lastName: "Patient", email: "test@example.com", phone: "09123456789", password: "Preview1!", branch: "Pasay", role: "patient" });
+});
+
+test.each([
+  ["phone", "", "This field is required."],
+  ["phone", "09123", "Enter an 11-digit mobile number starting with 09."],
+  ["email", "patient@", "Enter a valid email address."],
+  ["firstName", "ABCDEFGHIJKLMNOPQRSTU", "Use 20 characters or fewer."],
+  ["password", "short", "Password does not meet requirements."],
+  ["confirmPassword", "Different1!", "Passwords do not match."],
+])("signup shows %s validation at the input and prevents submission", (field, value, message) => {
+  render(<SignupPage />);
+  fillSignup({ [field]: value });
+  fireEvent.click(screen.getByRole("button", { name: "CREATE ACCOUNT" }));
+  expect(document.querySelector(`input[name="${field}"]`)).toHaveAttribute("aria-describedby", `${field}-error`);
+  expect(document.getElementById(`${field}-error`)).toHaveTextContent(message);
+  expect(global.fetch).not.toHaveBeenCalled();
+});
+
+test("server field errors appear separately and clear for a successful retry", async () => {
+  global.fetch.mockResolvedValueOnce(reply({ message: "Check your details", errors: { email: "Email already registered.", phone: "Check this phone number." } }, false)).mockResolvedValueOnce(reply({}, true));
+  render(<SignupPage />);
+  fillSignup();
+  fireEvent.click(screen.getByRole("button", { name: "CREATE ACCOUNT" }));
+  expect(await screen.findByText("Email already registered.")).toHaveAttribute("id", "email-error");
+  expect(screen.getByText("Check this phone number.")).toHaveAttribute("id", "phone-error");
+  expect(screen.queryByText("Check your details")).not.toBeInTheDocument();
+  fillSignup({ email: "new@example.com", phone: "09987654321" });
+  fireEvent.click(screen.getByRole("button", { name: "CREATE ACCOUNT" }));
+  expect(await screen.findByText("Success!")).toBeInTheDocument();
+});
+
+test("legacy duplicate-email responses are not duplicated in a summary", async () => {
+  global.fetch.mockResolvedValue(reply({ message: "Email already registered." }, false));
+  render(<SignupPage />);
+  fillSignup();
+  fireEvent.click(screen.getByRole("button", { name: "CREATE ACCOUNT" }));
+  expect(await screen.findByRole("alert")).toHaveAttribute("id", "email-error");
+  expect(screen.getAllByText("Email already registered.")).toHaveLength(1);
 });
 
 test("a rejected profile upload restores the saved photo and offers visible feedback", async () => {

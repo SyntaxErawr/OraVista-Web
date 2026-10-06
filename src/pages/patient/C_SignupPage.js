@@ -14,6 +14,7 @@ function SignupPage() {
     firstName: "",
     lastName: "",
     email: "",
+    phone: "",
     password: "",
     confirmPassword: "",
   });
@@ -25,6 +26,7 @@ function SignupPage() {
     firstName: "",
     lastName: "",
     email: "",
+    phone: "",
     password: "",
     confirmPassword: "",
   });
@@ -37,7 +39,7 @@ function SignupPage() {
     { label: "One number", regex: /[0-9]/ },
     {
       label: "One special character",
-      regex: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?~]/,
+      regex: /[^a-zA-Z0-9]/,
     },
     { label: "8 characters minimum", regex: /.{8,}/ },
   ];
@@ -45,40 +47,9 @@ function SignupPage() {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    if (name === "firstName" || name === "lastName") {
-      const letterOnlyRegex = /^[a-zA-Z\s]*$/;
-      let errorMsg = "";
-
-      if (!letterOnlyRegex.test(value)) {
-        errorMsg = "Only letters allowed (no numbers or symbols).";
-      } else if (value.length >= 20) {
-        errorMsg = "Maximum of 20 characters reached.";
-      }
-
-      setErrors((prev) => ({ ...prev, [name]: errorMsg }));
-
-      if (value.length <= 20) {
-        const filteredValue = value.replace(/[^a-zA-Z\s]/g, "");
-        setFormData((prev) => ({ ...prev, [name]: filteredValue }));
-      }
-      return;
-    }
-
     setFormData((prev) => ({ ...prev, [name]: value }));
-
-    if (name === "email") {
-      let errorMsg = "";
-      if (value !== "") {
-        if (!value.toLowerCase().endsWith("@gmail.com")) {
-          errorMsg = "Incorrect email format";
-        }
-      }
-      setErrors((prev) => ({ ...prev, email: errorMsg }));
-    }
-
-    if (name === "confirmPassword" || name === "password") {
-      setErrors((prev) => ({ ...prev, confirmPassword: "" }));
-    }
+    setErrors((prev) => ({ ...prev, [name]: "", ...(name === "password" ? { confirmPassword: "" } : {}) }));
+    setSubmitError("");
   };
 
   const handleSubmit = async (e) => {
@@ -108,20 +79,23 @@ function SignupPage() {
       newErrors.password = "Password does not meet requirements.";
     }
 
-    if (
-      Object.keys(newErrors).length > 0 ||
-      Object.values(errors).some(
-        (err) => err !== "" && err !== "This field is required.",
-      )
-    ) {
-      setErrors((prev) => ({ ...prev, ...newErrors }));
-      return;
+    for (const name of ["firstName", "lastName"]) {
+      if (formData[name].trim().length > 20) newErrors[name] = "Use 20 characters or fewer.";
     }
+    if (formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) newErrors.email = "Enter a valid email address.";
+    if (formData.phone.trim() && !/^09\d{9}$/.test(formData.phone.trim())) newErrors.phone = "Enter an 11-digit mobile number starting with 09.";
+    if (formData.password.length > 128) newErrors.password = "Use 128 characters or fewer.";
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length) return;
 
     // --- LOGIC TO INCLUDE BRANCH ---
     const selectedBranch = localStorage.getItem("tempBranch") || "Main Branch";
     const payload = {
-      ...formData,
+      firstName: formData.firstName.trim(),
+      lastName: formData.lastName.trim(),
+      email: formData.email.trim().toLowerCase(),
+      phone: formData.phone.trim(),
+      password: formData.password,
       branch: selectedBranch,
       role: "patient" // Standard role for signup
     };
@@ -137,10 +111,13 @@ function SignupPage() {
         setShowSuccessModal(true);
       } else {
         const data = await response.json();
-        setSubmitError(data.message || "Your account could not be created. Please try again.");
-        if (data.message && data.message.includes("Email")) {
-          setErrors((prev) => ({ ...prev, email: data.message }));
-        }
+        const fieldErrors = Object.fromEntries(Object.entries(data.errors || {}).filter(
+          ([field, message]) => Object.prototype.hasOwnProperty.call(formData, field) && typeof message === "string"
+        ));
+        if (Object.keys(fieldErrors).length) setErrors(fieldErrors);
+        else if (/email/i.test(data.message || "") && !/names, email/i.test(data.message)) {
+          setErrors({ email: data.message });
+        } else setSubmitError(data.message || "Your account could not be created. Please try again.");
       }
     } catch (err) {
       setSubmitError("We could not connect. Please try again in a moment.");
@@ -298,32 +275,32 @@ function SignupPage() {
           </Link>
         </p>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <div style={{ display: "flex", gap: "15px", marginBottom: "15px" }}>
             <div style={{ flex: 1 }}>
               <label style={labelStyle}>First Name</label>
               <input aria-label="First Name"
-                name="firstName"
+                aria-invalid={!!errors.firstName} aria-describedby={errors.firstName ? "firstName-error" : undefined} name="firstName"
                 value={formData.firstName}
                 onChange={handleChange}
                 style={inputStyle(errors.firstName)}
                 placeholder="First Name"
               />
               {errors.firstName && (
-                <span style={errorTextStyle}>{errors.firstName}</span>
+                <span id="firstName-error" role="alert" style={errorTextStyle}>{errors.firstName}</span>
               )}
             </div>
             <div style={{ flex: 1 }}>
               <label style={labelStyle}>Last Name</label>
               <input aria-label="Last Name"
-                name="lastName"
+                aria-invalid={!!errors.lastName} aria-describedby={errors.lastName ? "lastName-error" : undefined} name="lastName"
                 value={formData.lastName}
                 onChange={handleChange}
                 style={inputStyle(errors.lastName)}
                 placeholder="Last Name"
               />
               {errors.lastName && (
-                <span style={errorTextStyle}>{errors.lastName}</span>
+                <span id="lastName-error" role="alert" style={errorTextStyle}>{errors.lastName}</span>
               )}
             </div>
           </div>
@@ -331,19 +308,28 @@ function SignupPage() {
           <div style={{ marginBottom: "15px" }}>
             <label style={labelStyle}>Email Address</label>
             <input aria-label="example@gmail.com"
-              name="email"
+              aria-invalid={!!errors.email} aria-describedby={errors.email ? "email-error" : undefined} name="email"
               value={formData.email}
               onChange={handleChange}
               style={inputStyle(errors.email)}
               placeholder="example@gmail.com"
             />
-            {errors.email && <span style={errorTextStyle}>{errors.email}</span>}
+            {errors.email && <span id="email-error" role="alert" style={errorTextStyle}>{errors.email}</span>}
+          </div>
+
+          <div style={{ marginBottom: "15px" }}>
+            <label htmlFor="signup-phone" style={labelStyle}>Mobile Number</label>
+            <input id="signup-phone" name="phone" type="tel" autoComplete="tel"
+              value={formData.phone} onChange={handleChange} placeholder="09XXXXXXXXX"
+              aria-invalid={!!errors.phone} aria-describedby={errors.phone ? "phone-error" : undefined}
+              style={inputStyle(errors.phone)} />
+            {errors.phone && <span id="phone-error" role="alert" style={errorTextStyle}>{errors.phone}</span>}
           </div>
 
           <div style={{ marginBottom: "15px", position: "relative" }}>
             <label style={labelStyle}>Password</label>
             <input aria-label="Password"
-              name="password"
+              aria-invalid={!!errors.password} aria-describedby={errors.password ? "password-error" : undefined} name="password"
               type={showPassword ? "text" : "password"}
               value={formData.password}
               onChange={handleChange}
@@ -357,7 +343,7 @@ function SignupPage() {
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
             {errors.password && (
-              <span style={errorTextStyle}>{errors.password}</span>
+              <span id="password-error" role="alert" style={errorTextStyle}>{errors.password}</span>
             )}
           </div>
 
@@ -392,7 +378,7 @@ function SignupPage() {
           <div style={{ marginBottom: "25px", position: "relative" }}>
             <label style={labelStyle}>Confirm Password</label>
             <input aria-label="Confirm Password"
-              name="confirmPassword"
+              aria-invalid={!!errors.confirmPassword} aria-describedby={errors.confirmPassword ? "confirmPassword-error" : undefined} name="confirmPassword"
               type={showConfirmPassword ? "text" : "password"}
               value={formData.confirmPassword}
               onChange={handleChange}
@@ -406,7 +392,7 @@ function SignupPage() {
               {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
             {errors.confirmPassword && (
-              <span style={errorTextStyle}>{errors.confirmPassword}</span>
+              <span id="confirmPassword-error" role="alert" style={errorTextStyle}>{errors.confirmPassword}</span>
             )}
           </div>
 
