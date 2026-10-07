@@ -4,6 +4,7 @@ import PatientDialog from "../../components/PatientDialog";
 import BrandWordmark from "../../components/BrandWordmark";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { API_BASE_URL } from "../../config/api";
+import { getAppointmentRemindersEnabled, saveAppointmentReminders } from "../../utils/appointmentReminders";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Menu,
@@ -39,6 +40,8 @@ function SettingsPage() {
   const [showPreferenceModal, setShowPreferenceModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showNotifModal, setShowNotifModal] = useState(false);
+  const [appointmentReminders, setAppointmentReminders] = useState(true);
+  const [notificationPreferenceError, setNotificationPreferenceError] = useState("");
 
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [otpInput, setOtpInput] = useState("");
@@ -111,6 +114,18 @@ function SettingsPage() {
     setShowPreferenceModal(false);
     setSuccessMessage("Preferences saved on this device.");
     setShowSuccessModal(true);
+  };
+
+  const saveNotificationPreferences = () => {
+    try {
+      saveAppointmentReminders(userData.id, appointmentReminders);
+      setNotificationPreferenceError("");
+      setShowNotifModal(false);
+      setSuccessMessage("Notification preferences saved on this device.");
+      setShowSuccessModal(true);
+    } catch (error) {
+      setNotificationPreferenceError(error.message || "Unable to save notification preferences. Please try again.");
+    }
   };
 
   const handleSaveAttempt = () => {
@@ -214,7 +229,7 @@ function SettingsPage() {
     sendOTP();
   };
 
-  const ToggleSwitch = ({ label, description }) => (
+  const ToggleSwitch = useCallback(({ label, description, checked, onChange }) => (
     <div
       style={{
         display: "flex",
@@ -232,11 +247,11 @@ function SettingsPage() {
           {description}
         </p>
       </div>
-      <button type="button" className="ov-ui-button" role="switch" aria-checked={false} aria-label={label} disabled aria-describedby="notification-availability"
+      <button type="button" className="ov-ui-button" role="switch" aria-checked={checked} aria-label={label} onClick={onChange} aria-describedby="notification-availability"
         style={{
           width: "50px",
           height: "26px",
-          backgroundColor: "#ccc",
+          backgroundColor: checked ? "#087F8C" : "#ccc",
           borderRadius: "15px",
           position: "relative",
           cursor: "pointer",
@@ -252,14 +267,14 @@ function SettingsPage() {
             borderRadius: "50%",
             position: "absolute",
             top: "2px",
-            left: "2px",
+            left: checked ? "26px" : "2px",
             transition: "left 0.3s",
             boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
           }}
         />
       </button>
     </div>
-  );
+  ), []);
 
   const sidebarWidth = isCollapsed ? "80px" : "260px";
 
@@ -586,21 +601,16 @@ function SettingsPage() {
             >
               Notifications
             </h2>
-            <p id="notification-availability" role="status">Notification preferences are coming soon. These controls are unavailable and do not change the notifications you currently receive.</p>
+            <p id="notification-availability" role="status">Choose whether dashboard notifications are shown. Save Preferences applies your choice on this device.</p>
             <div style={{ marginBottom: "24px" }}>
               <ToggleSwitch
                 label="Appointment Reminders"
-                description="Appointment reminder preferences."
-              />
-              <ToggleSwitch
-                label="Marketing & Promos"
-                description="Get updates on dental discounts and clinic news."
-              />
-              <ToggleSwitch
-                label="System Alerts"
-                description="Security notifications, login alerts, and system updates."
+                description="Show appointment notifications on your dashboard."
+                checked={appointmentReminders}
+                onChange={() => setAppointmentReminders(enabled => !enabled)}
               />
             </div>
+            {notificationPreferenceError && <p role="alert">{notificationPreferenceError}</p>}
             <div style={{ display: "flex", gap: "10px" }}>
               <button
                 onClick={() => setShowNotifModal(false)}
@@ -615,7 +625,7 @@ function SettingsPage() {
                 Cancel
               </button>
               <button
-                disabled
+                onClick={saveNotificationPreferences}
                 aria-describedby="notification-availability"
                 style={{ "--ov-on-color": "var(--ov-ink)",
                   ...btnBase,
@@ -1326,7 +1336,11 @@ function SettingsPage() {
                 if (label === "Change Password") setShowPasswordModal(true);
                 if (label === "Preference") setShowPreferenceModal(true);
                 if (label === "Privacy & Security") setShowPrivacyModal(true);
-                if (label === "Notifications") setShowNotifModal(true);
+                if (label === "Notifications") {
+                  setAppointmentReminders(getAppointmentRemindersEnabled(userData.id));
+                  setNotificationPreferenceError("");
+                  setShowNotifModal(true);
+                }
               }}
               style={{
                 width: "100%",

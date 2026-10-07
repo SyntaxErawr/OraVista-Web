@@ -1,6 +1,7 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import SettingsPage from './L_SettingsPage';
 import LoginPage from './B_LoginPage';
+import DashboardPage from './J_DashboardPage';
 
 const mockLocation = { pathname: '/settings' };
 jest.mock('react-router-dom', () => ({
@@ -65,14 +66,94 @@ test('code delivery errors are visible in the confirmation dialog', async () => 
   expect(screen.queryByRole('dialog', { name: 'Verification Required' })).not.toBeInTheDocument();
 });
 
-test('notification preferences clearly show unavailable controls instead of fake saving', () => {
+test('notification preferences only offer working appointment reminders and save the patient choice', () => {
   render(<SettingsPage />);
   fireEvent.click(screen.getByRole('button', { name: 'Notifications' }));
   const dialog = screen.getByRole('dialog', { name: 'Notifications' });
-  expect(within(dialog).getByRole('status')).toHaveTextContent('coming soon');
-  within(dialog).getAllByRole('switch').forEach(control => expect(control).toBeDisabled());
-  expect(within(dialog).getByRole('button', { name: 'Save Preferences' })).toBeDisabled();
+  expect(within(dialog).getAllByRole('switch')).toHaveLength(1);
+  expect(within(dialog).queryByText('Marketing & Promos')).not.toBeInTheDocument();
+  expect(within(dialog).queryByText('System Alerts')).not.toBeInTheDocument();
+  const toggle = within(dialog).getByRole('switch', { name: 'Appointment Reminders' });
+  expect(toggle).toBeEnabled();
+  expect(toggle).toHaveAttribute('aria-checked', 'true');
+  toggle.focus();
+  fireEvent.click(toggle);
+  expect(within(dialog).getByRole('switch')).toHaveAttribute('aria-checked', 'false');
+  expect(within(dialog).getByRole('switch')).toHaveFocus();
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Save Preferences' }));
+  expect(localStorage.getItem('oravista-appointment-reminders:7')).toBe('false');
+  expect(screen.getByText('Notification preferences saved on this device.')).toBeInTheDocument();
   expect(global.fetch).not.toHaveBeenCalled();
+});
+
+test('cancelling notification changes leaves the saved preference unchanged', () => {
+  render(<SettingsPage />);
+  fireEvent.click(screen.getByRole('button', { name: 'Notifications' }));
+  fireEvent.click(screen.getByRole('switch', { name: 'Appointment Reminders' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'Notifications' }));
+  expect(screen.getByRole('switch', { name: 'Appointment Reminders' })).toHaveAttribute('aria-checked', 'true');
+  expect(localStorage.getItem('oravista-appointment-reminders:7')).toBeNull();
+});
+
+test('saving off hides dashboard notifications and saving on restores them, including after remount', async () => {
+  global.fetch.mockImplementation(async url => reply(url.includes('/api/notifications/')
+    ? [{ id: 1, title: 'Appointment reminder', message: 'Your appointment is tomorrow.', is_read: false }] : []));
+  const pages = render(<><section data-testid="settings"><SettingsPage /></section><section data-testid="dashboard"><DashboardPage /></section></>);
+  const settings = within(screen.getByTestId('settings'));
+  const dashboard = within(screen.getByTestId('dashboard'));
+  fireEvent.click(dashboard.getByRole('button', { name: 'Notifications' }));
+  await dashboard.findByText('Appointment reminder');
+  fireEvent.click(settings.getByRole('button', { name: 'Notifications' }));
+  fireEvent.click(settings.getByRole('switch', { name: 'Appointment Reminders' }));
+  fireEvent.click(settings.getByRole('button', { name: 'Save Preferences' }));
+  expect(dashboard.queryByRole('button', { name: 'Notifications' })).not.toBeInTheDocument();
+  expect(dashboard.queryByText('Appointment reminder')).not.toBeInTheDocument();
+  fireEvent.click(within(settings.getByRole('dialog', { name: 'Action Successful!' })).getByRole('button', { name: 'Close' }));
+  fireEvent.click(settings.getByRole('button', { name: 'Notifications' }));
+  expect(settings.getByRole('switch')).toHaveAttribute('aria-checked', 'false');
+  fireEvent.click(settings.getByRole('switch'));
+  fireEvent.click(settings.getByRole('button', { name: 'Save Preferences' }));
+  fireEvent.click(dashboard.getByRole('button', { name: 'Notifications' }));
+  expect(dashboard.getByText('Appointment reminder')).toBeInTheDocument();
+  pages.unmount();
+  await act(async () => { render(<DashboardPage />); });
+  expect(screen.getByRole('button', { name: 'Notifications' })).toBeInTheDocument();
+});
+
+test('dashboard honors an off preference after reload, responds to other tabs, and keeps choices separate for each patient', async () => {
+  global.fetch.mockImplementation(async url => reply(url.includes('/api/notifications/')
+    ? [{ id: 1, title: 'Appointment reminder', message: 'Your appointment is tomorrow.', is_read: false }] : []));
+  localStorage.setItem('oravista-appointment-reminders:7', 'false');
+  const page = render(<DashboardPage />);
+  expect(screen.queryByRole('button', { name: 'Notifications' })).not.toBeInTheDocument();
+  act(() => {
+    localStorage.setItem('oravista-appointment-reminders:7', 'true');
+    window.dispatchEvent(new StorageEvent('storage', { key: 'oravista-appointment-reminders:7' }));
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Notifications' }));
+  await screen.findByText('Appointment reminder');
+  act(() => {
+    localStorage.setItem('oravista-appointment-reminders:7', 'false');
+    window.dispatchEvent(new StorageEvent('storage', { key: 'oravista-appointment-reminders:7' }));
+  });
+  expect(screen.queryByText('Appointment reminder')).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Notifications' })).not.toBeInTheDocument();
+  page.unmount();
+  localStorage.setItem('user', JSON.stringify({ id: 8, firstName: 'Other patient' }));
+  await act(async () => { render(<DashboardPage />); });
+  expect(screen.getByRole('button', { name: 'Notifications' })).toBeInTheDocument();
+});
+
+test('notification storage errors stay in the dialog and do not report a successful save', () => {
+  render(<SettingsPage />);
+  fireEvent.click(screen.getByRole('button', { name: 'Notifications' }));
+  const store = jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('Storage unavailable'); });
+  try {
+    fireEvent.click(screen.getByRole('button', { name: 'Save Preferences' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Storage unavailable');
+    expect(screen.queryByText('Action Successful!')).not.toBeInTheDocument();
+  } finally { store.mockRestore(); }
 });
 
 test('login email failure does not open verification or create a session', async () => {

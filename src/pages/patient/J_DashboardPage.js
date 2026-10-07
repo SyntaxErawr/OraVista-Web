@@ -17,6 +17,7 @@ import {
   CreditCard,
 } from "lucide-react";
 import { API_BASE_URL } from "../../config/api";
+import { useAppointmentReminders } from "../../utils/appointmentReminders";
 
 const dentalFacts = [
   "Flossing can remove up to 40% of the plaque between your teeth.",
@@ -57,6 +58,10 @@ function DashboardPage() {
     firstName: "User",
     selectedBranch: "Select Branch",
   });
+  const appointmentRemindersEnabled = useAppointmentReminders(userData.id);
+  useEffect(() => {
+    if (!appointmentRemindersEnabled) setShowNotifications(false);
+  }, [appointmentRemindersEnabled]);
   const [funFact, setFunFact] = useState("");
   const [appointments, setAppointments] = useState([]);
   const [appointmentsError, setAppointmentsError] = useState("");
@@ -776,7 +781,7 @@ function DashboardPage() {
                   <PatientAccount />
                 </div>
                 {/* Notifications */}
-                <div style={{ position: "relative", flexShrink: 0 }}>
+                {appointmentRemindersEnabled && <div style={{ position: "relative", flexShrink: 0 }}>
                   <button className="ov-ui-button"
                     style={{ cursor: "pointer", position: "relative" }}
                     onClick={toggleNotifications}
@@ -910,12 +915,12 @@ function DashboardPage() {
                       )}
                     </div>
                   )}
-                </div>
+                </div>}
               </div>
             </div>
 
             {appointmentsError && <div className="ov-inline-error" role="alert">{appointmentsError} <button type="button" className="ov-ui-button ov-text-link" onClick={() => fetchAppointments(userData.id)}>Retry appointments</button></div>}
-            {notificationsError && <div className="ov-inline-error" role="alert">{notificationsError} <button type="button" className="ov-ui-button ov-text-link" onClick={() => fetchNotifications(userData.id)}>Retry notifications</button></div>}
+            {appointmentRemindersEnabled && notificationsError && <div className="ov-inline-error" role="alert">{notificationsError} <button type="button" className="ov-ui-button ov-text-link" onClick={() => fetchNotifications(userData.id)}>Retry notifications</button></div>}
             <div
               style={{
                 display: "grid",
