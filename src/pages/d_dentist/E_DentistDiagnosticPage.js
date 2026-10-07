@@ -1,4 +1,6 @@
 import ClinicPageTitle from '../../components/ClinicPageTitle';
+import { API_BASE_URL } from '../../config/api';
+import { getDiagnosticImageSource } from '../../utils/diagnosticImage';
 import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTools';
 import React, { useState, useRef, useEffect } from 'react';
 
@@ -10,9 +12,9 @@ import { Search, User, ZoomIn, RotateCw, UploadCloud, CheckCircle, X, Activity, 
 
 
 
-const NODE_API_BASE = "https://oravista-server-474976105474.asia-southeast1.run.app";
+const NODE_API_BASE = API_BASE_URL;
 
-const FASTAPI_API_BASE = "https://oravista-ai-engine-474976105474.asia-southeast1.run.app";
+const FASTAPI_API_BASE = (process.env.REACT_APP_AI_BASE_URL?.trim() || "https://oravista-ai-engine-474976105474.asia-southeast1.run.app").replace(/\/+$/, '');
 
 
 
@@ -35,6 +37,15 @@ function DentistDiagnostics() {
   const [imageUploaded, setImageUploaded] = useState(false);
 
   const [selectedFile, setSelectedFile] = useState(null);
+
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const diagnosticRequest = useRef(0);
+  useEffect(() => {
+    if (!selectedFile) { setPreviewUrl(null); return undefined; }
+    const url = URL.createObjectURL(selectedFile);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [selectedFile]);
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
@@ -188,9 +199,15 @@ function DentistDiagnostics() {
 
     let active = true;
 
+    const request = ++diagnosticRequest.current;
+    const invalidateRequest = () => { diagnosticRequest.current++; };
+
     const loadLatestSavedDiagnosis = async () => {
 
       setIsDiagnosisSaved(false);
+
+      setIsAnalyzing(false);
+      setIsSaving(false);
 
       setIsEditingDiagnosis(false);
 
@@ -210,15 +227,16 @@ function DentistDiagnostics() {
 
       try {
 
-        const response = await fetch(`${FASTAPI_API_BASE}/api/diagnostic-imaging/patient/${selectedPatient.id}/latest`, { cache: 'no-store' });
+        const response = await fetch(`${NODE_API_BASE}/api/patient-final-diagnoses/${selectedPatient.id}`, { cache: 'no-store' });
 
         if (response.status === 404) return;
 
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
-        const savedDiagnostic = await response.json();
+        const savedDiagnoses = await response.json();
+        const savedDiagnostic = Array.isArray(savedDiagnoses) ? savedDiagnoses[0] : null;
 
-        if (!active || savedDiagnostic?.ai_findings?.human_verified !== true) return;
+        if (!active || request !== diagnosticRequest.current || savedDiagnostic?.ai_findings?.human_verified !== true) return;
 
         const savedAnnotations = Array.isArray(savedDiagnostic.ai_findings?.annotations)
 
@@ -270,7 +288,9 @@ function DentistDiagnostics() {
 
           patient_id: savedDiagnostic.patient_id,
 
-          file_path: null,
+          file_path: getDiagnosticImageSource(savedDiagnostic),
+
+          ai_findings: savedDiagnostic.ai_findings,
 
           clinical_notes: "",
 
@@ -281,6 +301,8 @@ function DentistDiagnostics() {
         });
 
         setAnalysisComplete(true);
+
+        setImageUploaded(Boolean(getDiagnosticImageSource(savedDiagnostic)));
 
         setIsDiagnosisSaved(true);
 
@@ -296,7 +318,7 @@ function DentistDiagnostics() {
 
     loadLatestSavedDiagnosis();
 
-    return () => { active = false; };
+    return () => { active = false; invalidateRequest(); };
 
   }, [selectedPatient?.id]);
 
@@ -466,6 +488,8 @@ function DentistDiagnostics() {
 
   const uploadFileAndAnalyze = async (file) => {
 
+    const request = ++diagnosticRequest.current;
+
     const activePatientId = selectedPatient ? selectedPatient.id : (patientIdParam ? patientIdParam.toString().replace('PT-100', '').trim() : null);
 
     if (!activePatientId) { alert("No patient selected or patient ID parameter found. Cannot upload."); return; }
@@ -482,8 +506,6 @@ function DentistDiagnostics() {
 
     let responseData = null;
 
-    const delayPromise = new Promise(resolve => setTimeout(resolve, 5000));
-
     try {
 
       const uploadPromise = fetch(`${FASTAPI_API_BASE}/api/diagnostic-imaging/upload`, {
@@ -498,43 +520,19 @@ function DentistDiagnostics() {
 
       });
 
-      const [result] = await Promise.all([
+      responseData = await uploadPromise;
+      if (!responseData?.diagnostic_id) throw new Error('The imaging service did not create a diagnosis record.');
 
-        uploadPromise.catch(err => { console.warn("FastAPI server offline or error. Using mock response.", err); return null; }),
-
-        delayPromise
-
-      ]);
-
-      responseData = result;
-
-    } catch (error) { console.error("Upload error:", error); }
-
-    if (!responseData) {
-
-      const localUrl = URL.createObjectURL(file);
-
-      responseData = {
-
-        diagnostic_id: Math.floor(Math.random() * 1000) + 1,
-
-        patient_id: activePatientId, file_path: localUrl,
-
-        clinical_notes: "AI Recommended Advisory: Indication of localized caries on the lower left premolars and moderate horizontal bone loss on the posterior region. Clinical validation suggested.",
-
-        predictions: [
-
-          { class_id: 1, name: "Caries (Cavities)", confidence: 0.94, box: { x_min: 0.15, y_min: 0.25, width: 0.12, height: 0.10 } },
-
-          { class_id: 2, name: "Bone Loss (Periodontitis)", confidence: 0.82, box: { x_min: 0.45, y_min: 0.55, width: 0.18, height: 0.15 } }
-
-        ],
-
-        scan_date: new Date().toISOString()
-
-      };
-
+    } catch (error) {
+      if (request !== diagnosticRequest.current) return;
+      setIsAnalyzing(false);
+      setDiagnosticData(null);
+      setDiagnosisModal({ show: true, type: 'error', title: 'Unable to Analyze X-ray',
+        message: 'The image could not be analyzed. Please upload it again before saving a final diagnosis.' });
+      return;
     }
+
+    if (request !== diagnosticRequest.current) return;
 
     setDiagnosticData(responseData);
 
@@ -576,6 +574,8 @@ function DentistDiagnostics() {
 
     if (!validTypes.includes(file.type)) { alert("Invalid file type. Please upload a .jpg, .jpeg, or .png file."); return; }
 
+    if (file.size > 20 * 1024 * 1024) { alert('The X-ray must be 20 MB or smaller.'); return; }
+
     setSelectedFile(file);
 
     setImageUploaded(true);
@@ -585,6 +585,8 @@ function DentistDiagnostics() {
     setIsDiagnosisSaved(false);
 
     setIsEditingDiagnosis(false);
+
+    setDiagnosticData(null);
 
     uploadFileAndAnalyze(file);
 
@@ -867,34 +869,30 @@ function DentistDiagnostics() {
     }
 
     const wasAlreadySaved = isDiagnosisSaved;
+    const request = diagnosticRequest.current;
 
     setIsSaving(true);
 
     try {
 
-      const payload = {
+      const payload = new FormData();
+      payload.append('patient_id', selectedPatient?.id || diagnosticData.patient_id);
+      payload.append('clinical_notes', clinicalNotes);
+      payload.append('annotations', JSON.stringify(annotations));
+      if (selectedFile && !diagnosticData.ai_findings?.xray_image_path) payload.append('xray', selectedFile);
 
-        clinical_notes: clinicalNotes,
-
-        human_verified_findings: {
-
-          predictions: diagnosticData.predictions || [],
-
-          annotations: annotations, human_verified: true
-
-        }
-
-      };
-
-      const response = await fetch(`${FASTAPI_API_BASE}/api/diagnostic-imaging/${diagnosticData.diagnostic_id}/annotate`, {
-
-        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
-
+      const response = await fetch(`${NODE_API_BASE}/api/diagnostic-imaging/${diagnosticData.diagnostic_id}/final`, {
+        method: 'PUT', body: payload,
       });
 
       const data = await response.json();
 
+      if (request !== diagnosticRequest.current) return;
+
       if (response.ok) {
+
+        setDiagnosticData(previous => ({ ...previous, ai_findings: data.diagnostic.ai_findings,
+          file_path: getDiagnosticImageSource(data.diagnostic) }));
 
         setIsDiagnosisSaved(true);
 
@@ -932,15 +930,17 @@ function DentistDiagnostics() {
 
       console.error("Save Failed:", error);
 
+      if (request !== diagnosticRequest.current) return;
+
       setDiagnosisModal({
 
         show: true, type: 'error', title: 'Unable to Save Final Diagnosis',
 
-        message: 'Could not connect to the FastAPI server. Please try again.'
+        message: 'Could not save the diagnosis and X-ray. Check your connection and try again.'
 
       });
 
-    } finally { setIsSaving(false); }
+    } finally { if (request === diagnosticRequest.current) setIsSaving(false); }
 
   };
 
@@ -1326,21 +1326,24 @@ function DentistDiagnostics() {
 
                     <div className="dd-simulated-xray" style={styles.simulatedXray}>
 
-                      {selectedFile && (
+                      {(previewUrl || diagnosticData?.file_path) && (
 
-                        <img src={URL.createObjectURL(selectedFile)} alt="Patient X-Ray Preview"
+                        <img src={previewUrl || diagnosticData.file_path} alt="Patient X-Ray Preview"
 
                           style={{ width: '100%', height: '100%', objectFit: 'fill', borderRadius: '10px' }} />
 
                       )}
 
-                      {selectedFile && (
+                      {(previewUrl || diagnosticData?.file_path) && (
 
                         <button onClick={() => {
 
-                          setImageUploaded(false); setSelectedFile(null); setAnalysisComplete(false);
+                          diagnosticRequest.current++;
 
-                          setFindings([]); setDiagnosticData(null); setIsZoomed(false); setRotation(0);
+                          setImageUploaded(false); setSelectedFile(null); setAnalysisComplete(false); setIsAnalyzing(false);
+
+                          setFindings([]); setAnnotations([]); setDiagnosticData(null); setIsZoomed(false); setRotation(0);
+                          setIsDiagnosisSaved(false); setIsEditingDiagnosis(false); setClinicalNotes('');
 
                         }} style={styles.closePreviewBtn} title="Remove image and upload another">
 
@@ -1436,9 +1439,9 @@ function DentistDiagnostics() {
 
                       >
 
-                        {diagnosticData && diagnosticData.file_path && (
+                        {(previewUrl || diagnosticData?.file_path) && (
 
-                          <img src={diagnosticData.file_path} alt="AI Analyzed Scan" style={styles.insightImage} />
+                          <img src={previewUrl || diagnosticData.file_path} alt="AI Analyzed Scan" style={styles.insightImage} />
 
                         )}
 

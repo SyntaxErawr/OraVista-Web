@@ -19,6 +19,8 @@ import {
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { API_BASE_URL } from "../../config/api";
+import SavedDiagnosticImage from "../../components/SavedDiagnosticImage";
+import { renderDiagnosticImage } from "../../utils/diagnosticImage";
 
 const fetchFinalDiagnoses = async (userId) => {
   const response = await fetch(
@@ -303,7 +305,7 @@ function RecordsPage() {
         doc.setTextColor(0, 0, 0);
         doc.text("No dentist-saved final diagnoses are available yet.", 14, 32);
       }
-      savedDiagnoses.forEach((record, index) => {
+      for (const [index, record] of savedDiagnoses.entries()) {
         if (index > 0) doc.addPage();
         autoTable(doc, {
           startY: index === 0 ? 30 : 20,
@@ -322,13 +324,41 @@ function RecordsPage() {
           styles: { overflow: "linebreak", cellPadding: 4, fontSize: 11 },
           margin: { top: 20, bottom: 20, left: 14, right: 14 },
         });
-      });
+        let image;
+        try {
+          image = await renderDiagnosticImage(record);
+        } catch (error) {
+          throw new Error(`Final diagnosis #${record.id}: ${error.message}`);
+        }
+        let imageY = doc.lastAutoTable.finalY + 12;
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(11);
+        doc.setTextColor(0, 0, 0);
+        if (image) {
+          const maxWidth = pageWidth - 28;
+          const maxHeight = pageHeight - 56;
+          const scale = Math.min(maxWidth / image.width, maxHeight / image.height);
+          const width = image.width * scale;
+          const height = image.height * scale;
+          if (imageY + height + 8 > pageHeight - 20) {
+            doc.addPage();
+            imageY = 24;
+          }
+          doc.text(`Annotated X-ray - Final Diagnosis #${record.id}`, 14, imageY);
+          doc.addImage(image.dataUrl, 'PNG', 14 + (maxWidth - width) / 2, imageY + 8, width, height);
+        } else {
+          if (imageY + 16 > pageHeight - 20) { doc.addPage(); imageY = 24; }
+          doc.text('The original X-ray is unavailable for this saved diagnosis.', 14, imageY);
+        }
+      }
 
       addStamp(doc);
       doc.save(`${patientName.replace(/\s+/g, "_")}_OraVista_Report.pdf`);
     } catch (err) {
       console.error("Error generating report:", err);
-      alert("Failed to generate report.");
+      alert(`Failed to generate report. ${err.message || "Please try again."}`);
     } finally {
       setIsDownloadingReport(false);
     }
@@ -895,6 +925,7 @@ function RecordsPage() {
                   <article key={record.id} style={{ backgroundColor: "white", borderRadius: "12px", padding: "20px", overflowWrap: "anywhere" }}>
                     <h3 style={{ color: "#087F8C", fontSize: "17px", margin: "0 0 6px" }}>Final Diagnosis #{record.id}</h3>
                     <p style={{ color: "#666", fontSize: "13px", margin: "0 0 16px" }}>Scan date: {formatDiagnosticDate(record.scan_date)}</p>
+                    <SavedDiagnosticImage record={record} />
                     <h4 style={{ color: "#087F8C", margin: "0 0 10px" }}>Final Findings</h4>
                     <ul style={{ color: "#333", paddingLeft: "22px", lineHeight: 1.7 }}>
                       {getFinalFindingRows(record).map(([finding], index) => <li key={index} style={{ whiteSpace: "pre-wrap" }}>{finding}</li>)}
