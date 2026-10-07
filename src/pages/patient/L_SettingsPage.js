@@ -65,7 +65,6 @@ function SettingsPage() {
 
   const [preferences, setPreferences] = useState({
     language: localStorage.getItem("language") || "English",
-    timezone: localStorage.getItem("timezone") || "Asia/Manila",
   });
 
 
@@ -110,7 +109,6 @@ function SettingsPage() {
 
   const savePreferences = () => {
     localStorage.setItem("language", preferences.language);
-    localStorage.setItem("timezone", preferences.timezone);
     setShowPreferenceModal(false);
     setSuccessMessage("Preferences saved on this device.");
     setShowSuccessModal(true);
@@ -686,38 +684,6 @@ function SettingsPage() {
               >
                 <option value="English">English</option>
                 <option value="Tagalog">Tagalog</option>
-              </select>
-            </div>
-            <div style={{ marginBottom: "24px" }}>
-              <label
-                style={{
-                  display: "block",
-                  color: "#087F8C",
-                  fontWeight: "700",
-                  marginBottom: "8px",
-                  fontSize: "14px",
-                }}
-              >
-                Timezone
-              </label>
-              <select aria-label="timezone"
-                name="timezone"
-                value={preferences.timezone}
-                onChange={handlePreferenceChange}
-                style={{
-                  width: "100%",
-                  padding: "12px",
-                  borderRadius: "10px",
-                  border: "1px solid #ccc",
-                  outline: "none",
-                  fontSize: "14px",
-                  fontFamily: "'Manrope', sans-serif",
-                  boxSizing: "border-box",
-                }}
-              >
-                <option value="Asia/Manila">Asia/Manila (PHT)</option>
-                <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
-                <option value="America/New_York">America/New_York (EST)</option>
               </select>
             </div>
             <div style={{ display: "flex", gap: "10px" }}>
