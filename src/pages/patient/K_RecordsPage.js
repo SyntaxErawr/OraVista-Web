@@ -79,10 +79,17 @@ function RecordsPage() {
   const [isDiagnosesLoading, setIsDiagnosesLoading] = useState(true);
   const [diagnosesError, setDiagnosesError] = useState("");
 
-  const visibleDiagnoses = finalDiagnoses.filter(record =>
-    [record.id, formatDiagnosticDate(record.scan_date), record.clinical_notes,
-      ...getFinalFindingRows(record).flat()].join(" ").toLowerCase().includes(recordSearch.trim().toLowerCase())
-  );
+  const searchTerms = recordSearch.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const visibleDiagnoses = finalDiagnoses.filter((record) => {
+    const searchableText = [
+      `Final Diagnosis #${record.id}`,
+      record.scan_date,
+      formatDiagnosticDate(record.scan_date),
+      record.clinical_notes,
+      ...getFinalFindingRows(record).flat(),
+    ].join(" ").toLowerCase();
+    return searchTerms.every((term) => searchableText.includes(term));
+  });
 
   useEffect(() => {
     if (!userData.id) return undefined;
