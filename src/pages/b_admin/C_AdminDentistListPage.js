@@ -213,7 +213,7 @@ function AdminDentistList() {
             <a className="ov-directory-add" href="/admin/create-account">Add new dentist</a>
           </div>
 
-          <div style={styles.tableContainer} className="table-container-scrollable ov-panel">
+          <div style={styles.tableContainer} className="table-container-scrollable ov-panel" role="region" aria-label="Dentist directory table" tabIndex={0}>
             {loading ? (
               <p style={{ padding: '20px', color: "var(--ov-on-color, #fff)", textAlign: 'center' }}>Synchronizing with database...</p>
             ) : loadError ? (
@@ -294,7 +294,7 @@ const styles = {
   innerSearchIcon: { position: 'absolute', left: '12px', top: '12px' },
   innerSearchInput: { width: '100%', padding: '10px 15px 10px 40px', borderRadius: '8px', border: '1px solid #ddd', outline: 'none', boxSizing: 'border-box', fontFamily: "'Manrope', sans-serif" },
   addButton: { "--ov-on-color": "var(--ov-ink)", backgroundColor: "var(--ov-primary)", color: "var(--ov-on-color, #fff)", border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', cursor: 'pointer', fontFamily: "'Manrope', sans-serif" },
-  tableContainer: { "--ov-on-color": "var(--ov-ink)", backgroundColor: "var(--ov-primary)", borderRadius: '15px', overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', marginBottom: '30px' },
+  tableContainer: { "--ov-on-color": "var(--ov-ink)", backgroundColor: "var(--ov-primary)", borderRadius: '15px', overflow: 'auto', maxWidth: '100%', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', marginBottom: '30px' },
   table: { borderCollapse: 'collapse', color: "var(--ov-on-color, #fff)" },
   theadRow: { backgroundColor: "var(--ov-on-wash, rgba(255,255,255,0.05))" },
   th: { textAlign: 'left', padding: '20px', borderBottom: "1px solid var(--ov-on-line, rgba(255,255,255,0.1))", fontSize: '14px', fontWeight: '600', opacity: 0.8, whiteSpace: 'nowrap' },
