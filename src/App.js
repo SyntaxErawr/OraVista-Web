@@ -42,6 +42,7 @@ import AdminAppointments from "./pages/b_admin/D_AdminAppointmentPage";
 import AdminDiagnostics from "./pages/b_admin/E_AdminDiagnosticPage";
 import AdminAccountCreation from "./pages/b_admin/F_AdminAccountCreationPage";
 import AdminSettings from "./pages/b_admin/G_AdminSettingsPage";
+import AdminOversight from './pages/b_admin/I_AdminOversightPage';
 
 // Staff
 import StaffDashboard from "./pages/c_staff/A_StaffDashboardPage";
@@ -145,6 +146,8 @@ function App() {
         <Route path="/admin/diagnostics" element={user?.role === 'admin' ? <AdminDiagnostics /> : <Navigate to="/clinic/login" replace />} />
         <Route path="/admin/create-account" element={user?.role === 'admin' ? <AdminAccountCreation /> : <Navigate to="/clinic/login" replace />} />
         <Route path="/admin/settings" element={user?.role === 'admin' ? <AdminSettings /> : <Navigate to="/clinic/login" replace />} />
+        <Route path="/admin/transactions" element={user?.role === 'admin' ? <AdminOversight /> : <Navigate to="/clinic/login" replace />} />
+        <Route path="/admin/audit-logs" element={user?.role === 'admin' ? <AdminOversight audit /> : <Navigate to="/clinic/login" replace />} />
 
         {/* Protected Staff Routes */}
         <Route path="/staff/dashboard" element={user?.role === 'staff' ? <StaffDashboard /> : <Navigate to="/clinic/login" replace />} />

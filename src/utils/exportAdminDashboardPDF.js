@@ -36,7 +36,7 @@ export async function exportAdminDashboardPDF({ stats, appointments, recentVisit
   ]);
   section('Report Scope', ['Dashboard section', 'Data scope'], [
     ['Schedule / total appointments', 'All appointments returned by the dashboard API, across all dates.'],
-    ['Branch earnings', 'All non-cancelled appointment amounts returned by the dashboard API, across all dates.'],
+    ['Branch earnings', 'Payments collected today (Philippine time), since transaction tracking was enabled. Legacy collection history is excluded.'],
     ['Recent patient visits', 'All completed appointments in the loaded dashboard data.'],
     ['Snapshot', 'Uses the loaded dashboard data at the time Generate Report was clicked.'],
   ]);

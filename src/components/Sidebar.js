@@ -38,6 +38,8 @@ const Sidebar = ({ onToggle, isMobileOpen, onMobileClose }) => {
       { name: 'Dentist List', path: '/admin/dentists', icon: <UserRound size={20}/> },
       { name: 'Appointments', path: '/admin/appointments', icon: <Calendar size={20}/> },
       { name: 'Account Creation', path: '/admin/create-account', icon: <UserPlus size={20}/> },
+      { name: 'Transactions', path: '/admin/transactions', icon: <CreditCard size={20}/> },
+      { name: 'Audit Logs', path: '/admin/audit-logs', icon: <ActivitySquare size={20}/> },
       { name: 'Settings', path: '/admin/settings', icon: <Settings size={20}/> },
     ],
     staff: [

@@ -33,6 +33,7 @@ function StaffBillingsPage() {
     paid: "",
     balance: "0.00",
     nextVisit: "",
+    paymentMethod: '', paymentReference: '',
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -70,6 +71,7 @@ function StaffBillingsPage() {
       paid: savedDetails.paid ?? (billing.billing_status === "Paid" ? String(billing.amount || "") : ""),
       balance: savedDetails.balance ?? (billing.billing_status === "Paid" ? "0.00" : String(billing.amount || "0.00")),
       nextVisit: savedDetails.nextVisit || "",
+      paymentMethod: '', paymentReference: '',
     });
     setMessage("");
   };
@@ -91,6 +93,7 @@ function StaffBillingsPage() {
           amount: receipt.charge,
           service_type: receipt.procedure,
           receipt_details: receipt,
+          expected_paid: parseReceiptDetails(selectedBilling.receipt_details).paid ?? (selectedBilling.billing_status === 'Paid' ? selectedBilling.amount : 0),
         }),
       });
       const data = await response.json();
@@ -207,6 +210,12 @@ function StaffBillingsPage() {
                   </label>
                   <label style={styles.label}>Next visit
                     <input style={styles.input} type="date" value={receipt.nextVisit} onChange={(event) => updateReceipt("nextVisit", event.target.value)} />
+                  </label>
+                  <label style={styles.label}>Payment method (for new payments)
+                    <select style={styles.input} value={receipt.paymentMethod} onChange={event => updateReceipt('paymentMethod', event.target.value)}><option value="">Select method</option><option>Cash</option><option>E-wallet</option></select>
+                  </label>
+                  <label style={styles.label}>Payment reference (required for e-wallet)
+                    <input style={styles.input} maxLength={200} value={receipt.paymentReference} onChange={event => updateReceipt('paymentReference', event.target.value)} />
                   </label>
                 </div>
                 <div className="ov-receipt-totals">
