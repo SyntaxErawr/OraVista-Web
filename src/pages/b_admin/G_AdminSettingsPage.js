@@ -3,11 +3,19 @@ import ClinicPageTitle from '../../components/ClinicPageTitle';
 import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTools';
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/AdminLayout';
+import PatientDialog from '../../components/PatientDialog';
 import { Search, User, Shield, Lock, Briefcase, Eye, EyeOff, CheckCircle2, XCircle } from 'lucide-react';
 
 function AdminSettings() {
   // 1. Load User ID and Profile State
   const [adminId, setAdminId] = useState(null);
+  const [profileResult, setProfileResult] = useState(null);
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const closeProfileResult = () => {
+    const updated = profileResult?.success;
+    setProfileResult(null);
+    if (updated) window.location.reload();
+  };
   const [profileData, setProfileData] = useState({
     firstName: '',
     lastName: '',
@@ -49,6 +57,8 @@ function AdminSettings() {
 
   // 3. API Call: Update Profile
   const handleProfileUpdate = async () => {
+    if (isUpdatingProfile) return;
+    setIsUpdatingProfile(true);
     try {
       const response = await fetch('https://oravista-server-474976105474.asia-southeast1.run.app/api/update-profile', {
         method: 'PUT',
@@ -65,17 +75,18 @@ function AdminSettings() {
       });
 
       if (response.ok) {
-        alert("Profile updated successfully!");
         // Update local storage so the new name appears in the header
         const user = JSON.parse(localStorage.getItem("user"));
         localStorage.setItem("user", JSON.stringify({ ...user, firstName: profileData.firstName, lastName: profileData.lastName, email: profileData.email, phone: profileData.phone }));
-        window.location.reload(); // Refresh to show changes
+        setProfileResult({ success: true, message: 'Profile updated successfully!' });
       } else {
         const data = await response.json();
-        alert(data.message || "Failed to update profile.");
+        setProfileResult({ success: false, message: data.message || 'Failed to update profile.' });
       }
     } catch (err) {
-      alert("Connection Error. Is the server running?");
+      setProfileResult({ success: false, message: 'Connection Error. Is the server running?' });
+    } finally {
+      setIsUpdatingProfile(false);
     }
   };
 
@@ -194,7 +205,7 @@ function AdminSettings() {
                     style={styles.input}
                   />
                 </div>
-                <button style={styles.saveBtn} onClick={handleProfileUpdate}>Save Changes</button>
+                <button style={styles.saveBtn} onClick={handleProfileUpdate} disabled={isUpdatingProfile}>{isUpdatingProfile ? 'Saving...' : 'Save Changes'}</button>
               </div>
 
               {/* SECURITY CARD */}
@@ -319,11 +330,23 @@ function AdminSettings() {
           </div>
         </div>
       </div>
+      {profileResult && (
+        <div style={styles.profileModalOverlay}>
+          <PatientDialog style={styles.profileModal} onClose={closeProfileResult}>
+            {profileResult.success ? <CheckCircle2 size={36} color="#087F8C" /> : <XCircle size={36} color="#b91c1c" />}
+            <h2 style={{ color: '#087F8C', fontSize: 20 }}>{profileResult.success ? 'Profile Updated' : 'Unable to Update Profile'}</h2>
+            <p role={profileResult.success ? 'status' : 'alert'}>{profileResult.message}</p>
+            <button type="button" style={styles.saveBtn} onClick={closeProfileResult}>OK</button>
+          </PatientDialog>
+        </div>
+      )}
     </AdminLayout>
   );
 }
 
 const styles = {
+  profileModalOverlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, zIndex: 1100 },
+  profileModal: { background: 'white', color: '#444', borderRadius: 15, padding: 30, width: 420, maxWidth: '100%', boxSizing: 'border-box', textAlign: 'center', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' },
   container: { display: 'flex', flexDirection: 'column', width: '100%' },
   header: { "--ov-on-color": "var(--ov-ink)", height: '80px', background: "var(--ov-primary)", display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px', position: 'sticky', top: 0, zIndex: 10 },
   searchBox: { display: 'flex', alignItems: 'center', background: "var(--ov-on-wash, rgba(255,255,255,0.1))", padding: '10px 20px', borderRadius: '12px', width: '350px' },
