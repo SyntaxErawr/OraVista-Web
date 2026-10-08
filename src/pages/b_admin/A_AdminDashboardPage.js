@@ -3,6 +3,9 @@ import ClinicPageTitle from '../../components/ClinicPageTitle';
 import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTools';
 import React, { useState, useEffect } from "react";
 import AdminLayout from "../../components/AdminLayout";
+import PatientDialog from '../../components/PatientDialog';
+import PatientGrowthChart from '../../components/PatientGrowthChart';
+import RecentPatientVisits from '../../components/RecentPatientVisits';
 import { Search, User, Download, MapPin, ChevronDown, ChevronUp } from "lucide-react";
 
 function AdminDashboard() {
@@ -10,11 +13,13 @@ function AdminDashboard() {
   const [appointments, setAppointments] = useState([]);
   const [recentVisits, setRecentVisits] = useState([]);
   const [branchEarnings, setBranchEarnings] = useState({});
+  const [dataError, setDataError] = useState('');
+  const [reportStatus, setReportStatus] = useState(null);
   const [stats, setStats] = useState({
     todayCount: 0,
     totalAppointments: 0,
-    availableDentists: 3,
-    totalDentists: 3,
+    availableDentists: 0,
+    totalDentists: 0,
     monthPatients: 0,
     loading: true
   });
@@ -24,6 +29,7 @@ function AdminDashboard() {
       try {
         const statsRes = await fetch('https://oravista-server-474976105474.asia-southeast1.run.app/api/dashboard/stats');
         const earningsRes = await fetch('https://oravista-server-474976105474.asia-southeast1.run.app/api/dashboard/branch-earnings');
+        if (!statsRes.ok || !earningsRes.ok) throw new Error('Failed to load dashboard data.');
 
         if (statsRes.ok && earningsRes.ok) {
           const statsData = await statsRes.json();
@@ -36,8 +42,8 @@ function AdminDashboard() {
           setStats({
             todayCount: statsData.todayCount,
             totalAppointments: statsData.schedule.length,
-            availableDentists: 3,
-            totalDentists: 3,
+            availableDentists: statsData.availableDentists,
+            totalDentists: statsData.totalDentists,
             monthPatients: statsData.monthPatients,
             loading: false
           });
@@ -48,6 +54,7 @@ function AdminDashboard() {
         }
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
+        setDataError('Dashboard data could not be loaded. Please refresh the page before generating a report.');
         setStats(prev => ({ ...prev, loading: false }));
       }
     };
@@ -55,8 +62,28 @@ function AdminDashboard() {
     fetchDashboardData();
   }, []);
 
-  const handleGenerateReport = () => {
-    alert("Generating comprehensive daily report based on live branch operations...");
+  const refreshRecentVisits = async () => {
+    const response = await fetch('https://oravista-server-474976105474.asia-southeast1.run.app/api/dashboard/stats');
+    if (!response.ok) throw new Error('Unable to load recent visits.');
+    const data = await response.json();
+    if (!Array.isArray(data.schedule)) throw new Error('Invalid recent visits response.');
+    setRecentVisits(data.schedule.filter(appointment => appointment.status === 'Completed'));
+  };
+
+  const handleGenerateReport = async () => {
+    if (stats.loading || reportStatus === 'generating') return;
+    if (dataError) { setReportStatus('data-error'); return; }
+    setReportStatus('generating');
+    try {
+      // Yield to the browser so the progress dialog paints before PDF creation.
+      await new Promise(resolve => setTimeout(resolve, 100));
+      const { exportAdminDashboardPDF } = await import('../../utils/exportAdminDashboardPDF');
+      await exportAdminDashboardPDF({ stats, appointments, recentVisits, branchEarnings });
+      setReportStatus('success');
+    } catch (error) {
+      console.error('Error generating dashboard report:', error);
+      setReportStatus('error');
+    }
   };
 
   return (
@@ -71,7 +98,7 @@ function AdminDashboard() {
             </div>
 
             {/* Generate Report Button */}
-            <button style={styles.reportBtn} className="header-report-btn" onClick={handleGenerateReport}>
+            <button style={styles.reportBtn} className="header-report-btn" onClick={handleGenerateReport} disabled={stats.loading || reportStatus === 'generating'}>
               <Download size={16} />
               Generate Report
             </button>
@@ -105,7 +132,7 @@ function AdminDashboard() {
               <Search size={18} color="var(--ov-on-muted, rgba(255,255,255,0.75))" />
               <PortalSearch style={styles.searchInput} />
             </div>
-            <button style={{ ...styles.reportBtn, width: "100%", justifyContent: "center" }} onClick={handleGenerateReport}>
+            <button style={{ ...styles.reportBtn, width: "100%", justifyContent: "center" }} onClick={handleGenerateReport} disabled={stats.loading || reportStatus === 'generating'}>
               <Download size={16} />
               Generate Report
             </button>
@@ -114,6 +141,7 @@ function AdminDashboard() {
 
         {/* DASHBOARD CONTENT */}
         <div style={styles.content} className="settings-content ov-workspace-content">
+          {dataError && <p role="alert" style={{ color: '#b91c1c' }}>{dataError}</p>}
 
           <div style={styles.gridTop} className="dashboard-grid-top">
             {/* CARD 1: TOTAL APPOINTMENTS */}
@@ -185,36 +213,13 @@ function AdminDashboard() {
 
             <div className="ov-panel" style={styles.chartCard}>
               <p style={styles.sectionTitle}>Patient Growth</p>
-              <div style={styles.placeholder}>Growth Analytics Placeholder</div>
+              <PatientGrowthChart appointments={appointments} loading={stats.loading} error={dataError} />
             </div>
           </div>
 
           <div style={styles.gridBottom} className="dashboard-grid-bottom">
             {/* RECENT PATIENT VISITS */}
-            <div className="ov-panel" style={styles.listCard}>
-              <p style={styles.sectionTitle}>Recent Patient Visits</p>
-              {recentVisits.length > 0 ? (
-                <PaginatedList pageSize={10} label="Dashboard list pages">{recentVisits.map((visit, idx) => (
-                  <div key={visit.id || idx} style={styles.patientRow}>
-                    <div style={styles.pAvatar}>
-                      <User size={18} color="var(--ov-on-color, #fff)" />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={styles.pName}>{visit.patientName}</p>
-                      <p style={styles.pId}>ID: {visit.booking_ref || `PT-100${visit.id}`}</p>
-                    </div>
-                    <div style={{ textAlign: "right" }}>
-                      <p style={styles.pType}>{visit.serviceType || "Check-up"}</p>
-                      <p style={styles.pTime}>{visit.time || "Completed"}</p>
-                    </div>
-                  </div>
-                ))}</PaginatedList>
-              ) : (
-                <div style={styles.emptyState}>
-                  <p style={styles.emptyText}>No recent patient visits recorded.</p>
-                </div>
-              )}
-            </div>
+            <RecentPatientVisits visits={recentVisits} loading={stats.loading} error={dataError} onRefresh={refreshRecentVisits} styles={styles} />
 
             {/* SCHEDULE MONITORING LIST */}
             <div className="ov-panel" style={styles.listCard}>
@@ -247,11 +252,24 @@ function AdminDashboard() {
           </div>
         </div>
       </div>
+      {reportStatus && (
+        <div style={styles.reportOverlay}>
+          <PatientDialog style={styles.reportModal} busy={reportStatus === 'generating'} onClose={() => setReportStatus(null)} aria-busy={reportStatus === 'generating'}>
+            <h2 style={{ marginTop: 0 }}>{reportStatus === 'generating' ? 'Generating report...' : reportStatus === 'success' ? 'Report generated' : 'Unable to generate report'}</h2>
+            <p role={reportStatus === 'error' || reportStatus === 'data-error' ? 'alert' : 'status'}>
+              {reportStatus === 'generating' ? 'Please wait while we prepare your admin dashboard summary.' : reportStatus === 'success' ? 'Your dashboard PDF has been sent to your browser for download.' : reportStatus === 'data-error' ? dataError : 'The report could not be generated. Please close this window and try again.'}
+            </p>
+            {reportStatus !== 'generating' && <button style={styles.reportBtn} onClick={() => setReportStatus(null)}>Close</button>}
+          </PatientDialog>
+        </div>
+      )}
     </AdminLayout>
   );
 }
 
 const styles = {
+  reportOverlay: { position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' },
+  reportModal: { background: 'var(--ov-surface, #fff)', color: 'var(--ov-ink, #17343b)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '440px', boxSizing: 'border-box', boxShadow: '0 12px 40px rgba(0,0,0,0.2)' },
   container: { display: "flex", flexDirection: "column", width: "100%" },
   header: { "--ov-on-color": "var(--ov-ink)",
     height: "80px",
