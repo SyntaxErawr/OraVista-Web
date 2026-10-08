@@ -7,6 +7,7 @@ import AdminLayout from '../../components/AdminLayout';
 import { Search, User, Eye, Edit, Plus, X, FileText, ExternalLink, Download, ChevronDown, ChevronUp } from 'lucide-react';
 import AIDiagnosticModal from '../../components/AIDiagnosticModal';
 import { exportPatientPDF } from '../../utils/exportPDF';
+import AddPatientModal from '../../components/AddPatientModal';
 
 function AdminPatientList() {
   const navigate = useNavigate();
@@ -15,6 +16,15 @@ function AdminPatientList() {
   const [filteredPatients, setFilteredPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isAddPatientOpen, setIsAddPatientOpen] = useState(false);
+  const refreshAfterAddingPatient = async () => {
+    const response = await fetch('https://oravista-server-474976105474.asia-southeast1.run.app/api/patients');
+    if (!response.ok) throw new Error('Unable to refresh patient list.');
+    const data = await response.json();
+    if (!Array.isArray(data)) throw new Error('Invalid patient list.');
+    setPatients(data.map(patient => ({ dbId: patient.id, id: `PT-100${patient.id}`, name: patient.name, age: patient.age || '--', contact: patient.contact || 'No Contact', lastVisit: patient.lastVisit ? new Date(patient.lastVisit).toLocaleDateString() : 'No Visits' })));
+    setSearchQuery('');
+  };
 
   // NEW: Modal and Records states
   const [selectedPatient, setSelectedPatient] = useState(null);
@@ -254,7 +264,7 @@ function AdminPatientList() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <button style={styles.addButton}>
+            <button style={styles.addButton} onClick={() => setIsAddPatientOpen(true)}>
               <Plus size={18} style={{ marginRight: '8px' }} />
               Add New Patient
             </button>
@@ -314,6 +324,7 @@ function AdminPatientList() {
           onClose={() => setActiveRecordForModal(null)}
           record={activeRecordForModal}
         />
+        {isAddPatientOpen && <AddPatientModal onClose={() => setIsAddPatientOpen(false)} onCreated={refreshAfterAddingPatient} buttonStyle={styles.addButton} />}
       </div>
     </AdminLayout>
   );

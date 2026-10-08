@@ -4,6 +4,7 @@ import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTo
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/AdminLayout';
+import AddPatientModal from '../../components/AddPatientModal';
 import { Search, User, Eye, Edit, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 
 function StaffPatientList() {
@@ -14,6 +15,15 @@ function StaffPatientList() {
   const [filteredPatients, setFilteredPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isAddPatientOpen, setIsAddPatientOpen] = useState(false);
+  const refreshAfterAddingPatient = async () => {
+    const response = await fetch('https://oravista-server-474976105474.asia-southeast1.run.app/api/patients');
+    if (!response.ok) throw new Error('Unable to refresh patient list.');
+    const data = await response.json();
+    if (!Array.isArray(data)) throw new Error('Invalid patient list.');
+    setPatients(data.map(patient => ({ dbId: patient.id, id: `PT-100${patient.id}`, name: patient.name, age: patient.age || '--', contact: patient.contact || 'No Contact', lastVisit: patient.lastVisit ? new Date(patient.lastVisit).toLocaleDateString() : 'No Visits' })));
+    setSearchQuery('');
+  };
 
   useEffect(() => {
     const fetchPatients = async () => {
@@ -115,7 +125,7 @@ function StaffPatientList() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <button style={styles.addButton}>
+            <button style={styles.addButton} onClick={() => setIsAddPatientOpen(true)}>
               <Plus size={18} style={{ marginRight: '8px' }} />
               Add New Patient
             </button>
@@ -173,6 +183,7 @@ function StaffPatientList() {
             )}
           </div>
         </div>
+        {isAddPatientOpen && <AddPatientModal onClose={() => setIsAddPatientOpen(false)} onCreated={refreshAfterAddingPatient} buttonStyle={styles.addButton} />}
       </div>
     </AdminLayout>
   );
