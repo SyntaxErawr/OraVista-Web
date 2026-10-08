@@ -3,6 +3,8 @@ import ClinicPageTitle from '../../components/ClinicPageTitle';
 import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTools';
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/AdminLayout';
+import PatientGrowthChart from '../../components/PatientGrowthChart';
+import RecentPatientVisits from '../../components/RecentPatientVisits';
 import { Search, User, ChevronDown, ChevronUp } from 'lucide-react';
 
 function DentistDashboard() {
@@ -15,6 +17,7 @@ function DentistDashboard() {
     schedule: []
   });
   const [recentVisits, setRecentVisits] = useState([]);
+  const [dataError, setDataError] = useState('');
   const [loading, setLoading] = useState(true);
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
 
@@ -24,7 +27,9 @@ function DentistDashboard() {
     const fetchDashboardData = async () => {
       try {
         const response = await fetch('https://oravista-server-474976105474.asia-southeast1.run.app/api/dashboard/stats');
+        if (!response.ok) throw new Error('Failed to fetch dashboard data');
         const data = await response.json();
+        if (!Array.isArray(data.schedule)) throw new Error('Invalid dashboard response');
 
         const completedVisits = (data.schedule || []).filter(
           (appointment) => appointment.status === 'Completed'
@@ -34,6 +39,7 @@ function DentistDashboard() {
         setRecentVisits(completedVisits);
       } catch (err) {
         console.error("Error fetching dentist dashboard stats:", err);
+        setDataError('Dashboard data could not be loaded. Please refresh the page.');
       } finally {
         setLoading(false);
       }
@@ -42,6 +48,14 @@ function DentistDashboard() {
     fetchDashboardData();
     return () => clearInterval(timer);
   }, []);
+
+  const refreshRecentVisits = async () => {
+    const response = await fetch('https://oravista-server-474976105474.asia-southeast1.run.app/api/dashboard/stats');
+    if (!response.ok) throw new Error('Unable to load recent visits.');
+    const data = await response.json();
+    if (!Array.isArray(data.schedule)) throw new Error('Invalid recent visits response.');
+    setRecentVisits(data.schedule.filter(appointment => appointment.status === 'Completed'));
+  };
 
   return (
     <AdminLayout>
@@ -123,37 +137,14 @@ function DentistDashboard() {
             </div>
             <div className="ov-panel" style={styles.chartCard}>
               <p style={styles.sectionTitle}>Patient Growth</p>
-              <div style={styles.placeholder}>Growth Analytics Placeholder</div>
+              <PatientGrowthChart appointments={stats.schedule} loading={loading} error={dataError} />
             </div>
           </div>
 
           {/* LOWER GRID: VISITS & SCHEDULE */}
           <div style={styles.gridBottom} className="dashboard-grid-bottom">
             {/* RECENT PATIENT VISITS */}
-            <div className="ov-panel" style={styles.listCard}>
-              <p style={styles.sectionTitle}>Recent Patient Visits</p>
-              {recentVisits.length > 0 ? (
-                <PaginatedList pageSize={10} label="Dashboard list pages">{recentVisits.map((visit, idx) => (
-                  <div key={visit.id || idx} style={styles.patientRow}>
-                    <div style={styles.pAvatar}>
-                      <User size={18} color="var(--ov-on-color, #fff)" />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={styles.pName}>{visit.patientName}</p>
-                      <p style={styles.pId}>ID: {visit.booking_ref || `PT-100${visit.id}`}</p>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <p style={styles.pType}>{visit.serviceType || 'Consultation'}</p>
-                      <p style={styles.pTime}>{visit.time || 'Completed'}</p>
-                    </div>
-                  </div>
-                ))}</PaginatedList>
-              ) : (
-                <div style={styles.emptyState}>
-                  <p style={styles.emptyText}>No recent patient visits recorded.</p>
-                </div>
-              )}
-            </div>
+            <RecentPatientVisits visits={recentVisits} loading={loading} error={dataError} onRefresh={refreshRecentVisits} styles={{ ...styles, reportBtn: styles.refreshBtn }} />
 
             {/* TODAY'S SCHEDULE LIST */}
             <div className="ov-panel" style={styles.listCard}>
@@ -190,6 +181,7 @@ function DentistDashboard() {
 }
 
 const styles = {
+  refreshBtn: { background: 'white', color: '#087F8C', border: 'none', padding: '8px 16px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' },
   container: { display: 'flex', flexDirection: 'column', width: '100%' },
   header: { "--ov-on-color": "var(--ov-ink)",
     height: '80px',

@@ -11,19 +11,24 @@ function StaffDentistList() {
   const [dentists, setDentists] = useState([]);
   const [filteredDentists, setFilteredDentists] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [searchQuery, setSearchQuery] = useState("");
   const [summary, setSummary] = useState({ total: 0, available: 0, busy: 0, offDuty: 0 });
 
   useEffect(() => {
     const fetchDentists = async () => {
       try {
-        const response = await fetch('https://oravista-server-474976105474.asia-southeast1.run.app/api/dentists');
+        const response = await fetch('https://oravista-server-474976105474.asia-southeast1.run.app/api/admin/dentists');
+        if (!response.ok) throw new Error('Failed to load dentists.');
         const data = await response.json();
+        if (!Array.isArray(data)) throw new Error('Invalid dentist list response.');
 
         if (Array.isArray(data)) {
           const formattedDentists = data.map(d => ({
-            id: `DT-10${d.id}`,
-            name: `Dr. ${d.first_name} ${d.last_name}`,
+            id: d.directory_id || `DT-10${d.id}`,
+            name: d.display_name || `Dr. ${d.first_name} ${d.last_name}`,
+            appointmentOnly: Boolean(d.appointment_only),
+            branch: d.branch || 'Main Branch',
             specialty: d.specialty || 'General Dentistry',
             patients: `${d.patient_count || 0} assigned`,
             status: d.status || 'Available'
@@ -42,6 +47,7 @@ function StaffDentistList() {
         }
       } catch (err) {
         console.error("Error fetching dentists:", err);
+        setLoadError('Dentists could not be loaded. Please refresh the page to try again.');
       } finally {
         setLoading(false);
       }
@@ -236,9 +242,11 @@ function StaffDentistList() {
           </div>
 
           {/* DENTIST TABLE - Navy Blue Theme mirrored from Admin */}
-          <div style={styles.tableContainer} className="table-container-scrollable ov-panel">
+          <div style={styles.tableContainer} className="table-container-scrollable ov-panel" role="region" aria-label="Dentist directory table" tabIndex={0}>
             {loading ? (
               <p style={{ padding: '20px', color: "var(--ov-on-color, #fff)", textAlign: 'center' }}>Loading dentists...</p>
+            ) : loadError ? (
+              <p role="alert" style={{ padding: '20px', color: 'var(--ov-on-color, #fff)', textAlign: 'center' }}>{loadError}</p>
             ) : (
               <table style={styles.table} className="dentist-table">
                 <thead>
@@ -258,7 +266,11 @@ function StaffDentistList() {
                       <td style={styles.td}>
                         <div style={styles.nameCell}>
                           <div style={styles.nameAvatar}><User size={16} color="#087F8C" style={{ margin: '8px' }} /></div>
-                          {dentist.name}
+                          <div>
+                            <p style={{ margin: 0 }}>{dentist.name}</p>
+                            <p style={{ margin: 0, fontSize: '11px', opacity: 0.6 }}>{dentist.branch}</p>
+                            {dentist.appointmentOnly && <p style={{ margin: '4px 0 0', fontSize: '11px' }}>Appointment record · No registered account</p>}
+                          </div>
                         </div>
                       </td>
                       <td style={styles.td}>{dentist.specialty}</td>
@@ -321,7 +333,7 @@ const styles = {
     borderRadius: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', cursor: 'pointer', fontFamily: "'Manrope', sans-serif"
   },
 
-  tableContainer: { "--ov-on-color": "var(--ov-ink)", backgroundColor: "var(--ov-primary)", borderRadius: '15px', overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', marginBottom: '30px' },
+  tableContainer: { "--ov-on-color": "var(--ov-ink)", backgroundColor: "var(--ov-primary)", borderRadius: '15px', overflow: 'auto', maxWidth: '100%', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', marginBottom: '30px' },
   table: { borderCollapse: 'collapse', color: "var(--ov-on-color, #fff)" },
   theadRow: { backgroundColor: "var(--ov-on-wash, rgba(255,255,255,0.05))" },
   th: { textAlign: 'left', padding: '20px', borderBottom: "1px solid var(--ov-on-line, rgba(255,255,255,0.1))", fontSize: '14px', fontWeight: '600', opacity: 0.8, whiteSpace: 'nowrap' },

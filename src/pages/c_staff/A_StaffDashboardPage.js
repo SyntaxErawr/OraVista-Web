@@ -4,6 +4,8 @@ import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTo
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "../../components/AdminLayout";
+import PatientGrowthChart from '../../components/PatientGrowthChart';
+import RecentPatientVisits from '../../components/RecentPatientVisits';
 import { Search, User, ChevronDown, ChevronUp, CreditCard } from "lucide-react";
 
 function StaffDashboard() {
@@ -11,10 +13,12 @@ function StaffDashboard() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [appointments, setAppointments] = useState([]);
   const [recentVisits, setRecentVisits] = useState([]);
+  const [growthAppointments, setGrowthAppointments] = useState([]);
+  const [dataError, setDataError] = useState('');
   const [stats, setStats] = useState({
     todayCount: 0,
-    availableDentists: 3,
-    totalDentists: 3,
+    availableDentists: 0,
+    totalDentists: 0,
     monthPatients: 0,
     loading: true
   });
@@ -42,6 +46,7 @@ function StaffDashboard() {
         }
 
         const data = await response.json();
+        if (!Array.isArray(data.schedule)) throw new Error('Invalid dashboard response');
 
         const todayAppointments = (data.schedule || []).filter(
           (appointment) => getDateKey(appointment.date) === getTodayKey(),
@@ -53,23 +58,33 @@ function StaffDashboard() {
 
         setStats({
           todayCount: todayAppointments.length,
-          availableDentists: 3,
-          totalDentists: 3,
+          availableDentists: data.availableDentists,
+          totalDentists: data.totalDentists,
           monthPatients: data.monthPatients,
           loading: false
         });
 
         setAppointments(todayAppointments);
         setRecentVisits(completedVisits);
+        setGrowthAppointments(data.schedule);
 
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
+        setDataError('Dashboard data could not be loaded. Please refresh the page.');
         setStats(prev => ({ ...prev, loading: false }));
       }
     };
 
     fetchDashboardData();
   }, []);
+
+  const refreshRecentVisits = async () => {
+    const response = await fetch('https://oravista-server-474976105474.asia-southeast1.run.app/api/dashboard/stats');
+    if (!response.ok) throw new Error('Unable to load recent visits.');
+    const data = await response.json();
+    if (!Array.isArray(data.schedule)) throw new Error('Invalid recent visits response.');
+    setRecentVisits(data.schedule.filter(appointment => appointment.status === 'Completed'));
+  };
 
   return (
     <AdminLayout>
@@ -188,36 +203,13 @@ function StaffDashboard() {
             </div>
             <div className="ov-panel" style={styles.chartCard}>
               <p style={styles.sectionTitle}>Patient Growth</p>
-              <div style={styles.placeholder}>Growth Analytics Placeholder</div>
+              <PatientGrowthChart appointments={growthAppointments} loading={stats.loading} error={dataError} />
             </div>
           </div>
 
           <div style={styles.gridBottom} className="dashboard-grid-bottom">
             {/* RECENT PATIENT VISITS */}
-            <div className="ov-panel" style={styles.listCard}>
-              <p style={styles.sectionTitle}>Recent Patient Visits</p>
-              {recentVisits.length > 0 ? (
-                <PaginatedList pageSize={10} label="Dashboard list pages">{recentVisits.map((visit, idx) => (
-                  <div key={visit.id || idx} style={styles.patientRow}>
-                    <div style={styles.pAvatar}>
-                      <User size={18} color="var(--ov-on-color, #fff)" />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={styles.pName}>{visit.patientName}</p>
-                      <p style={styles.pId}>ID: {visit.booking_ref || `PT-100${visit.id}`}</p>
-                    </div>
-                    <div style={{ textAlign: "right" }}>
-                      <p style={styles.pType}>{visit.serviceType || "Check-up"}</p>
-                      <p style={styles.pTime}>{visit.time || "Completed"}</p>
-                    </div>
-                  </div>
-                ))}</PaginatedList>
-              ) : (
-                <div style={styles.emptyState}>
-                  <p style={styles.emptyText}>No recent patient visits recorded.</p>
-                </div>
-              )}
-            </div>
+            <RecentPatientVisits visits={recentVisits} loading={stats.loading} error={dataError} onRefresh={refreshRecentVisits} styles={{ ...styles, reportBtn: styles.refreshBtn }} />
 
             {/* TODAY'S SCHEDULE LIST */}
             <div className="ov-panel" style={styles.listCard}>
@@ -255,6 +247,7 @@ function StaffDashboard() {
 }
 
 const styles = {
+  refreshBtn: { background: 'white', color: '#087F8C', border: 'none', padding: '8px 16px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' },
   container: { display: "flex", flexDirection: "column", width: "100%" },
   header: { "--ov-on-color": "var(--ov-ink)",
     height: "80px",
