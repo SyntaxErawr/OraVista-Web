@@ -2,7 +2,7 @@ import ClinicPageTitle from '../../components/ClinicPageTitle';
 import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTools';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { readClinicUser } from '../../utils/clinicAppointments';
+import { readClinicUser, scopeAppointments, clinicDay, dateKey, timeMinutes } from '../../utils/clinicAppointments';
 import AdminLayout from '../../components/AdminLayout';
 import { Search, User, ChevronDown, ChevronUp } from 'lucide-react';
 
@@ -10,6 +10,7 @@ function DentistProfile() {
   const navigate = useNavigate();
   const [user] = useState(readClinicUser);
   const [dataError, setDataError] = useState('');
+  const [appointmentError, setAppointmentError] = useState('');
   const [dentistData, setDentistData] = useState(null);
   const [assignedPatients, setAssignedPatients] = useState([]);
   const [schedule, setSchedule] = useState([]);
@@ -24,14 +25,34 @@ function DentistProfile() {
 
         if (!dentistId || user.role !== 'dentist') throw new Error('No dentist session');
 
-        const response = await fetch(`https://oravista-server-474976105474.asia-southeast1.run.app/api/dentist-profile/${dentistId}`);
+        const response = await fetch(`https://oravista-server-474976105474.asia-southeast1.run.app/api/user-profile?email=${encodeURIComponent(user.email || '')}`);
         if (!response.ok) throw new Error('Unable to load dentist profile');
-        const data = await response.json();
-        if (!data.profile || String(data.profile.id) !== String(dentistId) || !Array.isArray(data.patients) || !Array.isArray(data.schedule)) throw new Error('Invalid dentist profile');
-
-        setDentistData(data.profile);
-        setAssignedPatients(data.patients || []);
-        setSchedule(data.schedule || []);
+        const profile = await response.json();
+        if (String(profile.id) !== String(dentistId) || profile.role !== 'dentist') throw new Error('Invalid dentist profile');
+        setDentistData(profile);
+        try {
+          const appointmentsResponse = await fetch('https://oravista-server-474976105474.asia-southeast1.run.app/api/dashboard/stats');
+          if (!appointmentsResponse.ok) throw new Error('Unable to load appointments');
+          const data = await appointmentsResponse.json();
+          if (!Array.isArray(data.schedule)) throw new Error('Invalid appointments');
+          const appointments = scopeAppointments(data.schedule, profile);
+          const today = clinicDay();
+          const completed = appointments.filter(item => item.status === 'Completed');
+          const patients = new Map();
+          completed.slice().sort((a, b) => dateKey(b.growthDate || b.date).localeCompare(dateKey(a.growthDate || a.date))).forEach(item => {
+            if (item.patientId != null && !patients.has(String(item.patientId))) patients.set(String(item.patientId), { id: item.patientId, name: item.patientName, case_type: item.serviceType, last_visit: item.growthDate || item.date });
+          });
+          appointments.forEach(item => {
+            if (item.patientId != null && !patients.has(String(item.patientId))) patients.set(String(item.patientId), { id: item.patientId, name: item.patientName, case_type: item.serviceType, last_visit: null });
+          });
+          setAssignedPatients(Array.from(patients.values()));
+          setSchedule(appointments.filter(item => dateKey(item.growthDate || item.date) === today).sort((a, b) => (timeMinutes(a.time) ?? 0) - (timeMinutes(b.time) ?? 0)).map(item => ({ ...item, type: item.serviceType })));
+          setDentistData({ ...profile, patient_count: patients.size, procedures_count: completed.length,
+            upcoming_count: appointments.filter(item => dateKey(item.growthDate || item.date) >= today && ['Pending', 'Confirmed', 'Approved', 'Reschedule Requested'].includes(item.status)).length });
+        } catch (err) {
+          console.error('Error fetching dentist appointments:', err);
+          setAppointmentError('Your appointments could not be loaded. Please refresh the page.');
+        }
       } catch (err) {
         console.error("Error fetching dentist profile:", err);
         setDataError('Your dentist profile could not be loaded. Please refresh the page.');
@@ -216,6 +237,7 @@ function DentistProfile() {
               {/* CARD 2: ASSIGNED PATIENTS */}
               <div className="dp-card">
                 <h3 className="dp-card-title">Assigned Patients</h3>
+                {appointmentError && <p role="alert">{appointmentError}</p>}
                 <div className="dp-table-container">
                   <table className="dp-table">
                     <thead>
@@ -237,7 +259,7 @@ function DentistProfile() {
                           </td>
                         </tr>
                       )) : (
-                        <tr><td colSpan="4" style={{ textAlign: 'center', opacity: 0.5 }}>No assigned patients</td></tr>
+                        <tr><td colSpan="4" style={{ textAlign: 'center', opacity: 0.5 }}>{appointmentError ? 'Patient assignments unavailable' : 'No assigned patients'}</td></tr>
                       )}
                     </tbody>
                   </table>
@@ -249,15 +271,15 @@ function DentistProfile() {
                 <h3 className="dp-card-title">Performance Summary</h3>
                 <div className="dp-summary-item">
                   <p className="dp-summary-label">Total Patients</p>
-                  <p className="dp-summary-value">{dentistData?.patient_count || 0}</p>
+                  <p className="dp-summary-value">{appointmentError ? '--' : dentistData?.patient_count || 0}</p>
                 </div>
                 <div className="dp-summary-item">
                   <p className="dp-summary-label">Procedures Completed</p>
-                  <p className="dp-summary-value">{dentistData?.procedures_count || 0}</p>
+                  <p className="dp-summary-value">{appointmentError ? '--' : dentistData?.procedures_count || 0}</p>
                 </div>
                 <div className="dp-summary-item">
                   <p className="dp-summary-label">Upcoming Appointments</p>
-                  <p className="dp-summary-value">{schedule.length}</p>
+                  <p className="dp-summary-value">{appointmentError ? '--' : dentistData?.upcoming_count || 0}</p>
                 </div>
               </div>
 
@@ -274,7 +296,7 @@ function DentistProfile() {
                       </div>
                     </div>
                   )) : (
-                    <p style={{ opacity: 0.5, fontSize: '13px' }}>No appointments scheduled for today.</p>
+                    <p style={{ opacity: 0.5, fontSize: '13px' }}>{appointmentError || 'No appointments scheduled for today.'}</p>
                   )}
                 </div>
               </div>
