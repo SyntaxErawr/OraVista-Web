@@ -4,10 +4,13 @@ import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTo
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/AdminLayout';
+import { readClinicUser, clinicDay, dateKey, timeMinutes } from '../../utils/clinicAppointments';
 import { Search, User, Eye, FileText, ClipboardList, ChevronDown, ChevronUp } from 'lucide-react';
 
 function DentistPatientList() {
   const navigate = useNavigate();
+  const [user] = useState(readClinicUser);
+  const [dataError, setDataError] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [patients, setPatients] = useState([]);
   const [filteredPatients, setFilteredPatients] = useState([]);
@@ -18,22 +21,35 @@ function DentistPatientList() {
     const fetchPatients = async () => {
       try {
         const response = await fetch('https://oravista-server-474976105474.asia-southeast1.run.app/api/patients');
+        if (!response.ok) throw new Error('Unable to load patients');
         const data = await response.json();
+        if (!Array.isArray(data)) throw new Error('Invalid patient list');
+        const scheduleResponse = await fetch('https://oravista-server-474976105474.asia-southeast1.run.app/api/dashboard/stats');
+        if (!scheduleResponse.ok) throw new Error('Unable to load patient appointments');
+        const dashboard = await scheduleResponse.json();
+        if (!Array.isArray(dashboard.schedule)) throw new Error('Invalid patient appointments');
 
         if (Array.isArray(data)) {
-          const patientData = data.map((patient) => ({
+          const patientData = data.map((patient) => {
+            const appointments = dashboard.schedule.filter(item => String(item.patientId) === String(patient.id));
+            const appointmentOrder = (a, b) => dateKey(a.growthDate || a.date).localeCompare(dateKey(b.growthDate || b.date)) || (timeMinutes(a.time) ?? 0) - (timeMinutes(b.time) ?? 0) || Number(a.id) - Number(b.id);
+            const lastVisit = appointments.filter(item => item.status === 'Completed').sort(appointmentOrder).pop();
+            const nextVisit = appointments.filter(item => ['Pending', 'Confirmed', 'Approved', 'Reschedule Requested'].includes(item.status) && dateKey(item.growthDate || item.date) >= clinicDay()).sort(appointmentOrder)[0];
+            return {
             dbId: patient.id,
             id: `PT-100${patient.id}`,
-            name: patient.name,
-            age: patient.age || '--',
-            lastProcedure: patient.last_procedure || 'None Recorded',
-            nextAppt: patient.next_appointment ? new Date(patient.next_appointment).toLocaleDateString() : 'Not Scheduled'
-          }));
+            name: patient.name || '',
+            age: patient.age ?? '--',
+            contact: patient.contact || '',
+            lastProcedure: lastVisit?.serviceType || 'None Recorded',
+            nextAppt: nextVisit ? new Date(`${dateKey(nextVisit.growthDate || nextVisit.date)}T12:00:00`).toLocaleDateString() : 'Not Scheduled'
+          }; });
           setPatients(patientData);
           setFilteredPatients(patientData);
         }
       } catch (err) {
         console.error("Error fetching dentist's patient list:", err);
+        setDataError('Patient data could not be loaded. Please refresh the page.');
       } finally {
         setLoading(false);
       }
@@ -46,7 +62,8 @@ function DentistPatientList() {
     const results = patients.filter(patient =>
       patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       patient.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      patient.lastProcedure.toLowerCase().includes(searchQuery.toLowerCase())
+      patient.lastProcedure.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      patient.contact.toLowerCase().includes(searchQuery.toLowerCase())
     );
     setFilteredPatients(results);
   }, [searchQuery, patients]);
@@ -79,7 +96,7 @@ function DentistPatientList() {
 
             <div style={styles.profile} className="header-profile">
               <div style={styles.profileText} className="header-profile-text">
-                <p style={styles.userName}>Dr. Smith</p>
+                <p style={styles.userName}>Dr. {user.lastName || user.last_name || ''}</p>
                 <p style={styles.userRole}>Dentist</p>
               </div>
               <div style={styles.avatar}><User size={20} color="#087F8C" /></div>
@@ -118,6 +135,8 @@ function DentistPatientList() {
           <div style={styles.tableContainer} className="patient-table-container ov-panel">
             {loading ? (
               <p style={{ padding: '20px', color: "var(--ov-on-color, #fff)" }}>Loading patients...</p>
+            ) : dataError ? (
+              <p role="alert" style={{ padding: '20px', color: "var(--ov-on-color, #fff)" }}>{dataError}</p>
             ) : (
               <table style={styles.table}>
                 <thead>
@@ -151,9 +170,9 @@ function DentistPatientList() {
                       <td style={styles.td}>{patient.nextAppt}</td>
                       <td style={styles.td}>
                         <div style={styles.actionGroup}>
-                          <button title="View History" style={styles.iconBtn}><ClipboardList size={18} /></button>
-                          <button title="Diagnostics" style={styles.iconBtn}><FileText size={18} /></button>
-                          <button title="Full Profile" style={styles.iconBtn}><Eye size={18} /></button>
+                          <button title="View History" style={styles.iconBtn} onClick={(event) => { event.stopPropagation(); handleRowClick(patient.dbId); }}><ClipboardList size={18} /></button>
+                          <button title="Diagnostics" style={styles.iconBtn} onClick={(event) => { event.stopPropagation(); navigate(`/dentist/diagnostics?patient_id=${patient.dbId}`); }}><FileText size={18} /></button>
+                          <button title="Full Profile" style={styles.iconBtn} onClick={(event) => { event.stopPropagation(); handleRowClick(patient.dbId); }}><Eye size={18} /></button>
                         </div>
                       </td>
                     </tr>

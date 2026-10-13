@@ -5,9 +5,11 @@ import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/AdminLayout';
 import PatientGrowthChart from '../../components/PatientGrowthChart';
 import RecentPatientVisits from '../../components/RecentPatientVisits';
+import { readClinicUser, clinicDay, dateKey, scopeAppointments } from '../../utils/clinicAppointments';
 import { Search, User, ChevronDown, ChevronUp } from 'lucide-react';
 
 function DentistDashboard() {
+  const [user] = useState(readClinicUser);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [stats, setStats] = useState({
     todayCount: 0,
@@ -31,11 +33,13 @@ function DentistDashboard() {
         const data = await response.json();
         if (!Array.isArray(data.schedule)) throw new Error('Invalid dashboard response');
 
-        const completedVisits = (data.schedule || []).filter(
+        const schedule = scopeAppointments(data.schedule, readClinicUser());
+        const completedVisits = schedule.filter(
           (appointment) => appointment.status === 'Completed'
         );
 
-        setStats(data);
+        setStats({ ...data, schedule, todayCount: schedule.filter(item => dateKey(item.growthDate || item.date) === clinicDay()).length,
+          monthPatients: new Set(schedule.filter(item => dateKey(item.growthDate || item.date).slice(0, 7) === clinicDay().slice(0, 7)).map(item => item.patientId ?? item.patientName)).size });
         setRecentVisits(completedVisits);
       } catch (err) {
         console.error("Error fetching dentist dashboard stats:", err);
@@ -54,8 +58,11 @@ function DentistDashboard() {
     if (!response.ok) throw new Error('Unable to load recent visits.');
     const data = await response.json();
     if (!Array.isArray(data.schedule)) throw new Error('Invalid recent visits response.');
-    setRecentVisits(data.schedule.filter(appointment => appointment.status === 'Completed'));
+    setRecentVisits(scopeAppointments(data.schedule, readClinicUser()).filter(appointment => appointment.status === 'Completed'));
+    setDataError('');
   };
+
+  const todaySchedule = stats.schedule.filter(item => dateKey(item.growthDate || item.date) === clinicDay(currentDateTime));
 
   return (
     <AdminLayout>
@@ -80,7 +87,7 @@ function DentistDashboard() {
 
             <div style={styles.profile} className="header-profile">
               <div style={styles.profileText} className="header-profile-text">
-                <p style={styles.userName}>Dr. Smith</p>
+                <p style={styles.userName}>Dr. {user.lastName || user.last_name || ''}</p>
                 <p style={styles.userRole}>Dentist</p>
               </div>
               <div style={styles.avatar}><User size={20} color="#087F8C" /></div>
@@ -151,8 +158,10 @@ function DentistDashboard() {
               <p style={styles.sectionTitle}>Today's Schedule</p>
               {loading ? (
                 <p style={styles.emptyText}>Loading schedule...</p>
-              ) : stats.schedule.length > 0 ? (
-                <PaginatedList pageSize={10} label="Dashboard list pages">{stats.schedule.map((item, idx) => (
+              ) : dataError ? (
+                <p role="alert" style={styles.emptyText}>{dataError}</p>
+              ) : todaySchedule.length > 0 ? (
+                <PaginatedList pageSize={10} label="Dashboard list pages">{todaySchedule.map((item, idx) => (
                   <div key={idx} style={styles.scheduleRow}>
                     <div style={styles.scheduleInfo}>
                       <span style={styles.scheduleTime}>🕒 {item.time}</span>

@@ -1,10 +1,15 @@
 import ClinicPageTitle from '../../components/ClinicPageTitle';
 import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTools';
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { readClinicUser } from '../../utils/clinicAppointments';
 import AdminLayout from '../../components/AdminLayout';
 import { Search, User, ChevronDown, ChevronUp } from 'lucide-react';
 
 function DentistProfile() {
+  const navigate = useNavigate();
+  const [user] = useState(readClinicUser);
+  const [dataError, setDataError] = useState('');
   const [dentistData, setDentistData] = useState(null);
   const [assignedPatients, setAssignedPatients] = useState([]);
   const [schedule, setSchedule] = useState([]);
@@ -14,19 +19,22 @@ function DentistProfile() {
   useEffect(() => {
     const fetchDentistProfile = async () => {
       try {
-        const user = JSON.parse(localStorage.getItem('user'));
+        const user = readClinicUser();
         const dentistId = user?.id;
 
-        if (!dentistId) return;
+        if (!dentistId || user.role !== 'dentist') throw new Error('No dentist session');
 
         const response = await fetch(`https://oravista-server-474976105474.asia-southeast1.run.app/api/dentist-profile/${dentistId}`);
+        if (!response.ok) throw new Error('Unable to load dentist profile');
         const data = await response.json();
+        if (!data.profile || String(data.profile.id) !== String(dentistId) || !Array.isArray(data.patients) || !Array.isArray(data.schedule)) throw new Error('Invalid dentist profile');
 
         setDentistData(data.profile);
         setAssignedPatients(data.patients || []);
         setSchedule(data.schedule || []);
       } catch (err) {
         console.error("Error fetching dentist profile:", err);
+        setDataError('Your dentist profile could not be loaded. Please refresh the page.');
       } finally {
         setLoading(false);
       }
@@ -162,7 +170,7 @@ function DentistProfile() {
 
             <div className="dp-profile">
               <div className="dp-profile-text">
-                <p className="dp-user-name">{dentistData ? `Dr. ${dentistData.last_name}` : 'Loading...'}</p>
+                <p className="dp-user-name">Dr. {dentistData?.last_name || user.lastName || user.last_name || ''}</p>
                 <p className="dp-user-role">Dentist</p>
               </div>
               <div className="dp-avatar">
@@ -178,6 +186,8 @@ function DentistProfile() {
 
           {loading ? (
             <p style={{ color: '#087F8C' }}>Loading data from database...</p>
+          ) : dataError ? (
+            <p role="alert" style={{ color: '#087F8C' }}>{dataError}</p>
           ) : (
             <div className="dp-dashboard-grid">
               {/* CARD 1: PROFILE */}
@@ -198,7 +208,7 @@ function DentistProfile() {
                   </div>
                   <div className="dp-contact-item">
                     <p className="dp-contact-label">Phone</p>
-                    <p className="dp-contact-value">{dentistData?.phone || '+1 (555) 000-0000'}</p>
+                    <p className="dp-contact-value">{dentistData?.phone || 'Not provided'}</p>
                   </div>
                 </div>
               </div>
@@ -221,9 +231,9 @@ function DentistProfile() {
                         <tr key={i}>
                           <td className="dp-td">{p.name}</td>
                           <td className="dp-td">{p.case_type}</td>
-                          <td className="dp-td">{new Date(p.last_visit).toLocaleDateString()}</td>
+                          <td className="dp-td">{p.last_visit ? new Date(p.last_visit).toLocaleDateString() : 'No Visits'}</td>
                           <td className="dp-td">
-                            <button className="dp-view-btn">View Profile</button>
+                            <button className="dp-view-btn" onClick={() => navigate(`/dentist/patient-profile/${p.id}`)}>View Profile</button>
                           </td>
                         </tr>
                       )) : (
