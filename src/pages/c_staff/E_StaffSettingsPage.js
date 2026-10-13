@@ -1,13 +1,26 @@
 import {saveSession} from "../../utils/auth";
 import ClinicPageTitle from '../../components/ClinicPageTitle';
 import { PortalSearch, RoleNotifications } from '../../components/ClinicPortalTools';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import AdminLayout from '../../components/AdminLayout';
 import { Search, User, Shield, Lock, Briefcase, Eye, EyeOff, CheckCircle2, XCircle } from 'lucide-react';
 
 function StaffSettings() {
   // 1. Load User ID and Profile State
   const [userId, setUserId] = useState(null);
+  const [message, setMessage] = useState(null);
+  const messageDialog = useRef(null);
+
+  useEffect(() => {
+    if (message && !messageDialog.current.open) {
+      messageDialog.current.showModal();
+    }
+  }, [message]);
+
+  const closeMessage = () => {
+    setMessage(null);
+    if (message?.reload) window.location.reload();
+  };
   const [profileData, setProfileData] = useState({
     firstName: '',
     lastName: '',
@@ -64,28 +77,27 @@ function StaffSettings() {
       });
 
       if (response.ok) {
-        alert("Profile updated successfully!");
         const user = JSON.parse(localStorage.getItem("user"));
         localStorage.setItem("user", JSON.stringify({ ...user, firstName: profileData.firstName, lastName: profileData.lastName, email: profileData.email, phone: profileData.phone }));
-        window.location.reload();
+        setMessage({ text: "Profile updated successfully!", success: true, reload: true });
       } else {
         const data = await response.json();
-        alert(data.message || "Failed to update profile.");
+        setMessage({ text: data.message || "Failed to update profile." });
       }
     } catch (err) {
-      alert("Connection Error. Is the server running?");
+      setMessage({ text: "Connection Error. Is the server running?" });
     }
   };
 
   // 4. API Call: Update Password
   const handlePasswordUpdate = async () => {
     if (newPassword !== confirmPassword) {
-      alert("Error: New passwords do not match!");
+      setMessage({ text: "Error: New passwords do not match!" });
       return;
     }
 
     if (!conditions.length || !conditions.lowercase || !conditions.uppercase || !conditions.number || !conditions.special) {
-      alert("Error: Please ensure the new password meets all security requirements.");
+      setMessage({ text: "Error: Please ensure the new password meets all security requirements." });
       return;
     }
 
@@ -104,20 +116,30 @@ function StaffSettings() {
 
       if (response.ok) {
         saveSession(data.token);
-        alert("Password changed successfully!");
+        setMessage({ text: "Password changed successfully!", success: true });
         setCurrentPassword('');
         setNewPassword('');
         setConfirmPassword('');
       } else {
-        alert(data.message || "Failed to update password.");
+        setMessage({ text: data.message || "Failed to update password." });
       }
     } catch (err) {
-      alert("Connection Error. Is the server running?");
+      setMessage({ text: "Connection Error. Is the server running?" });
     }
   };
 
   return (
     <AdminLayout>
+      <dialog ref={messageDialog} onClose={closeMessage} aria-labelledby="settings-message-title" aria-describedby="settings-message-text" style={styles.messageDialog}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {message?.success ? <CheckCircle2 size={24} color="#087F8C" /> : <XCircle size={24} color="#b42318" />}
+          <h2 id="settings-message-title" style={{ margin: 0, fontSize: '18px' }}>{message?.success ? 'Success' : 'Unable to save changes'}</h2>
+        </div>
+        <p id="settings-message-text" style={{ lineHeight: 1.5, overflowWrap: 'anywhere' }}>{message?.text}</p>
+        <form method="dialog" style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <button autoFocus type="submit" style={{ ...styles.saveBtn, background: '#087F8C', color: 'white' }}>OK</button>
+        </form>
+      </dialog>
       <div style={styles.container}>
         {/* HEADER - Staff Profile */}
         <header style={styles.header} className="dashboard-page-header ov-header"><ClinicPageTitle />
@@ -311,6 +333,7 @@ function StaffSettings() {
 }
 
 const styles = {
+  messageDialog: { width: '400px', maxWidth: 'calc(100vw - 48px)', maxHeight: 'calc(100vh - 48px)', boxSizing: 'border-box', padding: '24px', border: '1px solid #d5e5e7', borderRadius: '8px', background: 'white', color: '#243438', boxShadow: '0 16px 48px rgba(0,0,0,0.2)' },
   container: { display: 'flex', flexDirection: 'column', width: '100%' },
   header: { "--ov-on-color": "var(--ov-ink)", height: '80px', background: "var(--ov-primary)", display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px', position: 'sticky', top: 0, zIndex: 10 },
   searchBox: { display: 'flex', alignItems: 'center', background: "var(--ov-on-wash, rgba(255,255,255,0.1))", padding: '10px 20px', borderRadius: '12px', width: '350px' },
