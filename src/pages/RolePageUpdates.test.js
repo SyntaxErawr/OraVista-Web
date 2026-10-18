@@ -17,12 +17,13 @@ const schedule = [
   { id: 2, patientId: 10, patientName: 'Newest Visit', date: today, growthDate: today, time: '10:00', status: 'Completed' },
   { id: 3, patientId: 11, patientName: 'New Patient', date: today, growthDate: today, time: '11:00', status: 'Completed' },
   { id: 4, patientId: 12, patientName: 'Pending Patient', date: today, growthDate: today, status: 'Pending' },
-];
+].map(visit => ({ ...visit, dentistId: 9 }));
 const stats = { todayCount: 3, availableDentists: 4, totalDentists: 5, monthPatients: 3, schedule };
 beforeEach(() => { global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => stats }); });
-afterEach(() => { global.fetch = originalFetch; jest.restoreAllMocks(); });
+afterEach(() => { global.fetch = originalFetch; localStorage.clear(); jest.restoreAllMocks(); });
 
-test.each([['staff', StaffDashboard], ['dentist', DentistDashboard]])('%s dashboard shows growth, newest-first completed visits and supports refresh', async (_, Page) => {
+test.each([['staff', StaffDashboard], ['dentist', DentistDashboard]])('%s dashboard shows growth, newest-first completed visits and supports refresh', async (role, Page) => {
+  localStorage.setItem('user', JSON.stringify({ id: 9, role, firstName: 'Test', lastName: 'Dentist' }));
   render(<Page />);
   const panel = screen.getByRole('region', { name: 'Recent Patient Visits' });
   expect(within(panel).getByRole('status')).toHaveTextContent('Loading');

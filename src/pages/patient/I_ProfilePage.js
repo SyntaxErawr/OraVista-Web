@@ -1,6 +1,7 @@
 import PatientAccount from '../../components/PatientAccount';
 import PatientDialog from "../../components/PatientDialog";
 import BrandWordmark from "../../components/BrandWordmark";
+import { API_BASE_URL } from '../../config/api';
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -33,6 +34,20 @@ function ProfilePage() {
   const [profilePreview, setProfilePreview] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [isPhotoEditing, setIsPhotoEditing] = useState(false);
+  const [pendingPhoto, setPendingPhoto] = useState(null);
+  const [pendingPreview, setPendingPreview] = useState(null);
+  const [confirmPhoto, setConfirmPhoto] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const savingRef = useRef(false);
+  const uploadingRef = useRef(false);
+  const photoUrl = (path) => path ? (/^https?:\/\//i.test(path) ? path : `${API_BASE_URL}/${path.replace(/^\/+/, '')}`) : null;
+  const photoButtonStyle = (primary = false) => ({
+    padding: '10px 16px', borderRadius: 10, border: '1px solid #b8d7dd',
+    background: primary ? 'var(--ov-primary)' : 'white', color: '#12485b',
+    font: 'inherit', fontSize: 14, fontWeight: 700, cursor: 'pointer',
+  });
 
   const [userData, setUserData] = useState({
     firstName: "",
@@ -73,20 +88,17 @@ function ProfilePage() {
     const user = JSON.parse(localStorage.getItem("user"));
     if (user) {
       setUserData({
-        firstName: user.firstName || "",
-        lastName: user.lastName || "",
+        firstName: user.firstName ?? user.first_name ?? "",
+        lastName: user.lastName ?? user.last_name ?? "",
         email: user.email || "",
         sex: user.sex || "",
-        dob: user.dob || "",
+        dob: user.dob?.slice(0, 10) || "",
         age: user.dob ? calculateAge(user.dob) : user.age || "",
         phone: user.phone || "",
         occupation: user.occupation || "",
       });
-      if (user.profile_picture) {
-        setProfilePreview(
-          `https://oravista-server-474976105474.asia-southeast1.run.app/${user.profile_picture}`,
-        );
-      }
+      const path = user.profile_picture;
+      setProfilePreview(path ? (/^https?:\/\//i.test(path) ? path : `${API_BASE_URL}/${path.replace(/^\/+/, '')}`) : null);
     }
   }, []);
 
@@ -94,17 +106,25 @@ function ProfilePage() {
     loadUserData();
   }, [loadUserData]);
 
+  useEffect(() => () => { if (pendingPreview) URL.revokeObjectURL(pendingPreview); }, [pendingPreview]);
+
   const validate = (name, value) => {
     let error = "";
-    if (name !== "age" && typeof value === "string" && value.trim() === "") {
+    if (["firstName", "lastName", "email", "phone"].includes(name) && !String(value).trim()) {
       error = "This field cannot be empty.";
     }
     if (name === "firstName" || name === "lastName") {
       if (value.length > 20) error = "Maximum 20 characters allowed.";
     } else if (name === "email") {
-      const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(value))
-        error = "Must be a valid @gmail.com address.";
+        error = "Enter a valid email address.";
+    } else if (name === "phone" && !/^09\d{9}$/.test(value)) {
+      error = "Enter an 11-digit mobile number starting with 09.";
+    } else if (name === "dob" && value) {
+      const parsed = new Date(`${value}T00:00:00Z`);
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
+      if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== value || value > today) error = "Enter a valid birth date that is not in the future.";
     } else if (name === "occupation") {
       if (value.length > 50) error = "Maximum 50 characters allowed.";
     }
@@ -114,9 +134,6 @@ function ProfilePage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === "firstName" || name === "lastName") {
-      if (/[^a-zA-Z\s]/.test(value)) return;
-    }
     if (name === "phone") {
       if (/[^0-9]/.test(value)) return;
     }
@@ -130,50 +147,58 @@ function ProfilePage() {
     }
   };
 
-  const handleImageUpload = async (e) => {
-    if (!isEditing || isUploading) return;
+  const handleImageUpload = (e) => {
+    if (!isPhotoEditing || uploadingRef.current) return;
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploadError("");
+    if (!file.type.startsWith('image/')) { setUploadError('Choose an image file.'); return; }
+    setPendingPhoto(file);
+    setPendingPreview(URL.createObjectURL(file));
+  };
 
-    const file = e.target.files[0];
-    if (file) {
-      const previousPreview = profilePreview;
-      setIsUploading(true);
-      setUploadError("");
-      const imageUrl = URL.createObjectURL(file);
-      setProfilePreview(imageUrl);
-      const user = JSON.parse(localStorage.getItem("user"));
-      const formData = new FormData();
-      formData.append("profileImage", file);
-      formData.append("userId", user.id);
+  const cancelPhoto = () => {
+    if (uploadingRef.current) return;
+    setPendingPhoto(null); setPendingPreview(null); setUploadError("");
+    setConfirmPhoto(false); setIsPhotoEditing(false);
+  };
+
+  const savePhoto = async () => {
+    if (!pendingPhoto || uploadingRef.current) return;
+    uploadingRef.current = true;
+    setIsUploading(true); setUploadError("");
       try {
+        const user = JSON.parse(localStorage.getItem("user"));
+        const formData = new FormData();
+        formData.append("profileImage", pendingPhoto);
+        formData.append("userId", user.id);
         const response = await fetch(
-          "https://oravista-server-474976105474.asia-southeast1.run.app/api/upload-profile-picture",
+          `${API_BASE_URL}/api/upload-profile-picture`,
           {
             method: "POST",
             body: formData,
           },
         );
         const data = await response.json();
-        if (response.ok) {
-          const updatedUser = { ...user, profile_picture: data.imagePath };
+        if (response.ok && data.imagePath) {
+          const current = JSON.parse(localStorage.getItem("user"));
+          if (!current || String(current.id) !== String(user.id)) throw new Error('Your session changed.');
+          const updatedUser = { ...current, profile_picture: data.imagePath };
           localStorage.setItem("user", JSON.stringify(updatedUser));
           window.dispatchEvent(new Event("patient-profile-updated"));
-          setProfilePreview(
-            `https://oravista-server-474976105474.asia-southeast1.run.app/${data.imagePath}`,
-          );
+          setProfilePreview(photoUrl(data.imagePath));
+          setPendingPhoto(null); setPendingPreview(null); setConfirmPhoto(false); setIsPhotoEditing(false);
         } else {
-          setProfilePreview(previousPreview);
           setUploadError(data.message || "Your photo could not be uploaded. Please try again.");
         }
       } catch (error) {
         console.error("Upload error:", error);
-        setProfilePreview(previousPreview);
         setUploadError("We could not upload your photo. Please check your connection and retry.");
       } finally {
-        URL.revokeObjectURL(imageUrl);
-        e.target.value = "";
+        uploadingRef.current = false;
         setIsUploading(false);
       }
-    }
   };
 
   const triggerFileInput = () => fileInputRef.current.click();
@@ -181,16 +206,13 @@ function ProfilePage() {
   const handleDiscard = () => {
     loadUserData();
     setErrors({});
+    setSaveError("");
     setIsEditing(false);
-    const user = JSON.parse(localStorage.getItem("user"));
-    setProfilePreview(
-      user?.profile_picture
-        ? `https://oravista-server-474976105474.asia-southeast1.run.app/${user.profile_picture}`
-        : null,
-    );
   };
 
   const handleSaveClick = () => {
+    if (!isEditing || savingRef.current) return;
+    setSaveError("");
     const newErrors = {};
     let hasEmpty = false;
     Object.keys(userData).forEach((key) => {
@@ -209,30 +231,43 @@ function ProfilePage() {
   };
 
   const handleConfirmSave = async () => {
-    const user = JSON.parse(localStorage.getItem("user"));
+    if (savingRef.current) return;
+    savingRef.current = true; setIsSaving(true); setSaveError("");
     try {
+      const user = JSON.parse(localStorage.getItem("user"));
       const response = await fetch(
-        "https://oravista-server-474976105474.asia-southeast1.run.app/api/update-profile",
+        `${API_BASE_URL}/api/update-profile`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id: user.id, ...userData }),
         },
       );
+      const data = await response.json();
       if (response.ok) {
-        const updatedUser = { ...user, ...userData };
+        const current = JSON.parse(localStorage.getItem("user"));
+        if (!current || String(current.id) !== String(user.id)) throw new Error('Your session changed.');
+        const savedData = { ...userData };
+        for (const key of Object.keys(savedData)) {
+          if (data.user && Object.hasOwn(data.user, key)) savedData[key] = data.user[key] ?? '';
+        }
+        savedData.firstName = data.user?.first_name ?? savedData.firstName;
+        savedData.lastName = data.user?.last_name ?? savedData.lastName;
+        savedData.dob = savedData.dob.slice(0, 10);
+        const updatedUser = { ...current, ...savedData, first_name: savedData.firstName, last_name: savedData.lastName };
         localStorage.setItem("user", JSON.stringify(updatedUser));
-          window.dispatchEvent(new Event("patient-profile-updated"));
+        window.dispatchEvent(new Event("patient-profile-updated"));
+        setUserData(savedData);
         setIsEditing(false);
         setShowConfirmModal(false);
         setShowSuccessModal(true);
       } else {
-        alert("Failed to update profile. Check database connection.");
+        setSaveError(data.message || "Your information could not be saved. Please try again.");
       }
     } catch (err) {
       console.error(err);
-      alert("Server error. Check your connection.");
-    }
+      setSaveError("Your information could not be saved. Check your connection and retry.");
+    } finally { savingRef.current = false; setIsSaving(false); }
   };
 
   const handleLogout = () => {
@@ -423,7 +458,7 @@ function ProfilePage() {
     >
       {/* Modals */}
       {showConfirmModal && (
-        <PatientDialog onClose={() => setShowConfirmModal(false)} style={modalOverlayStyle}>
+        <PatientDialog onClose={() => { if (!savingRef.current) setShowConfirmModal(false); }} style={modalOverlayStyle}>
           <div style={modalContentStyle}>
             <AlertTriangle
               size={50}
@@ -444,8 +479,10 @@ function ProfilePage() {
             >
               Are you sure you want to save these updates to your profile?
             </p>
+            {saveError && <p role="alert" className="ov-inline-error">{saveError}</p>}
             <div style={{ display: "flex", gap: "10px" }}>
               <button
+                disabled={isSaving}
                 onClick={() => setShowConfirmModal(false)}
                 style={{
                   flex: 1,
@@ -461,6 +498,7 @@ function ProfilePage() {
                 Cancel
               </button>
               <button
+                disabled={isSaving}
                 onClick={handleConfirmSave}
                 style={{ "--ov-on-color": "var(--ov-ink)",
                   flex: 1,
@@ -474,8 +512,23 @@ function ProfilePage() {
                   fontFamily: "'Manrope', sans-serif",
                 }}
               >
-                Confirm
+                {isSaving ? "Saving..." : "Confirm"}
               </button>
+            </div>
+          </div>
+        </PatientDialog>
+      )}
+
+      {confirmPhoto && (
+        <PatientDialog onClose={() => { if (!uploadingRef.current) setConfirmPhoto(false); }} style={modalOverlayStyle}>
+          <div style={modalContentStyle}>
+            <h3>Save Profile Photo?</h3>
+            <p>Your new photo will be uploaded only after you confirm.</p>
+            <img src={pendingPreview} alt="Selected portrait preview" style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: '50%' }} />
+            {uploadError && <p role="alert" className="ov-inline-error">{uploadError}</p>}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: 20 }}>
+              <button type="button" style={photoButtonStyle()} disabled={isUploading} onClick={() => setConfirmPhoto(false)}>Cancel</button>
+              <button type="button" style={photoButtonStyle(true)} disabled={isUploading} onClick={savePhoto}>{isUploading ? 'Uploading...' : 'Confirm Photo'}</button>
             </div>
           </div>
         </PatientDialog>
@@ -668,8 +721,8 @@ function ProfilePage() {
                     height: isMobile ? "90px" : "120px",
                     borderRadius: "50%",
                     backgroundColor: "white",
-                    backgroundImage: profilePreview
-                      ? `url(${profilePreview})`
+                    backgroundImage: (pendingPreview || profilePreview)
+                      ? `url(${pendingPreview || profilePreview})`
                       : "none",
                     backgroundSize: "cover",
                     backgroundPosition: "center",
@@ -692,15 +745,15 @@ function ProfilePage() {
                 <input
                   type="file"
                   ref={fileInputRef}
-                  disabled={!isEditing}
+                  disabled={isUploading}
                   onChange={handleImageUpload}
                   accept="image/*"
                   style={{ display: "none" }}
                 />
                 <button
                   className="ov-photo-upload"
-                  onClick={triggerFileInput}
-                  disabled={!isEditing || isUploading}
+                  onClick={() => { setIsPhotoEditing(true); setUploadError(''); triggerFileInput(); }}
+                  disabled={isUploading}
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -711,16 +764,17 @@ function ProfilePage() {
                     backgroundColor: "var(--ov-on-wash, rgba(255,255,255,0.2))",
                     color: "var(--ov-on-color, #fff)",
                     fontSize: "12px",
-                    cursor: isEditing ? "pointer" : "not-allowed",
-                    opacity: isEditing ? 1 : 0.5,
+                    cursor: isUploading ? "wait" : "pointer",
                     fontFamily: "'Manrope', sans-serif",
                   }}
                 >
-                  <Upload size={14} /> {isUploading ? "Uploading..." : "Update Photo"}
+                  <Upload size={14} /> {isPhotoEditing ? "Choose Photo" : "Edit Photo"}
                 </button>
-                {!isEditing && <p className="ov-availability-note" style={{ maxWidth: "200px", textAlign: "center", margin: "8px 0 0" }}>Select Edit Information to update your photo.</p>}
-                {uploadError && <p className="ov-inline-error" role="alert">{uploadError}</p>}
-                {isEditing && <p className="ov-availability-note" style={{ maxWidth: "220px", textAlign: "center" }}>Photo uploads save immediately. Discard Changes applies to the form fields.</p>}
+                {isPhotoEditing && <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                  <button type="button" style={photoButtonStyle()} disabled={isUploading} onClick={cancelPhoto}>Cancel Photo</button>
+                  <button type="button" style={photoButtonStyle(true)} disabled={!pendingPhoto || isUploading} onClick={() => setConfirmPhoto(true)}>Save Photo</button>
+                </div>}
+                {uploadError && !confirmPhoto && <p className="ov-inline-error" role="alert">{uploadError}</p>}
               </div>
 
               <div>
@@ -734,7 +788,7 @@ function ProfilePage() {
                   Personal Information
                 </h2>
                 <button
-                  onClick={() => setIsEditing(true)}
+                  onClick={() => { setIsEditing(true); setSaveError(''); }}
                   style={{
                     marginTop: "10px",
                     padding: "8px 20px",
@@ -798,7 +852,7 @@ function ProfilePage() {
                       type={type}
                       value={userData[name]}
                       onChange={handleChange}
-                      disabled={!isEditing}
+                      disabled={!isEditing || isSaving}
                     />
                     {errors[name] && (
                       <span
@@ -846,12 +900,13 @@ function ProfilePage() {
                     style={inputStyle()}
                     value={userData.sex}
                     onChange={handleChange}
-                    disabled={!isEditing}
+                    disabled={!isEditing || isSaving}
                   >
                     <option value="">Select Sex</option>
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
                   </select>
+                  {errors.sex && <span role="alert" className="ov-inline-error">{errors.sex}</span>}
                 </div>
                 <div
                   style={{
@@ -873,12 +928,13 @@ function ProfilePage() {
                   </label>
                   <input aria-label="dob"
                     name="dob"
-                    style={inputStyle()}
+                    style={inputStyle(errors.dob)}
                     type="date"
                     value={userData.dob}
                     onChange={handleChange}
-                    disabled={!isEditing}
+                    disabled={!isEditing || isSaving}
                   />
+                  {errors.dob && <span role="alert" className="ov-inline-error">{errors.dob}</span>}
                 </div>
                 <div
                   style={{
@@ -938,12 +994,13 @@ function ProfilePage() {
                   </label>
                   <input aria-label="phone"
                     name="phone"
-                    style={inputStyle()}
+                    style={inputStyle(errors.phone)}
                     type="text"
                     value={userData.phone}
                     onChange={handleChange}
-                    disabled={!isEditing}
+                    disabled={!isEditing || isSaving}
                   />
+                  {errors.phone && <span role="alert" className="ov-inline-error">{errors.phone}</span>}
                 </div>
                 <div
                   style={{
@@ -969,7 +1026,7 @@ function ProfilePage() {
                     type="text"
                     value={userData.occupation}
                     onChange={handleChange}
-                    disabled={!isEditing}
+                    disabled={!isEditing || isSaving}
                     placeholder="Enter your occupation"
                   />
                   {errors.occupation && (
@@ -998,7 +1055,7 @@ function ProfilePage() {
                 }}
               >
                 <button
-                  disabled={!isEditing}
+                  disabled={!isEditing || isSaving}
                   onClick={handleDiscard}
                   style={{
                     padding: "12px 30px",
@@ -1015,7 +1072,7 @@ function ProfilePage() {
                   Discard Changes
                 </button>
                 <button
-                  disabled={!isEditing}
+                  disabled={!isEditing || isSaving}
                   onClick={handleSaveClick}
                   style={{
                     padding: "12px 30px",

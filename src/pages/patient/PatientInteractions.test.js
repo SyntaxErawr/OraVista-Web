@@ -225,11 +225,16 @@ test("a rejected profile upload restores the saved photo and offers visible feed
   localStorage.setItem("user", JSON.stringify({ ...patient, profile_picture: "oldphoto.png" }));
   global.fetch.mockResolvedValue(reply({ message: "Photo upload was rejected." }, false));
   render(<ProfilePage />);
-  fireEvent.click(screen.getByRole("button", { name: "Edit Information" }));
+  fireEvent.click(screen.getByRole("button", { name: "Edit Photo" }));
   fireEvent.change(document.querySelector('input[type="file"]'), { target: { files: [new File(["image"], "photo.png", { type: "image/png" })] } });
+  fireEvent.click(screen.getByRole('button', { name: 'Save Photo' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Confirm Photo' }));
   expect(await screen.findByRole("alert")).toHaveTextContent("Photo upload was rejected.");
-  expect(screen.getByRole("img", { name: "Profile photo" }).style.backgroundImage).toContain("oldphoto.png");
+  expect(screen.getByRole("img", { name: "Profile photo" }).style.backgroundImage).toContain("blob:temporary-photo");
   expect(JSON.parse(localStorage.getItem("user")).profile_picture).toBe("oldphoto.png");
+  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel Photo' }));
+  expect(screen.getByRole('img', { name: 'Profile photo' }).style.backgroundImage).toContain('oldphoto.png');
   expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:temporary-photo");
   URL.createObjectURL = create;
   URL.revokeObjectURL = revoke;
