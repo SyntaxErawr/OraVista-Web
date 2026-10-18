@@ -170,7 +170,7 @@ function ProfilePage() {
   };
 
   const savePhoto = async () => {
-    if (!pendingPhoto || uploadingRef.current) return;
+    if (!confirmPhoto || !isPhotoEditing || !pendingPhoto || uploadingRef.current) return;
     uploadingRef.current = true;
     setIsUploading(true); setUploadError("");
       try {
@@ -237,7 +237,7 @@ function ProfilePage() {
   };
 
   const handleConfirmSave = async () => {
-    if (savingRef.current) return;
+    if (!showConfirmModal || !isEditing || savingRef.current) return;
     savingRef.current = true; setIsSaving(true); setSaveError("");
     try {
       const user = JSON.parse(localStorage.getItem("user"));
@@ -907,7 +907,7 @@ function ProfilePage() {
                     onChange={handleChange}
                     disabled={!isEditing || isSaving}
                   >
-                    <option value="">Select Sex</option>
+                    <option value="" disabled hidden>Select Sex</option>
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
                   </select>

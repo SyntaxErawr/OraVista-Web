@@ -100,5 +100,25 @@ test('age is blank without DOB, computed from DOB and read-only; sex options mat
   fireEvent.click(screen.getByRole('button', { name: 'Edit Information' })); fireEvent.change(screen.getByLabelText('dob'), { target: { value: '2000-01-02' } });
   expect(screen.getByLabelText('Auto-computed')).toHaveValue(String(new Date().getFullYear() - 2000)); expect(screen.getByLabelText('Auto-computed')).toBeDisabled();
   expect([...screen.getByLabelText('sex').options].map(o => o.value)).toEqual(['', 'Male', 'Female']);
+  expect(screen.getByLabelText('sex').options[0]).toBeDisabled();
+  expect(screen.getByLabelText('sex').options[0].hidden).toBe(true);
+  expect([...screen.getByLabelText('sex').options].filter(o => !o.disabled).map(o => o.value)).toEqual(['Male', 'Female']);
   fireEvent.change(screen.getByLabelText('dob'), { target: { value: '' } }); expect(screen.getByLabelText('Auto-computed')).toHaveValue('');
+});
+
+test('sex and birth-date selections remain private drafts through refresh and canceled confirmation', async () => {
+  await ready(); const saved = localStorage.getItem('user');
+  fireEvent.click(screen.getByRole('button', { name: 'Edit Information' }));
+  fireEvent.change(screen.getByLabelText('sex'), { target: { value: 'Female' } });
+  fireEvent.change(screen.getByLabelText('dob'), { target: { value: '2004-11-28' } });
+  act(() => window.dispatchEvent(new Event('focus')));
+  await act(async () => {});
+  expect(writes()).toHaveLength(0); expect(localStorage.getItem('user')).toBe(saved); expect(serverProfile.sex).toBe('');
+  fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
+  expect(writes()).toHaveLength(0);
+  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }));
+  expect(writes()).toHaveLength(0); expect(localStorage.getItem('user')).toBe(saved);
+  fireEvent.click(screen.getByRole('button', { name: 'Save Changes' })); confirmInfo();
+  await screen.findByText('Profile updated successfully!');
+  expect(writes()).toHaveLength(1); expect(serverProfile).toMatchObject({ sex: 'Female', dob: '2004-11-28' });
 });
