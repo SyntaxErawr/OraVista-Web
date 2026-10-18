@@ -28,7 +28,7 @@ async function confirmPasswordChange() {
 
 test('password success waits for the existing update endpoint and prevents repeated requests', async () => {
   let finish;
-  global.fetch.mockImplementation(async (url) => url.endsWith('/api/send-otp')
+  global.fetch.mockImplementation(async (url) => url.includes('/api/user-profile?') ? reply({ id: 7, first_name: 'Test', email: 'test@example.test' }) : url.endsWith('/api/send-otp')
     ? reply({ challengeId: 'challenge-1' }) : url.endsWith('/api/verify-otp') ? reply({verificationToken: 'proof-1'}) : new Promise(resolve => { finish = resolve; }));
   await confirmPasswordChange();
   const dialog = await screen.findByRole('dialog', { name: 'Verification Required' });
@@ -42,7 +42,7 @@ test('password success waits for the existing update endpoint and prevents repea
   const [, options] = global.fetch.mock.calls.find(([url]) => url.endsWith('/api/update-password'));
   expect(options.method).toBe('PUT');
   expect(JSON.parse(options.body)).toEqual({ id: 7, oldPassword: 'OldPassword1!', newPassword: 'NewPassword2!', verificationToken: 'proof-1' });
-  expect(global.fetch).toHaveBeenCalledTimes(3);
+  expect(global.fetch.mock.calls.filter(([url]) => !url.includes('/api/user-profile?'))).toHaveLength(3);
   finish(reply({ message: 'Password updated successfully!' }));
   await screen.findByText('Your password has been updated.');
 });
@@ -83,7 +83,7 @@ test('notification preferences only offer working appointment reminders and save
   fireEvent.click(within(dialog).getByRole('button', { name: 'Save Preferences' }));
   expect(localStorage.getItem('oravista-appointment-reminders:7')).toBe('false');
   expect(screen.getByText('Notification preferences saved on this device.')).toBeInTheDocument();
-  expect(global.fetch).not.toHaveBeenCalled();
+  expect(global.fetch.mock.calls.filter(([url]) => !url.includes('/api/user-profile?'))).toHaveLength(0);
 });
 
 test('cancelling notification changes leaves the saved preference unchanged', () => {

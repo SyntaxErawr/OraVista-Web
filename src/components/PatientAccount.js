@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { User } from 'lucide-react';
+import usePatientProfileSync from '../hooks/usePatientProfileSync';
 const readUser = () => { try { return JSON.parse(localStorage.getItem('user') || '{}') || {}; } catch { return {}; } };
 export default function PatientAccount() {
+  usePatientProfileSync();
   const [user, setUser] = useState(readUser);
   const [failed, setFailed] = useState(false);
   useEffect(() => {

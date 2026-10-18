@@ -2,6 +2,8 @@ import PatientAccount from '../../components/PatientAccount';
 import PatientDialog from "../../components/PatientDialog";
 import BrandWordmark from "../../components/BrandWordmark";
 import { API_BASE_URL } from '../../config/api';
+import { profileAge } from '../../utils/profileFields';
+import { mergePatientProfile } from '../../utils/patientProfile';
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -42,6 +44,11 @@ function ProfilePage() {
   const [saveError, setSaveError] = useState("");
   const savingRef = useRef(false);
   const uploadingRef = useRef(false);
+  const editingRef = useRef(false);
+  const photoEditingRef = useRef(false);
+  const originalInfoRef = useRef(null);
+  editingRef.current = isEditing;
+  photoEditingRef.current = isPhotoEditing;
   const photoUrl = (path) => path ? (/^https?:\/\//i.test(path) ? path : `${API_BASE_URL}/${path.replace(/^\/+/, '')}`) : null;
   const photoButtonStyle = (primary = false) => ({
     padding: '10px 16px', borderRadius: 10, border: '1px solid #b8d7dd',
@@ -74,36 +81,34 @@ function ProfilePage() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const calculateAge = (dobString) => {
-    if (!dobString) return "";
-    const today = new Date();
-    const birthDate = new Date(dobString);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
-    return age;
-  };
+  const calculateAge = (value) => profileAge(value) ?? '';
 
   const loadUserData = useCallback(() => {
     const user = JSON.parse(localStorage.getItem("user"));
     if (user) {
-      setUserData({
+      if (!editingRef.current) setUserData({
         firstName: user.firstName ?? user.first_name ?? "",
         lastName: user.lastName ?? user.last_name ?? "",
         email: user.email || "",
         sex: user.sex || "",
         dob: user.dob?.slice(0, 10) || "",
-        age: user.dob ? calculateAge(user.dob) : user.age || "",
+        age: profileAge(user.dob) ?? '',
         phone: user.phone || "",
         occupation: user.occupation || "",
       });
       const path = user.profile_picture;
-      setProfilePreview(path ? (/^https?:\/\//i.test(path) ? path : `${API_BASE_URL}/${path.replace(/^\/+/, '')}`) : null);
+      if (!photoEditingRef.current) setProfilePreview(path ? (/^https?:\/\//i.test(path) ? path : `${API_BASE_URL}/${path.replace(/^\/+/, '')}`) : null);
     }
   }, []);
 
   useEffect(() => {
     loadUserData();
+    window.addEventListener('patient-profile-updated', loadUserData);
+    window.addEventListener('storage', loadUserData);
+    return () => {
+      window.removeEventListener('patient-profile-updated', loadUserData);
+      window.removeEventListener('storage', loadUserData);
+    };
   }, [loadUserData]);
 
   useEffect(() => () => { if (pendingPreview) URL.revokeObjectURL(pendingPreview); }, [pendingPreview]);
@@ -122,9 +127,7 @@ function ProfilePage() {
     } else if (name === "phone" && !/^09\d{9}$/.test(value)) {
       error = "Enter an 11-digit mobile number starting with 09.";
     } else if (name === "dob" && value) {
-      const parsed = new Date(`${value}T00:00:00Z`);
-      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
-      if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== value || value > today) error = "Enter a valid birth date that is not in the future.";
+      if (profileAge(value) === null) error = "Enter a valid birth date that is not in the future.";
     } else if (name === "occupation") {
       if (value.length > 50) error = "Maximum 50 characters allowed.";
     }
@@ -162,6 +165,8 @@ function ProfilePage() {
     if (uploadingRef.current) return;
     setPendingPhoto(null); setPendingPreview(null); setUploadError("");
     setConfirmPhoto(false); setIsPhotoEditing(false);
+    photoEditingRef.current = false;
+    loadUserData();
   };
 
   const savePhoto = async () => {
@@ -204,6 +209,7 @@ function ProfilePage() {
   const triggerFileInput = () => fileInputRef.current.click();
 
   const handleDiscard = () => {
+    editingRef.current = false;
     loadUserData();
     setErrors({});
     setSaveError("");
@@ -235,29 +241,27 @@ function ProfilePage() {
     savingRef.current = true; setIsSaving(true); setSaveError("");
     try {
       const user = JSON.parse(localStorage.getItem("user"));
+      const changed = Object.fromEntries(Object.entries(userData).filter(([key, value]) => key !== 'age' && value !== originalInfoRef.current?.[key]));
+      if (!Object.keys(changed).length) {
+        editingRef.current = false; setIsEditing(false); setShowConfirmModal(false); loadUserData(); return;
+      }
       const response = await fetch(
         `${API_BASE_URL}/api/update-profile`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: user.id, ...userData }),
+          body: JSON.stringify({ id: user.id, ...changed }),
         },
       );
       const data = await response.json();
       if (response.ok) {
         const current = JSON.parse(localStorage.getItem("user"));
         if (!current || String(current.id) !== String(user.id)) throw new Error('Your session changed.');
-        const savedData = { ...userData };
-        for (const key of Object.keys(savedData)) {
-          if (data.user && Object.hasOwn(data.user, key)) savedData[key] = data.user[key] ?? '';
-        }
-        savedData.firstName = data.user?.first_name ?? savedData.firstName;
-        savedData.lastName = data.user?.last_name ?? savedData.lastName;
-        savedData.dob = savedData.dob.slice(0, 10);
-        const updatedUser = { ...current, ...savedData, first_name: savedData.firstName, last_name: savedData.lastName };
+        const updatedUser = mergePatientProfile(current, data.user || changed);
         localStorage.setItem("user", JSON.stringify(updatedUser));
+        editingRef.current = false;
         window.dispatchEvent(new Event("patient-profile-updated"));
-        setUserData(savedData);
+        loadUserData();
         setIsEditing(false);
         setShowConfirmModal(false);
         setShowSuccessModal(true);
@@ -788,7 +792,8 @@ function ProfilePage() {
                   Personal Information
                 </h2>
                 <button
-                  onClick={() => { setIsEditing(true); setSaveError(''); }}
+                  onClick={() => { originalInfoRef.current = { ...userData }; setIsEditing(true); setSaveError(''); }}
+                  disabled={isEditing || isSaving}
                   style={{
                     marginTop: "10px",
                     padding: "8px 20px",
