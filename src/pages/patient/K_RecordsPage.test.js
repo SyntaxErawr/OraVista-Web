@@ -23,6 +23,7 @@ beforeEach(() => {
   global.fetch = jest.fn(async url => ({ ok: true, json: async () => url.includes('patient-final-diagnoses') ? [finalRecord] : {} }));
   renderDiagnosticImage.mockReset().mockResolvedValue({ dataUrl: 'data:image/png;base64,annotated', width: 2200, height: 1100 });
   pdf = { setFontSize: jest.fn(), setTextColor: jest.fn(), text: jest.fn(), setFont: jest.fn(), splitTextToSize: value => [value],
+    rect: jest.fn(), line: jest.fn(),
     addPage: jest.fn(), addImage: jest.fn(), save: jest.fn(), lastAutoTable: { finalY: 80 },
     internal: { getNumberOfPages: () => 0, pageSize: { getWidth: () => 210, getHeight: () => 297 } } };
   jsPDF.mockImplementation(() => pdf);
@@ -48,8 +49,8 @@ test('large images move to another page and retain their proportions', async () 
   await screen.findByRole('img', { name: /X-ray with dentist-saved annotations/ });
   fireEvent.click(screen.getByRole('button', { name: 'Download Report' }));
   await waitFor(() => expect(pdf.save).toHaveBeenCalled());
-  expect(pdf.addPage).toHaveBeenCalledTimes(2);
-  const [, , x, y, width, height] = pdf.addImage.mock.calls[0];
+  expect(pdf.addPage).toHaveBeenCalledTimes(3);
+  const [, , x, y, width, height] = pdf.addImage.mock.calls.find(call => call[1] === 'PNG');
   expect(y).toBe(32);
   expect(width / height).toBeCloseTo(0.1);
   expect(x).toBeGreaterThan(14);
@@ -75,7 +76,7 @@ test('legacy diagnoses without images still export their saved text and an expli
   await screen.findByText('The original X-ray is unavailable for this saved diagnosis.');
   fireEvent.click(screen.getByRole('button', { name: 'Download Report' }));
   await waitFor(() => expect(pdf.save).toHaveBeenCalled());
-  expect(pdf.addImage).not.toHaveBeenCalled();
+  expect(pdf.addImage.mock.calls.filter(call => call[1] === 'PNG')).toHaveLength(0);
   expect(pdf.text).toHaveBeenCalledWith('The original X-ray is unavailable for this saved diagnosis.', 14, 92);
   expect(autoTable.mock.calls.at(-1)[1].body.flat()).toContain('No findings retained in the saved final diagnosis.');
 });

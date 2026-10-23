@@ -1,3 +1,4 @@
+import { drawPatientRecord, drawClinicHeader } from '../../utils/clinicRecordLayout';
 import PatientAccount from '../../components/PatientAccount';
 import { fetchPatientHealth } from '../../utils/patientHealth';
 import BrandWordmark from "../../components/BrandWordmark";
@@ -135,6 +136,7 @@ function RecordsPage() {
     const user = JSON.parse(localStorage.getItem("user"));
     if (user) {
       setUserData({
+        ...user,
         id: user.id,
         firstName: user.firstName || "User",
         lastName: user.lastName || "",
@@ -195,16 +197,14 @@ function RecordsPage() {
       const rData = risk || {};
 
       const doc = new jsPDF();
-      doc.setFontSize(22);
-      doc.setTextColor(0, 17, 102);
-      doc.text("OraVista Clinic", 14, 20);
-      doc.setFontSize(16);
-      doc.setTextColor(0, 0, 0);
-      doc.text(`Patient Report: ${patientName}`, 14, 30);
-      doc.setFontSize(12);
-      doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, 38);
+      drawPatientRecord(doc, userData, aData);
+      doc.addPage();
+      drawClinicHeader(doc, userData.branch);
+      doc.setFontSize(11);
+      doc.text(`Patient Report: ${patientName}`, 14, 41);
+      doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, 47);
 
-      let currentY = 50;
+      let currentY = 57;
 
       doc.setFontSize(14);
       doc.setTextColor(0, 17, 102);
@@ -238,6 +238,7 @@ function RecordsPage() {
       });
       currentY = doc.lastAutoTable.finalY + 15;
 
+      if (currentY > 245) { doc.addPage(); currentY = 22; }
       doc.setFontSize(14);
       doc.setTextColor(0, 17, 102);
       doc.text("AI Assessment", 14, currentY);
@@ -251,7 +252,7 @@ function RecordsPage() {
         ]);
         assessmentBody.push([
           "Risk Grade",
-          String(rData.risk_grade ?? rData.grade ?? "N/A"),
+          String(rData.health_grade ?? rData.risk_grade ?? rData.grade ?? "N/A"),
         ]);
         assessmentBody.push([
           "Risk Level",
@@ -280,25 +281,19 @@ function RecordsPage() {
         rData?.actions ??
         "No actions recommended at this time.";
 
-      doc.setFontSize(14);
-      doc.setTextColor(0, 17, 102);
-      doc.text("Analysis", 14, currentY);
-      currentY += 8;
-      doc.setFontSize(11);
-      doc.setTextColor(0, 0, 0);
-      doc.setFont("helvetica", "bold");
-      doc.text("Disease Progression Forecast:", 14, currentY);
-      currentY += 6;
-      doc.setFont("helvetica", "normal");
-      const splitForecast = doc.splitTextToSize(String(forecastText), 180);
-      doc.text(splitForecast, 14, currentY);
-      currentY += splitForecast.length * 5 + 8;
-      doc.setFont("helvetica", "bold");
-      doc.text("Recommended Actions:", 14, currentY);
-      currentY += 6;
-      doc.setFont("helvetica", "normal");
-      const splitActions = doc.splitTextToSize(String(actionsText), 180);
-      doc.text(splitActions, 14, currentY);
+      const reportParagraph = (title, value) => {
+        if (currentY > 248) { doc.addPage(); currentY = 22; }
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
+        doc.text(title, 14, currentY); currentY += 7;
+        doc.setFont('helvetica', 'normal');
+        for (const line of doc.splitTextToSize(String(value), 180)) {
+          if (currentY > 275) { doc.addPage(); currentY = 22; }
+          doc.text(line, 14, currentY); currentY += 5;
+        }
+        currentY += 8;
+      };
+      reportParagraph('Disease Progression Forecast', forecastText);
+      reportParagraph('Recommended Actions', actionsText);
 
       // Keep the existing checkup report and append finalized diagnosis pages.
       doc.addPage();

@@ -1,3 +1,4 @@
+import { drawPatientRecord, drawClinicHeader } from './clinicRecordLayout';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -110,7 +111,7 @@ const addFooter = (doc) => {
     doc.line(14, pdfHeight - 15, pdfWidth - 14, pdfHeight - 15);
 
     // Centered footer label and page count details
-    doc.text("OraVista Clinic • Clinical Patient Report • Confidential", pdfWidth / 2, pdfHeight - 10, { align: "center" });
+    doc.text("King Epres Dental Clinic - Patient Report - Confidential", pdfWidth / 2, pdfHeight - 10, { align: "center" });
     doc.text(`Page ${i} of ${pageCount}`, pdfWidth - 14, pdfHeight - 10, { align: "right" });
   }
 };
@@ -127,13 +128,16 @@ const checkPageBreak = (doc, currentY, neededHeight) => {
 // Export Patient PDF handler
 export const exportPatientPDF = async (patient, medicalInfo, history, records) => {
   const doc = new jsPDF();
-  let currentY = 20;
+  drawPatientRecord(doc, patient, medicalInfo || {});
+  doc.addPage();
+  drawClinicHeader(doc, patient?.selectedBranch || patient?.branch);
+  let currentY = 42;
 
   // 1. HEADER
   doc.setFontSize(22);
   doc.setTextColor(0, 17, 102);
   doc.setFont("helvetica", "bold");
-  doc.text("OraVista Clinic", 14, currentY);
+  doc.text("Patient Clinical Report", 14, currentY);
   currentY += 8;
 
   doc.setFontSize(10);
@@ -166,10 +170,10 @@ export const exportPatientPDF = async (patient, medicalInfo, history, records) =
   // Format fallbacks
   const name = patient?.name || patient?.firstName ? `${patient?.name || `${patient?.firstName} ${patient?.lastName || ''}`}` : "N/A";
   const patientId = patient?.id || patient?.dbId ? `PT-100${patient?.dbId || patient?.id}` : "N/A";
-  const age = patient?.age || "N/A";
+  const age = patient?.age ?? "N/A";
   const email = patient?.email || "N/A";
   const contact = patient?.contact || patient?.phone || "N/A";
-  const address = "STI Sta. Mesa, Manila";
+  const address = patient?.address || "Not recorded";
 
   // Row 1
   doc.setFont("helvetica", "bold"); doc.text("Patient Name:", leftLabelX, currentY);
