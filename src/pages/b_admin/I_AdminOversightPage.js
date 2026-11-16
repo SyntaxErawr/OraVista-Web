@@ -6,6 +6,57 @@ import { API_BASE_URL } from '../../config/api';
 const money = value => `PHP ${Number(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const timestamp = value => new Date(value).toLocaleString('en-PH', { timeZone: 'Asia/Manila' });
 
+const fieldLabel = key => String(key).replace(/([a-z])([A-Z])/g, '$1 $2').replace(/_/g, ' ')
+  .replace(/\b\w/g, letter => letter.toUpperCase()).replace(/\bId\b/g, 'ID');
+
+const auditAction = action => {
+  const [type, ...parts] = String(action || '').trim().split(/\s+/);
+  const labels = { INSERT: 'Created', UPDATE: 'Updated', DELETE: 'Deleted' };
+  const activities = {
+    '/api/login': 'Sign-in request', '/api/verify-otp': 'Code verification',
+    '/api/send-otp': 'Verification code request', '/api/forgot-password': 'Password recovery',
+    '/api/reset-password-by-email': 'Password reset', '/api/update-password': 'Password change',
+  };
+  if (type === 'SUCCESS' || type === 'FAILED') {
+    return `${activities[parts.at(-1)] || 'Authentication'} ${type === 'SUCCESS' ? 'succeeded' : 'failed'}`;
+  }
+  return labels[type] || fieldLabel(action || 'Unknown action');
+};
+
+function DetailValue({ value }) {
+  if (value == null || value === '') return <span className="ov-detail-empty">Not provided</span>;
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+  if (Array.isArray(value)) {
+    return value.length ? <ul>{value.map((item, index) => <li key={index}><DetailValue value={item} /></li>)}</ul> : 'None';
+  }
+  if (typeof value === 'object') {
+    if (!Object.keys(value).length) return 'None';
+    return <dl className="ov-record-details">{Object.entries(value).map(([key, item]) => <div key={key}>
+      <dt>{fieldLabel(key)}</dt><dd><DetailValue value={item} /></dd>
+    </div>)}</dl>;
+  }
+  return String(value);
+}
+
+function AuditChanges({ changes }) {
+  let details = changes;
+  if (typeof details === 'string') {
+    try { details = JSON.parse(details); } catch { return <p>{details}</p>; }
+  }
+  if (details == null || details === '') return <p>No field changes were recorded for this event.</p>;
+  if (typeof details !== 'object' || Array.isArray(details)) return <DetailValue value={details} />;
+  if (!Object.keys(details).length) return <p>No field changes were recorded for this event.</p>;
+  return <div className="ov-audit-changes-wrap"><table className="ov-audit-changes" aria-label="Changed fields">
+    <thead><tr><th>Field</th><th>Previous value</th><th>New value</th></tr></thead>
+    <tbody>{Object.entries(details).map(([key, value]) => {
+      const changed = value && typeof value === 'object' && !Array.isArray(value) && ('before' in value || 'after' in value);
+      return <tr key={key}><th scope="row">{fieldLabel(key)}</th>{changed ? <>
+        <td><DetailValue value={value.before} /></td><td><DetailValue value={value.after} /></td>
+      </> : <td colSpan={2}><DetailValue value={value} /></td>}</tr>;
+    })}</tbody>
+  </table></div>;
+}
+
 export default function AdminOversightPage({ audit = false }) {
   const [filters, setFilters] = useState({ from: '', to: '', branch: '', q: '' });
   const [applied, setApplied] = useState(filters);
@@ -56,14 +107,33 @@ export default function AdminOversightPage({ audit = false }) {
         <table style={styles.table}><thead><tr>{(audit ? ['Time','User','Action','Record','Branch','Details'] : ['Time','Patient / Booking','Branch','Service','Received','Method','Collected by','Details']).map(label => <th style={styles.cell} key={label}>{label}</th>)}</tr></thead>
           <tbody>{result.records.map(row => <tr key={row.id}>
             <td style={styles.cell}>{timestamp(row.created_at)}</td>
-            {audit ? <><td style={styles.cell}>{row.actor_name || 'System / unidentified'}<br />{row.actor_role}</td><td style={styles.cell}>{row.action}</td><td style={styles.cell}>{row.entity} #{row.entity_id}</td><td style={styles.cell}>{row.branch || '—'}</td></> : <><td style={styles.cell}>{row.patient_name}<br />{row.booking_ref || `Appointment ${row.appointment_id}`}</td><td style={styles.cell}>{row.branch || '—'}</td><td style={styles.cell}>{row.service}</td><td style={styles.cell}>{money(row.amount)}</td><td style={styles.cell}>{row.method}<br />{row.reference}</td><td style={styles.cell}>{row.collector_name || row.collector_id}</td></>}
+            {audit ? <><td style={styles.cell}>{row.actor_name || 'System / unidentified'}<br />{row.actor_role}</td><td style={styles.cell}>{auditAction(row.action)}</td><td style={styles.cell}>{fieldLabel(row.entity)} #{row.entity_id}</td><td style={styles.cell}>{row.branch || '—'}</td></> : <><td style={styles.cell}>{row.patient_name}<br />{row.booking_ref || `Appointment ${row.appointment_id}`}</td><td style={styles.cell}>{row.branch || '—'}</td><td style={styles.cell}>{row.service}</td><td style={styles.cell}>{money(row.amount)}</td><td style={styles.cell}>{row.method}<br />{row.reference}</td><td style={styles.cell}>{row.collector_name || row.collector_id}</td></>}
             <td style={styles.cell}><button style={styles.button} onClick={() => setSelected(row)}>Details</button></td>
           </tr>)}{!result.records.length && <tr><td colSpan={audit ? 6 : 8} style={styles.cell}>No records match these filters.</td></tr>}</tbody>
         </table>
       </div>
       <nav aria-label="Record pages" style={styles.filters}><span>{result.count} records · Page {page} of {Math.max(1, Math.ceil(result.count / 20))}</span><button style={styles.button} disabled={page === 1} onClick={() => setPage(value => value - 1)}>Previous</button><button style={styles.button} disabled={page * 20 >= result.count} onClick={() => setPage(value => value + 1)}>Next</button><button style={styles.button} disabled={!result.records.length || exporting} onClick={exportPage}>{exporting ? 'Exporting...' : 'Export filtered records (CSV)'}</button></nav>
     </>}
-    {selected && <div style={styles.overlay}><PatientDialog onClose={() => setSelected(null)} style={styles.modal}><h2>{audit ? 'Audit Event' : 'Transaction'} #{selected.id}</h2><p>{timestamp(selected.created_at)}</p><pre style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', fontSize: 12 }}>{JSON.stringify(audit ? selected.changes : selected, null, 2)}</pre><button style={styles.button} onClick={() => setSelected(null)}>Close</button></PatientDialog></div>}
+    {selected && <div style={styles.overlay}><PatientDialog onClose={() => setSelected(null)} style={styles.modal}>
+      <section className="ov-oversight-details">
+        <h2>{audit ? 'Audit Event' : 'Transaction'} #{selected.id}</h2>
+        <p>{timestamp(selected.created_at)}</p>
+        {audit ? <>
+          <dl className="ov-record-details">
+            <div><dt>User</dt><dd>{selected.actor_name || 'System / unidentified'}</dd></div>
+            <div><dt>Role</dt><dd><DetailValue value={selected.actor_role && fieldLabel(selected.actor_role)} /></dd></div>
+            <div><dt>Action</dt><dd>{auditAction(selected.action)}</dd></div>
+            <div><dt>Record</dt><dd>{fieldLabel(selected.entity)} #{selected.entity_id}</dd></div>
+            <div><dt>Branch</dt><dd><DetailValue value={selected.branch} /></dd></div>
+          </dl>
+          <h3>Recorded changes</h3>
+          <AuditChanges changes={selected.changes} />
+        </> : <dl className="ov-record-details">{Object.entries(selected).filter(([key]) => !['id', 'created_at'].includes(key)).map(([key, value]) =>
+          <div key={key}><dt>{key === 'collector_name' ? 'Collected by' : fieldLabel(key)}</dt><dd>{key === 'amount' ? money(value) : <DetailValue value={value} />}</dd></div>
+        )}</dl>}
+        <button style={styles.button} onClick={() => setSelected(null)}>Close</button>
+      </section>
+    </PatientDialog></div>}
   </div></AdminLayout>;
 }
 const styles = {

@@ -8,7 +8,11 @@ import {
   Search, User, AlertTriangle, CheckCircle2, RotateCw, ChevronLeft, ChevronRight
 } from "lucide-react";
 
+import { isPastClinicSlot } from "../../utils/clinicAppointments";
+import useCurrentTime from "../../hooks/useCurrentTime";
+
 function StaffBookingPage() {
+  const now = useCurrentTime();
   const navigate = useNavigate();
   const [userData, setUserData] = useState({ id: null, firstName: "Staff" });
   const availabilityVersion = useRef(0);
@@ -233,7 +237,7 @@ function StaffBookingPage() {
   };
 
   const handleFinalSubmit = async () => {
-    if (saving.current || !canBook) return;
+    if (saving.current || !canBook || isPastClinicSlot(bookingData.date, bookingData.time)) return;
     saving.current = true;
     setIsSubmitting(true);
     setBookingError('');
@@ -279,7 +283,7 @@ function StaffBookingPage() {
     const start = timeToMinutes(time);
     return Array.from({ length: Math.ceil(Math.max(selectedDuration, 30) / 30) }, (_, i) => start + i * 30).some(minute => bookedSlots.includes(minute));
   };
-  const canBook = Boolean(bookingData.patientId.trim() && selectedBranch && bookingData.mainService && bookingData.specificService && currentDentist?.available && currentDentist.schedule.includes(bookingData.date) && bookingData.time && !slotUnavailable(bookingData.time) && !isRefreshing && !availabilityError && availabilityKey === `${bookingData.dentist}|${bookingData.date}`);
+  const canBook = Boolean(bookingData.patientId.trim() && selectedBranch && bookingData.mainService && bookingData.specificService && currentDentist?.available && currentDentist.schedule.includes(bookingData.date) && bookingData.time && !isPastClinicSlot(bookingData.date, bookingData.time, now) && !slotUnavailable(bookingData.time) && !isRefreshing && !availabilityError && availabilityKey === `${bookingData.dentist}|${bookingData.date}`);
 
   return (
     <AdminLayout>
@@ -423,18 +427,20 @@ function StaffBookingPage() {
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                   {bookingData.date ? timeSlots.map(t => {
                     const isTaken = slotUnavailable(t);
+                    const isPast = isPastClinicSlot(bookingData.date, t, now);
+                    const isUnavailable = isTaken || isPast;
                     return (
                       <button key={t}
-                        onClick={() => !isTaken && setBookingData({ ...bookingData, time: t })}
-                        disabled={isTaken || isRefreshing || Boolean(availabilityError) || availabilityKey !== `${bookingData.dentist}|${bookingData.date}`}
+                        onClick={() => !isUnavailable && !isPastClinicSlot(bookingData.date, t) && setBookingData({ ...bookingData, time: t })}
+                        disabled={isUnavailable || isRefreshing || Boolean(availabilityError) || availabilityKey !== `${bookingData.dentist}|${bookingData.date}`}
                         style={{ "--ov-on-color": "var(--ov-ink)",
                           padding: "12px", borderRadius: "10px", border: "none", fontWeight: "600",
-                          cursor: isTaken ? "not-allowed" : "pointer",
-                          backgroundColor: isTaken ? "#ccc" : (bookingData.time === t ? "var(--ov-primary)" : "white"),
-                          color: isTaken ? "#888" : (bookingData.time === t ? "var(--ov-ink)" : "#087F8C"),
-                          opacity: isTaken ? 0.6 : 1
+                          cursor: isUnavailable ? "not-allowed" : "pointer",
+                          backgroundColor: isUnavailable ? "#e3ecef" : (bookingData.time === t ? "var(--ov-primary)" : "white"),
+                          color: isUnavailable ? "var(--ov-muted)" : (bookingData.time === t ? "var(--ov-ink)" : "#087F8C"),
+                          opacity: isUnavailable ? 0.6 : 1
                         }}>
-                        {t} {isTaken && "(Occupied)"}
+                        {t} {isPast ? "(Past)" : isTaken && "(Occupied)"}
                       </button>
                     );
                   }) : <p style={{ fontSize: "12px", color: "#666" }}>Please select a date first.</p>}

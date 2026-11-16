@@ -21,6 +21,8 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { API_BASE_URL } from "../../config/api";
+import { isPastClinicSlot } from "../../utils/clinicAppointments";
+import useCurrentTime from "../../hooks/useCurrentTime";
 
 const servicesData = {
   "General Dentistry": [
@@ -73,6 +75,7 @@ function BookingPage() {
   const [availabilityError, setAvailabilityError] = useState("");
   const availabilityVersion = useRef(0);
 
+  const now = useCurrentTime();
   const today = new Date();
   const [viewDate, setViewDate] = useState(new Date());
 
@@ -275,7 +278,7 @@ function BookingPage() {
   };
 
   const selectedServicePrice = getSelectedServicePrice();
-  const canSubmitBooking = Boolean(userData.id && bookingData.date && bookingData.time &&
+  const canSubmitBooking = Boolean(userData.id && bookingData.date && bookingData.time && !isPastClinicSlot(bookingData.date, bookingData.time, now) &&
     (isReschedule || (bookingData.mainService && bookingData.specificService && bookingData.dentist)));
 
   const fetchBookedSlots = useCallback(async () => {
@@ -337,6 +340,10 @@ function BookingPage() {
   const handleFinalSubmit = async () => {
     if (isSubmitting) return;
     setRescheduleError("");
+    if (bookingData.date && bookingData.time && isPastClinicSlot(bookingData.date, bookingData.time)) {
+      setRescheduleError("Please choose a future date and time.");
+      return;
+    }
     if (!isReschedule && !canSubmitBooking) {
       setRescheduleError("Choose a service, treatment, dentist, date and time before confirming.");
       return;
@@ -682,7 +689,7 @@ function BookingPage() {
                 Cancel
               </button>
               <button
-                disabled={isSubmitting}
+                disabled={!canSubmitBooking || isSubmitting}
                 onClick={handleFinalSubmit}
                 style={{ "--ov-on-color": "var(--ov-ink)",
                   flex: 1,
@@ -1164,37 +1171,40 @@ function BookingPage() {
                     timeSlots.map((t) => {
                       const currentMinutes = timeToMinutes(t);
                       const isTaken = bookedSlots.includes(currentMinutes);
+                      const isPast = isPastClinicSlot(bookingData.date, t, now);
+                      const isUnavailable = isTaken || isPast;
                       return (
                         <button
                           key={t}
                           onClick={() =>
-                            !isTaken &&
+                            !isUnavailable && !isPastClinicSlot(bookingData.date, t) &&
                             setBookingData({ ...bookingData, time: t })
                           }
-                          disabled={isTaken || isRefreshing || Boolean(availabilityError)}
+                          disabled={isUnavailable || isRefreshing || Boolean(availabilityError)}
+                          title={isPast ? "Please choose a future time." : undefined}
                           style={{ "--ov-on-color": "var(--ov-ink)",
                             padding: "11px 8px",
                             borderRadius: "10px",
                             border: "none",
                             fontWeight: "600",
                             fontSize: "12px",
-                            cursor: isTaken ? "not-allowed" : "pointer",
+                            cursor: isUnavailable ? "not-allowed" : "pointer",
                             fontFamily: "'Manrope', sans-serif",
-                            backgroundColor: isTaken
-                              ? "#ccc"
+                            backgroundColor: isUnavailable
+                              ? "#e3ecef"
                               : bookingData.time === t
                                 ? (isMobile ? "var(--ov-primary)" : "#C2E6E6")
                                 : "white",
-                            color: isTaken
-                              ? "#888"
+                            color: isUnavailable
+                              ? "var(--ov-muted)"
                               : bookingData.time === t
                                 ? (isMobile ? "var(--ov-ink)" : "#087F8C")
                                 : "#087F8C",
-                            opacity: isTaken ? 0.6 : 1,
+                            opacity: isUnavailable ? 0.6 : 1,
                           }}
                         >
                           {t}
-                          {isTaken && " (Occupied)"}
+                          {isPast ? " (Past)" : isTaken && " (Occupied)"}
                         </button>
                       );
                     })

@@ -33,6 +33,12 @@ export function timeMinutes(value) {
   return hour * 60 + minute;
 }
 
+export function isPastClinicSlot(date, time, now = Date.now()) {
+  const minutes = timeMinutes(time);
+  const midnight = Date.parse(`${dateKey(date)}T00:00:00+08:00`);
+  return minutes === null || !Number.isFinite(midnight) || midnight + minutes * 60000 <= now;
+}
+
 export function appointmentText(row) {
   const date = row.date || row.appointment_date;
   const formatted = date && !Number.isNaN(new Date(date).getTime())

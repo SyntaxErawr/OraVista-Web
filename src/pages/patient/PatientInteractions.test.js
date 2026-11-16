@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import RecordsPage from "./K_RecordsPage";
 import DashboardPage from "./J_DashboardPage";
 import BookingPage from "./H_BookingPage";
@@ -21,14 +21,18 @@ const originalFetch = global.fetch;
 const reply = (data, ok = true) => ({ ok, json: async () => data });
 const patient = { id: 7, firstName: "Preview", lastName: "Patient", selectedBranch: "Gil Puyat, Pasay", branch: "Gil Puyat, Pasay" };
 
+const calendarDay = new Date();
+const bookingDay = `${calendarDay.getFullYear()}-${String(calendarDay.getMonth() + 1).padStart(2, '0')}-${String(calendarDay.getDate()).padStart(2, '0')}`;
+
 beforeEach(() => {
+  jest.spyOn(Date, 'now').mockReturnValue(Date.parse(`${bookingDay}T08:00:00+08:00`));
   window.innerWidth = 1440;
   mockLocation = { pathname: "/dashboard" };
   localStorage.setItem("user", JSON.stringify(patient));
   global.fetch = jest.fn(async () => reply([]));
   mockNavigate.mockClear();
 });
-afterEach(() => { localStorage.clear(); global.fetch = originalFetch; });
+afterEach(() => { localStorage.clear(); global.fetch = originalFetch; jest.restoreAllMocks(); });
 
 test("records search filters only dentist-verified saved diagnoses", async () => {
   global.fetch.mockImplementation(async url => reply(url.includes("patient-final-diagnoses") ? [
@@ -134,7 +138,7 @@ test("booking requires a treatment and changing it clears the selected time", as
 });
 
 test("successful rescheduling keeps the existing request contract", async () => {
-  mockLocation = { pathname: "/booking", state: { mode: "reschedule", appointmentId: 42, currentService: "Oral Prophylaxis", currentDentist: "Dra. Theresa Madrid", currentDate: "2026-10-10", currentTime: "10:00 AM" } };
+  mockLocation = { pathname: "/booking", state: { mode: "reschedule", appointmentId: 42, currentService: "Oral Prophylaxis", currentDentist: "Dra. Theresa Madrid", currentDate: bookingDay, currentTime: "10:00 AM" } };
   render(<BookingPage />);
   await waitFor(() => expect(screen.getByRole("button", { name: "Submit Reschedule Request" })).not.toBeDisabled());
   fireEvent.click(screen.getByRole("button", { name: "Submit Reschedule Request" }));
@@ -142,11 +146,11 @@ test("successful rescheduling keeps the existing request contract", async () => 
   await screen.findByRole("dialog", { name: "Reschedule Request Submitted!" });
   const request = global.fetch.mock.calls.find(([, options]) => options?.method === "POST");
   expect(request[0]).toMatch(/\/api\/request-reschedule$/);
-  expect(JSON.parse(request[1].body)).toEqual({ appointment_id: 42, user_id: 7, requested_date: "2026-10-10", requested_time: "10:00 AM" });
+  expect(JSON.parse(request[1].body)).toEqual({ appointment_id: 42, user_id: 7, requested_date: bookingDay, requested_time: "10:00 AM" });
 });
 
 test("leaving rescheduling returns to appointments instead of clearing locked fields", async () => {
-  mockLocation = { pathname: "/booking", state: { mode: "reschedule", appointmentId: 1, currentService: "Oral Prophylaxis", currentDentist: "Dra. Theresa Madrid", currentDate: "2026-10-10", currentTime: "10:00 AM" } };
+  mockLocation = { pathname: "/booking", state: { mode: "reschedule", appointmentId: 1, currentService: "Oral Prophylaxis", currentDentist: "Dra. Theresa Madrid", currentDate: bookingDay, currentTime: "10:00 AM" } };
   render(<BookingPage />);
   await waitFor(() => expect(screen.getByRole("button", { name: /Refresh/ })).not.toBeDisabled());
   fireEvent.click(screen.getByRole("button", { name: "Back to Appointments" }));
@@ -295,4 +299,38 @@ test("dashboard history paginates ten entries and links to appointment managemen
   expect(screen.queryByRole("link", { name: "Visit 1" })).not.toBeInTheDocument();
   fireEvent.change(screen.getByRole("searchbox", { name: "Search appointment history" }), { target: { value: "Visit 1" } });
   expect(screen.getByRole("link", { name: "Visit 1" })).toBeInTheDocument();
+});
+
+test('web booking disables past and current-minute slots in Manila while keeping future dates available', async () => {
+  Date.now.mockReturnValue(Date.parse(`${bookingDay}T10:30:00+08:00`));
+  render(<BookingPage />);
+  await chooseBooking();
+  expect(screen.getByRole('button', { name: /^10:00 AM/ })).toBeDisabled();
+  expect(screen.getByRole('button', { name: /^10:30 AM/ })).toBeDisabled();
+  expect(screen.getByRole('button', { name: /^11:00 AM/ })).not.toBeDisabled();
+  const tomorrow = new Date(`${bookingDay}T12:00:00`);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const futureDay = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+  fireEvent.change(screen.getByRole('combobox', { name: 'Select Date' }), { target: { value: futureDay } });
+  await waitFor(() => expect(screen.getByRole('button', { name: /Refresh/ })).not.toBeDisabled());
+  expect(screen.getByRole('button', { name: /^10:30 AM/ })).not.toBeDisabled();
+});
+
+test('a selected slot expires on clock refresh and a pending confirmation cannot submit a past booking', async () => {
+  Date.now.mockReturnValue(Date.parse(`${bookingDay}T10:29:00+08:00`));
+  render(<BookingPage />);
+  await chooseBooking();
+  fireEvent.click(screen.getByRole('button', { name: /^10:30 AM/ }));
+  fireEvent.click(screen.getByRole('button', { name: 'Confirm Appointment' }));
+  const dialog = screen.getByRole('dialog', { name: 'Confirm Appointment?' });
+  act(() => {
+    Date.now.mockReturnValue(Date.parse(`${bookingDay}T10:30:00+08:00`));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Confirm', exact: true }));
+  });
+  expect(within(dialog).getByRole('alert')).toHaveTextContent('Please choose a future date and time.');
+  expect(global.fetch.mock.calls.filter(([, options]) => options?.method === 'POST')).toHaveLength(0);
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel', exact: true }));
+  act(() => window.dispatchEvent(new Event('focus')));
+  expect(screen.getByRole('button', { name: /^10:30 AM/ })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Confirm Appointment' })).toBeDisabled();
 });

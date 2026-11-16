@@ -51,8 +51,8 @@ function ProfilePage() {
   photoEditingRef.current = isPhotoEditing;
   const photoUrl = (path) => path ? (/^https?:\/\//i.test(path) ? path : `${API_BASE_URL}/${path.replace(/^\/+/, '')}`) : null;
   const photoButtonStyle = (primary = false) => ({
-    padding: '10px 16px', borderRadius: 10, border: '1px solid #b8d7dd',
-    background: primary ? 'var(--ov-primary)' : 'white', color: '#12485b',
+    padding: '10px 16px', borderRadius: 10, border: '1px solid var(--ov-text-accent)',
+    background: primary ? 'var(--ov-primary)' : 'var(--ov-surface)', color: 'var(--ov-ink)',
     font: 'inherit', fontSize: 14, fontWeight: 700, cursor: 'pointer',
   });
 
@@ -765,8 +765,8 @@ function ProfilePage() {
                     padding: "6px 15px",
                     borderRadius: "15px",
                     border: "none",
-                    backgroundColor: "var(--ov-on-wash, rgba(255,255,255,0.2))",
-                    color: "var(--ov-on-color, #fff)",
+                    backgroundColor: "var(--ov-primary)",
+                    color: "var(--ov-ink)",
                     fontSize: "12px",
                     cursor: isUploading ? "wait" : "pointer",
                     fontFamily: "'Manrope', sans-serif",
@@ -798,9 +798,9 @@ function ProfilePage() {
                     marginTop: "10px",
                     padding: "8px 20px",
                     borderRadius: "20px",
-                    border: "none",
-                    backgroundColor: "white",
-                    color: "#087F8C",
+                    border: "1px solid var(--ov-text-accent)",
+                    backgroundColor: "var(--ov-surface)",
+                    color: "var(--ov-ink)",
                     fontSize: "14px",
                     fontWeight: "700",
                     cursor: "pointer",
@@ -1065,9 +1065,9 @@ function ProfilePage() {
                   style={{
                     padding: "12px 30px",
                     borderRadius: "10px",
-                    border: "none",
-                    backgroundColor: isEditing ? "white" : "#ccc",
-                    color: "#087F8C",
+                    border: "1px solid var(--ov-text-accent)",
+                    backgroundColor: isEditing ? "var(--ov-surface)" : "#e3ecef",
+                    color: "var(--ov-ink)",
                     fontWeight: "700",
                     cursor: isEditing ? "pointer" : "not-allowed",
                     fontFamily: "'Manrope', sans-serif",
@@ -1082,9 +1082,9 @@ function ProfilePage() {
                   style={{
                     padding: "12px 30px",
                     borderRadius: "10px",
-                    border: "none",
-                    backgroundColor: isEditing ? "white" : "#ccc",
-                    color: "#087F8C",
+                    border: "1px solid var(--ov-text-accent)",
+                    backgroundColor: isEditing ? "var(--ov-primary)" : "#e3ecef",
+                    color: "var(--ov-ink)",
                     fontWeight: "700",
                     cursor: isEditing ? "pointer" : "not-allowed",
                     fontFamily: "'Manrope', sans-serif",

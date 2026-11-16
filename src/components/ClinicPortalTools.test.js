@@ -15,7 +15,7 @@ const rows = [
   { id: 2, booking_ref: 'OV-002', patientName: 'Bob Patient', dentist: 'Dr. John Reyes', dentist_id: 8, date: '2099-10-11', time: '09:00 AM', status: 'Confirmed', serviceType: 'Consultation' },
 ];
 beforeEach(() => { localStorage.clear(); localStorage.setItem('user', JSON.stringify({ id: 7, role: 'admin', first_name: 'Jane', last_name: 'Cruz' })); mockNavigate.mockClear(); mockParams.delete('q'); mockParams.delete('appointment'); global.fetch = jest.fn(async () => ({ ok: true, json: async () => ({ schedule: rows }) })); });
-afterEach(() => { global.fetch = originalFetch; });
+afterEach(() => { global.fetch = originalFetch; jest.restoreAllMocks(); });
 test('filters combine query, time, status, date and database reference', () => {
  expect(matchesAppointment(rows[0], { query: 'alice cleaning 14:30', date: '2099-10-10', fromTime: '14:00', toTime: '15:00', status: 'Pending' })).toBe(true);
  expect(matchesAppointment(rows[0], { fromTime: '15:00' })).toBe(false);
@@ -68,6 +68,9 @@ test('calendar follows filter date and selecting a day toggles it', async () => 
 });
 
 test('clinic booking requires a patient, blocks failed availability and reports save failures', async () => {
+ const day = new Date();
+ const dateKey = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
+ jest.spyOn(Date, 'now').mockReturnValue(Date.parse(`${dateKey}T08:00:00+08:00`));
  let failAvailability = true;
  global.fetch = jest.fn(async (url, options) => {
   if (options?.method === 'POST') return { ok: false, json: async () => ({ message: 'That slot is no longer available.' }) };
