@@ -1204,7 +1204,7 @@ function BookingPage() {
                           }}
                         >
                           {t}
-                          {isPast ? " (Past)" : isTaken && " (Occupied)"}
+                          {!isPast && isTaken && " (Occupied)"}
                         </button>
                       );
                     })

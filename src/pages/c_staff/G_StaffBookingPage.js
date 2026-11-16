@@ -440,7 +440,7 @@ function StaffBookingPage() {
                           color: isUnavailable ? "var(--ov-muted)" : (bookingData.time === t ? "var(--ov-ink)" : "#087F8C"),
                           opacity: isUnavailable ? 0.6 : 1
                         }}>
-                        {t} {isPast ? "(Past)" : isTaken && "(Occupied)"}
+                        {t} {!isPast && isTaken && "(Occupied)"}
                       </button>
                     );
                   }) : <p style={{ fontSize: "12px", color: "#666" }}>Please select a date first.</p>}
