@@ -1,4 +1,4 @@
-const deployedApiUrl =
+export const DEPLOYED_API_BASE_URL =
   "https://oravista-server-474976105474.asia-southeast1.run.app";
 
 const configuredApiUrl = process.env.REACT_APP_API_BASE_URL?.trim();
@@ -7,5 +7,5 @@ const configuredApiUrl = process.env.REACT_APP_API_BASE_URL?.trim();
 // If it is not defined, fall back to the deployed Google Cloud Run server.
 // Remove any trailing slash so endpoint paths can safely use `${API_BASE_URL}/api/...`.
 export const API_BASE_URL = (
-  configuredApiUrl || deployedApiUrl
+  configuredApiUrl || DEPLOYED_API_BASE_URL
 ).replace(/\/+$/, "");

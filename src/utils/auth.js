@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '../config/api';
+import { API_BASE_URL, DEPLOYED_API_BASE_URL } from '../config/api';
 export async function verifyCode(email, challengeId, code) {
   const response = await fetch(`${API_BASE_URL}/api/verify-otp`, {
     method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -21,7 +21,33 @@ export function installAuthFetch() {
     const signedIn = localStorage.getItem('user');
     const token = signedIn && localStorage.getItem('userToken');
     if (token) headers.set('Authorization', `Bearer ${token}`);
-    const response = await original(input, {...options, headers});
+    let request = input;
+    let fetchOptions = {...options, headers};
+    if (process.env.NODE_ENV === 'production' && API_BASE_URL === DEPLOYED_API_BASE_URL) {
+      request = url.slice(API_BASE_URL.length);
+      if (typeof input !== 'string') {
+        const source = new Request(input, fetchOptions);
+        fetchOptions = {
+          ...options,
+          method: source.method,
+          headers: source.headers,
+          mode: source.mode,
+          credentials: source.credentials,
+          cache: source.cache,
+          redirect: source.redirect,
+          referrer: source.referrer,
+          referrerPolicy: source.referrerPolicy,
+          integrity: source.integrity,
+          keepalive: source.keepalive,
+          signal: source.signal,
+        };
+        if (source.method !== 'GET' && source.method !== 'HEAD') {
+          // Preserve JSON and multipart bodies without converting them to streaming uploads.
+          fetchOptions.body = await source.blob();
+        }
+      }
+    }
+    const response = await original(request, fetchOptions);
     if (response.status === 401 && signedIn && !redirecting) {
       const data = await response.clone().json().catch(() => ({}));
       if (data.code === 'SESSION_EXPIRED' && localStorage.getItem('userToken') === token) {
